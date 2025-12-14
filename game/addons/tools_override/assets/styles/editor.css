@@ -52,7 +52,7 @@ TextEdit,
 QLineEdit {
 	padding: 0 5px;
 	/* border-radius: $ControlRadius; */
-	/* background-color: $ControlBackground; */
+	background-color: $ControlBackground;
 	/* color: $Text; */
 }
 
