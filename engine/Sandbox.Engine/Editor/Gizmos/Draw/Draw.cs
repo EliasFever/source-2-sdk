@@ -184,7 +184,6 @@ public static partial class Gizmo
 			bool? hasOutline = false, float? outlineSize = 1.0f, Color? outlineColor = null )
 		{
 			var so = Active.FindOrCreate( $"text", () => new TextSceneObject( World ) );
-
 			var textBlock = new TextRendering.Scope( text, Color, size, font );
 
 			if ( hasOutline == true )
