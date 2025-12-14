@@ -79,4 +79,18 @@ public static class WidgetExtensions
 		popup.Hide();
 		popup.Show();
 	}
+
+	public static void ForceFlexibleWidth( this Widget widget )
+	{
+		if ( widget == null ) return;
+
+		widget.MinimumWidth = 0;
+		widget.HorizontalSizeMode = SizeMode.Flexible;
+
+		if ( widget.Layout != null )
+		{
+			foreach ( var child in widget.Children )
+				child.ForceFlexibleWidth();
+		}
+	}
 }
