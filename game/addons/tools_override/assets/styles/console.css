@@ -52,5 +52,5 @@ ConsoleWidget #Output,
 ConsoleWidget QLineEdit {
 	font-size: 10px;
 	/* font-family: "Roboto Mono"; */
-	/* font-weight: 450; */
+	font-weight: 450;
 }
