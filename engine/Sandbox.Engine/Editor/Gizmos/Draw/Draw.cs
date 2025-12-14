@@ -1,4 +1,6 @@
-﻿namespace Sandbox;
+﻿using HarfBuzzSharp;
+
+namespace Sandbox;
 
 public static partial class Gizmo
 {
@@ -178,11 +180,22 @@ public static partial class Gizmo
 		/// <summary>
 		/// Draw text
 		/// </summary>
-		public void ScreenText( string text, Vector2 pos, string font = "Roboto", float size = 12.0f, TextFlag flags = TextFlag.LeftTop )
+		public void ScreenText( string text, Vector2 pos, string font = "Roboto", float size = 12.0f, TextFlag flags = TextFlag.LeftTop,
+			bool? hasOutline = false, float? outlineSize = 1.0f, Color? outlineColor = null )
 		{
 			var so = Active.FindOrCreate( $"text", () => new TextSceneObject( World ) );
 
-			so.TextBlock = new TextRendering.Scope( text, Color, size, font );
+			var textBlock = new TextRendering.Scope( text, Color, size, font );
+
+			if ( hasOutline == true )
+			{
+				textBlock.Outline.Enabled = true;
+				textBlock.Outline.Size = outlineSize.Value;
+				textBlock.Outline.Color = outlineColor ?? Color.Black;
+			}
+			else textBlock.Outline.Enabled = false;
+			
+			so.TextBlock = textBlock;
 			so.Transform = Transform.Zero;
 			so.ScreenPos = pos;
 			so.Bounds = BBox.FromPositionAndSize( 0, float.MaxValue );
