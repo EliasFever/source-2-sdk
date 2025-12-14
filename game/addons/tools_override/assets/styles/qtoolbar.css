@@ -5,7 +5,6 @@ QToolBar {
 	padding: 3px;
 	spacing: 1px;
 	min-height: 26px;
-	
 }
 
 .CQHammerSelectModeBar, .CQMapSettingsBar, 
@@ -141,9 +140,8 @@ CQPropertyEditorToolbar QLineEdit {
 CQCordonEditorDockWidget,
 CQHammerGlobalModeBar,
 CQHammerGlobalViewBar {
-	/* background-color: $WindowBackground; */
-	background-color: #363636 !important;
-
+	background-color: $WindowBackground;
+	/* background-color: #363636 !important; */
 }
 
 ScrollArea {
