@@ -56,6 +56,7 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			{
 				// In standalone, we don't ship code - only assets
 				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, $"/base/assets" );
+				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, $"/base_override/assets" );
 				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Root, "/core/" );
 			}
 			else

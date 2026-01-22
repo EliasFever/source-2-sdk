@@ -70,6 +70,7 @@ internal static class EngineFileSystem
 
 			Assets.CreateAndMount( Root, "/core/" );
 			Assets.CreateAndMount( Root, "/addons/base/assets" );
+			Assets.CreateAndMount( Root, "/addons/base_override/assets" );
 		}
 		else
 		{

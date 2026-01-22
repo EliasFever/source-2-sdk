@@ -228,6 +228,7 @@ public partial class StandaloneExporter
 
 			// Copy all from enabled addons, in case they reference anything at runtime
 			// (e.g. UI shaders in base)
+			QueueCompiled( $"{engineDir}/addons/base_override", BuildStep.CopyProjectAssets );
 			QueueCompiled( $"{engineDir}/addons/base", BuildStep.CopyProjectAssets );
 
 			// Get all core files - only the ones we absolutely need, because everything else should
@@ -287,8 +288,8 @@ public partial class StandaloneExporter
 				}
 			}
 
-			QueueAll( $"{engineDir}/addons/base/assets/ui", BuildStep.CopyBaseAssets ); // Necessary
-			QueueAll( $"{engineDir}/addons/base/assets/fonts", BuildStep.CopyBaseAssets ); // Necessary
+			QueueAll( $"{engineDir}/addons/base_override/assets/ui", BuildStep.CopyBaseAssets ); // Necessary
+			QueueAll( $"{engineDir}/addons/base_override/assets/fonts", BuildStep.CopyBaseAssets ); // Necessary
 		}
 
 		//
@@ -308,7 +309,7 @@ public partial class StandaloneExporter
 		{
 			var sbprojPath = Path.Combine( baseDir, Standalone.GamePath, ".sbproj" );
 			QueueCopy( $"{_exportConfig.Project.ConfigFilePath}", sbprojPath, BuildStep.CopyMisc );
-			QueueCopy( $"{engineDir}/addons/base/.sbproj", $"{baseDir}/addons/base/.sbproj", BuildStep.CopyMisc );
+			QueueCopy( $"{engineDir}/addons/base_override/.sbproj", $"{baseDir}/addons/base_override/.sbproj", BuildStep.CopyMisc );
 		}
 
 		//
