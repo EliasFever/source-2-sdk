@@ -49,11 +49,6 @@ public class AssetType
 	public static AssetType SoundEvent { get; protected set; }
 
 	/// <summary>
-	/// A soundscape
-	/// </summary>
-	public static AssetType Soundscape { get; protected set; }
-
-	/// <summary>
 	/// Image source (.png or .jpg) asset type.
 	/// </summary>
 	public static AssetType ImageFile { get; protected set; }
@@ -189,12 +184,6 @@ public class AssetType
 		{
 			SoundEvent = this;
 			ResourceType = typeof( SoundEvent );
-		}
-
-		if ( FileExtension == "sndscape" )
-		{
-			Soundscape = this;
-			ResourceType = typeof( Soundscape );
 		}
 
 		if ( FileExtension == "vmap" )

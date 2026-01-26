@@ -536,24 +536,6 @@ file class MapComponentMapLoader : SceneMapLoader
 		}
 	}
 
-	void CreateSoundScapeBox( GameObject go, ObjectEntry kv )
-	{
-		var soundscape = go.Components.Create<SoundscapeTrigger>();
-		soundscape.Soundscape = GameResource.Load<Soundscape>( kv.GetString( "Soundscape" ) );
-		soundscape.BoxSize = kv.GetValue<Vector3>( "Extents" ) * 0.5f;
-		soundscape.Type = SoundscapeTrigger.TriggerType.Box;
-		soundscape.Enabled = kv.GetValue<bool>( "Enabled" );
-	}
-
-	void CreateSoundScape( GameObject go, ObjectEntry kv )
-	{
-		var soundscape = go.Components.Create<SoundscapeTrigger>();
-		soundscape.Soundscape = GameResource.Load<Soundscape>( kv.GetString( "Soundscape" ) );
-		soundscape.Radius = kv.GetValue<float>( "radius" );
-		soundscape.Type = SoundscapeTrigger.TriggerType.Sphere;
-		soundscape.Enabled = kv.GetValue<bool>( "Enabled" );
-	}
-
 	void CreateGradientFog( GameObject go, ObjectEntry kv )
 	{
 		var fog = go.Components.Create<GradientFog>();
@@ -704,16 +686,6 @@ file class MapComponentMapLoader : SceneMapLoader
 				{
 					EnvmapProbe.InitializeFromLegacy( go, kv ); // create an envmap component
 					AddMapObjectComponent( go, kv ); // create the probe sceneobject (we don't have a component for it)
-					break;
-				}
-			case "snd_soundscape_box":
-				{
-					CreateSoundScapeBox( go, kv );
-					break;
-				}
-			case "snd_soundscape":
-				{
-					CreateSoundScape( go, kv );
 					break;
 				}
 			case "env_gradient_fog":
