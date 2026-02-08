@@ -86,7 +86,7 @@ public static partial class EditorUtility
 
 				logOutput?.Invoke( "Adding package.base to compiler" );
 
-				var baseCompiler = compileGroup.CreateCompiler( "base", EngineFileSystem.Root.GetFullPath( "/addons/base_override/code/" ), baseSettings );
+				var baseCompiler = compileGroup.CreateCompiler( "base", EngineFileSystem.Root.GetFullPath( "/addons/base/code/" ), baseSettings );
 				baseCompiler.UseAbsoluteSourcePaths = false;
 				baseCompiler.GeneratedCode.AppendLine( "global using static Sandbox.Internal.GlobalGameNamespace;" );
 

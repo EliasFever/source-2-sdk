@@ -60,9 +60,8 @@ internal sealed class MenuDll : IMenuDll
 			if ( Application.IsStandalone )
 			{
 				// No menu or citizen addon in standalone
-				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, $"/base_override/code" );
+				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, $"/base/code" );
 				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, $"/base/assets" );
-				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, $"/base_override/assets" );
 			}
 			else
 			{

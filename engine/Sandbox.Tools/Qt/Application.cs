@@ -21,9 +21,9 @@ public static class Application
 	{
 		var sheet = "";
 
-		foreach ( var file in FileSystem.Root.FindFile( "/addons/tools_override/assets/styles/", "*.css" ) )
+		foreach ( var file in FileSystem.Root.FindFile( "/addons/tools/assets/styles/", "*.css" ) )
 		{
-			var txt = FileSystem.Root.ReadAllText( $"/addons/tools_override/assets/styles/{file}" );
+			var txt = FileSystem.Root.ReadAllText( $"/addons/tools/assets/styles/{file}" );
 			txt = Theme.ParseVariables( txt );
 
 			sheet += $"\n{txt}\n";
