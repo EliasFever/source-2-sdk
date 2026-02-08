@@ -104,6 +104,15 @@ internal class RemoteSnapshotState
 	}
 
 	/// <summary>
+	/// Remove an entry from the specified slot.
+	/// </summary>
+	public void Remove( int slot )
+	{
+		_predictedData.Remove( slot );
+		Data.Remove( slot );
+	}
+
+	/// <summary>
 	/// Try to get the serialized byte array value from the specified slot.
 	/// </summary>
 	public bool TryGetValue( int slot, out byte[] value, float timeNow )
@@ -126,16 +135,15 @@ internal class RemoteSnapshotState
 
 	/// <summary>
 	/// Create a new delta snapshot using the values of this snapshot state but only with the slots
-	/// from the provided <see cref="DeltaSnapshot"/>.
+	/// from the provided <see cref="DeltaSnapshot"/>. This will return a pooled <see cref="DeltaSnapshot"/>
+	/// so you'll want to call <see cref="DeltaSnapshot.Release"/> when you're done with it.
 	/// </summary>
 	public DeltaSnapshot ToDeltaSnapshot( ushort snapshotId, ushort version, IEnumerable<int> slots, float timeNow )
 	{
-		var result = new DeltaSnapshot
-		{
-			SnapshotId = snapshotId,
-			ObjectId = ObjectId,
-			Version = version
-		};
+		var result = DeltaSnapshot.Pool.Rent();
+		result.SnapshotId = snapshotId;
+		result.ObjectId = ObjectId;
+		result.Version = version;
 
 		foreach ( var slot in slots )
 		{

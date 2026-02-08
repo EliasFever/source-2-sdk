@@ -12,35 +12,23 @@ internal class NetworkTable : IDisposable
 
 	public class Entry : INetworkProxy
 	{
-		public Type TargetType { get; init; }
-		public string DebugName { get; init; }
-		public bool NeedsQuery { get; set; }
-		public Func<Connection, bool> ControlCondition { get; init; } = c => true;
-		public Func<object> GetValue { get; init; }
-		public Action<object> SetValue { get; init; }
-		public Action<Entry> OnDirty { get; set; }
-		public int HashValue { get; set; }
-		public bool IsSerializerType { get; private set; }
-		public bool IsDeltaSnapshotType { get; private set; }
-		public bool IsReliableType { get; set; }
-		public byte[] Serialized { get; set; }
-		public bool Initialized { get; set; }
-		public int Slot { get; private set; }
-
-		private bool InternalIsDirty { get; set; }
-
-		public bool IsDirty
-		{
-			get => InternalIsDirty;
-			set
-			{
-				if ( InternalIsDirty == value )
-					return;
-
-				InternalIsDirty = value;
-				OnDirty?.Invoke( this );
-			}
-		}
+		// We're making all of these fields because they're accessed on an extremely hot path.
+		// Being properties, the extra method call stacks up a lot when you have thousands and
+		// thousands of entries. It doesn't really matter though, this API is not public.
+		public Type TargetType;
+		public string DebugName;
+		public bool NeedsQuery;
+		public Func<Connection, bool> ControlCondition = _ => true;
+		public Func<object> GetValue;
+		public Action<object> SetValue;
+		public int HashCodeValue;
+		public bool IsSerializerType;
+		public bool IsDeltaSnapshotType;
+		public bool IsReliableType;
+		public bool IsDirty;
+		public byte[] Serialized;
+		public bool Initialized;
+		public int Slot;
 
 		bool INetworkProxy.IsProxy => !HasControl( Connection.Local );
 
@@ -130,7 +118,9 @@ internal class NetworkTable : IDisposable
 	/// </summary>
 	public void Register( int slot, Entry entry )
 	{
-		_entries[slot] = entry;
+		// Do nothing if we already have an entry in this slot.
+		if ( !_entries.TryAdd( slot, entry ) )
+			return;
 
 		var value = GetValue( slot );
 		UpdateSlotHash( slot, value );
@@ -192,12 +182,12 @@ internal class NetworkTable : IDisposable
 			return;
 		}
 
-		var hashValue = GenerateHash( value );
+		var hashValue = ToHashCode( value );
 
-		if ( entry.HashValue == hashValue )
+		if ( entry.HashCodeValue == hashValue )
 			return;
 
-		entry.HashValue = hashValue;
+		entry.HashCodeValue = hashValue;
 		entry.Serialized = null;
 		entry.IsDirty = true;
 	}
@@ -213,7 +203,7 @@ internal class NetworkTable : IDisposable
 		UpdateSlotHash( v, value );
 	}
 
-	private int GenerateHash( object value )
+	private static int ToHashCode( object value )
 	{
 		if ( value is IList list )
 		{
@@ -275,11 +265,13 @@ internal class NetworkTable : IDisposable
 	/// <param name="snapshot"></param>
 	internal void WriteSnapshotState( LocalSnapshotState snapshot )
 	{
+		var localConnection = Connection.Local;
+
 		for ( var i = 0; i < _snapshotEntries.Count; i++ )
 		{
 			var entry = _snapshotEntries[i];
 
-			if ( !entry.HasControl() )
+			if ( !entry.HasControl( localConnection ) )
 				continue;
 
 			if ( entry.IsDeltaSnapshotType )
@@ -289,22 +281,24 @@ internal class NetworkTable : IDisposable
 				continue;
 			}
 
+			if ( entry.Serialized is not null )
+				continue;
+
+			var bs = ByteStream.Create( 4096 );
+
 			try
 			{
-				if ( entry.Serialized is null )
-				{
-					var bs = ByteStream.Create( 4096 );
-					WriteEntryToStream( entry, ref bs );
-					entry.Serialized = bs.ToArray();
-					bs.Dispose();
-				}
-
-				snapshot.AddSerialized( entry.Slot, entry.Serialized );
+				WriteEntryToStream( entry, ref bs );
+				entry.Serialized = bs.ToArray();
 			}
 			catch ( Exception e )
 			{
 				Log.Warning( e, $"Error when getting value {entry.DebugName} - {e.Message}" );
 			}
+
+			bs.Dispose();
+
+			snapshot.AddSerialized( entry.Slot, entry.Serialized );
 		}
 	}
 

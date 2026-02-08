@@ -18,6 +18,15 @@ MODES
 COMMON
 {
 	#include "common/shared.hlsl"
+
+	enum SpriteFlags
+	{
+		None = 0x0,
+		CastShadows = 0x1,
+		FlipW = 0x2,
+		FlipH = 0x4,
+		SnapToFrame = 0x8
+	};
 }
 
 struct PixelInput
@@ -53,7 +62,7 @@ VS
 		int TextureID;
 		int Flags;
 		uint BillboardMode;
-		float FogStrength; 
+		uint FogStrengthCutout;
 		int Lighting;
 		float DepthFeather;
 		int SamplerIndex;
@@ -206,12 +215,23 @@ VS
 
 		float blendAmount = 0.0f;
 		float4 blendedUV = float4(0.0f, 0.0f, 0.0f, 0.0f);
-		
-		Sheet::Blended(sprite.BlendSheetUV, sprite.Sequence, sprite.SequenceTime, v.uv, blendedUV.xy, blendedUV.zw, blendAmount );
+
+		bool snapToFrame = (sprite.Flags & SnapToFrame) != 0;
+
+		if (snapToFrame)
+		{
+			blendedUV.xy = Sheet::Single(sprite.BlendSheetUV, sprite.Sequence, sprite.SequenceTime, v.uv);
+			blendedUV.zw = blendedUV.xy;
+		}
+		else
+		{
+			Sheet::Blended(sprite.BlendSheetUV, sprite.Sequence, sprite.SequenceTime, v.uv, blendedUV.xy, blendedUV.zw, blendAmount);
+		}
 
 		PixelInput o;
-		o.vPositionWs = mul(transpose(transform), float4(v.position.xyz, 1)).xyz;
-		o.vPositionPs = Position3WsToPs( o.vPositionWs );
+		float3 vPositionWs = mul(transpose(transform), float4(v.position.xyz, 1)).xyz;
+		o.vPositionWs = vPositionWs - g_vHighPrecisionLightingOffsetWs.xyz;
+		o.vPositionPs = Position3WsToPs( vPositionWs );
 		o.instanceID = instanceID;
 		o.vNormalWs = worldNormal;
 		o.uv = blendedUV;
@@ -230,27 +250,18 @@ PS
 		RenderState( SrcBlend, SRC_ALPHA );
 		RenderState( DstBlend, ONE );
 		RenderState( DepthWriteEnable, false );
-	#else 
-		RenderState( BlendEnable, true);
-		RenderState( DepthWriteEnable, S_MODE_DEPTH == 1 );
+	#else
+		RenderState( BlendEnable, true );
 		RenderState( SrcBlend, SRC_ALPHA );
 		RenderState( DstBlend, INV_SRC_ALPHA );
 		RenderState( BlendOp, ADD );
 		RenderState( SrcBlendAlpha, ONE );
 		RenderState( DstBlendAlpha, INV_SRC_ALPHA );
-		RenderState( AlphaToCoverageEnable, S_MODE_DEPTH == 1);
-		
+		RenderState( DepthWriteEnable, D_OPAQUE || S_MODE_DEPTH == 1 );
+		RenderState( AlphaToCoverageEnable, S_MODE_DEPTH == 1 );
 	#endif
 
 	RenderState( CullMode, NONE );
-
-	enum SpriteFlags 
-	{
-		None = 0x0,
-		CastShadows = 0x1,
-		FlipW = 0x2,
-		FlipH = 0x4
-	};
 
 	struct SpriteVertex
 	{
@@ -270,7 +281,7 @@ PS
 		int TextureHandle;
 		int RenderFlags;
 		uint BillboardMode;
-		float FogStrength;
+		uint FogStrengthCutout;  // Lower 16 bits: fog, upper 16 bits: alpha cutout
 		uint Lighting;
 		float DepthFeather;
 		int SamplerIndex;
@@ -290,6 +301,7 @@ PS
 	int CurrentBufferSize < Attribute("SpriteCount"); >;
 
 	DynamicCombo( D_BLEND, 0..1, Sys( ALL ) );
+	DynamicCombo( D_OPAQUE, 0..1, Sys( ALL ) );
 
 	float g_FogStrength < Attribute( "g_FogStrength" ); >;
 
@@ -343,9 +355,24 @@ PS
 		exponent = (lightingPacked >> 16) & 0xFF;
 	}
 
+	void UnpackFogAndAlpha( uint packed, out float fogStrength, out float alphaCutoff )
+	{
+		// Extract lower 16 bits for fog strength
+		uint fogPacked = packed & 0xFFFF;
+		fogStrength = fogPacked / 65535.0f;
+
+		// Extract upper 16 bits for alpha cutoff
+		uint alphaPacked = (packed >> 16) & 0xFFFF;
+		alphaCutoff = alphaPacked / 65535.0f;
+	}
+
 	float4 MainPs( PixelInput i ) : SV_Target0
 	{
 		SpriteData sprite = GetSprite(i.instanceID); 
+
+		// Unpack fog strength and alpha cutoff
+		float fogStrength, alphaCutoff;
+		UnpackFogAndAlpha( sprite.FogStrengthCutout, fogStrength, alphaCutoff );
 
 		Texture2D ColorTexture = Bindless::GetTexture2D( NonUniformResourceIndex( sprite.TextureHandle ), true );
 		SamplerState spriteSampler = Bindless::GetSampler( NonUniformResourceIndex( sprite.SamplerIndex ) );
@@ -393,63 +420,44 @@ PS
 		OpaqueFadeDepth(col.a * tintColor.a , i.vPositionSs.xy );
 		return 1;
 	#else
-		col.a = AdjustOpacityForAlphaToCoverage( col.a, 0.5f, 1.0f, i.vPositionSs.xy );
-		if(col.a < 0.00001) discard;
+		col.a = AdjustOpacityForAlphaToCoverage( col.a, alphaCutoff, 1.0f, i.vPositionSs.xy );
+		if(col.a < alphaCutoff) discard;
 	#endif
 
 		if ( sprite.DepthFeather > 0 )
 		{
 			float3 pos = Depth::GetWorldPosition( i.vPositionSs.xy );
+			float3 spriteWorldPos = i.vPositionWithOffsetWs.xyz + g_vHighPrecisionLightingOffsetWs.xyz;
 
-			float dist = distance( pos, i.vPositionWithOffsetWs.xyz );
+			float dist = distance( pos, spriteWorldPos );
 			float feather = clamp(dist / sprite.DepthFeather, 0.0, 1.0 );
 			col.a *= feather;
 		}
 
 		if(hasLighting)
-		{ 
-			FinalCombinerInput_t finalCombinerInput;
-			finalCombinerInput.vPositionWs.xyz = i.vPositionWithOffsetWs.xyz;
+		{
+			FinalCombinerInput_t finalCombinerInput = (FinalCombinerInput_t)0;
+			finalCombinerInput.vPositionWithOffsetWs.xyz = i.vPositionWithOffsetWs.xyz;
+			finalCombinerInput.vPositionWs.xyz = i.vPositionWithOffsetWs.xyz + g_vHighPrecisionLightingOffsetWs.xyz;
 			finalCombinerInput.vRoughness = 1;
 			finalCombinerInput.vNormalWs = i.vNormalWs;
 			finalCombinerInput.vPositionSs = i.vPositionSs;
-			finalCombinerInput.vPositionWithOffsetWs.xyz = finalCombinerInput.vPositionWs.xyz - g_vHighPrecisionLightingOffsetWs.xyz;
-			finalCombinerInput.vSpecularColor = float3( 0.0, 0.0, 0.0 );
 
 			LightingTerms_t lightingTerms = InitLightingTerms();
 			ComputeDirectLighting( lightingTerms, finalCombinerInput );
 			CalculateIndirectLighting( lightingTerms, finalCombinerInput ); 
 
 			float4 lighting = float4( 0.0, 0.0, 0.0, 1.0 );
-			lighting.rgb += lightingTerms.vDiffuse.rgb;
+			lighting.rgb += lightingTerms.vDiffuse.rgb; 
 			lighting.rgb += lightingTerms.vIndirectDiffuse.rgb;
 
 			col *= lighting;
 		}
 
-		if ( sprite.FogStrength > 0 ) 
+		if ( fogStrength > 0 ) 
 		{
-		#if (D_BLEND == 1)
-			const float3 vPositionToCameraWs = i.vPositionWithOffsetWs.xyz - g_vCameraPositionWs;
-
-			if ( g_bGradientFogEnabled )
-			{
-				col.a *= 1.0 - CalculateGradientFog( i.vPositionWithOffsetWs, vPositionToCameraWs ).a; 
-			}
-
-			if ( g_bCubemapFogEnabled )
-			{
-				col.a *= 1.0 - CalculateCubemapFog( i.vPositionWithOffsetWs, vPositionToCameraWs ).a;
-			}
-
-			if ( g_bVolumetricFogEnabled )
-			{
-				col.a *= CalculateVolumetricFog( i.vPositionWithOffsetWs.xyz, i.vPositionSs.xy ).a;
-			}
-		#else
-			float3 fogged = Fog::Apply( i.vPositionWithOffsetWs, i.vPositionSs.xy, col.rgb );
-			col.rgb = lerp( col.rgb, fogged, sprite.FogStrength );
-		#endif
+			float4 fogged = DoAtmospherics( i.vPositionWithOffsetWs.xyz + g_vHighPrecisionLightingOffsetWs.xyz, i.vPositionSs.xy, col, D_BLEND == 1 );
+			col.rgb = lerp( col.rgb, fogged.rgb, fogStrength );
 		}
 
 		return col;

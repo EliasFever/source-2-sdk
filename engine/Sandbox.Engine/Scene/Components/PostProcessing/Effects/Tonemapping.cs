@@ -35,7 +35,8 @@ public class Tonemapping : BasePostProcess<Tonemapping>
 		/// </summary>
 		Linear,
 		/// <summary>
-		/// Default AgX implementation.
+		/// Similar to ACES - very realistic, but handles lower and higher brightness ranges better.
+		/// Uses the Punchy AgX look.
 		/// </summary>
 		AgX
 	}
@@ -54,14 +55,14 @@ public class Tonemapping : BasePostProcess<Tonemapping>
 	[ShowIf( nameof( Mode ), TonemappingMode.HableFilmic )]
 	[Property, MakeDirty] public ExposureColorSpaceEnum ExposureMethod { get; set; } = ExposureColorSpaceEnum.RGB;
 
+	private static readonly Material Shader = Material.FromShader( "shaders/tonemapping/tonemapping.shader" );
+
 	public override void Render()
 	{
-		var shader = Material.FromShader( "shaders/tonemapping/tonemapping.shader" );
-
 		Attributes.SetComboEnum( "D_TONEMAPPING", Mode );
 		Attributes.SetComboEnum( "D_EXPOSUREMETHOD", ExposureMethod );
 
-		var blit = BlitMode.WithBackbuffer( shader, Stage.Tonemapping, 1 ); // The actual tonemap should be after the autoexposure
+		var blit = BlitMode.WithBackbuffer( Shader, Stage.Tonemapping, 1 );
 		Blit( blit, "Tonemapping" );
 	}
 

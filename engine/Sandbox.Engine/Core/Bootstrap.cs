@@ -30,7 +30,7 @@ internal static class Bootstrap
 	/// </summary>
 	internal static void PreInit( CMaterialSystem2AppSystemDict appDict )
 	{
-		Application.InitializeGame( appDict.IsDedicatedServer(), appDict.IsConsoleApp(), appDict.IsInToolsMode(), appDict.IsInTestMode(), EngineGlobal.IsRetail() );
+		Application.Initialize( appDict.IsDedicatedServer(), appDict.IsConsoleApp(), appDict.IsInToolsMode(), appDict.IsInTestMode(), EngineGlobal.IsRetail() );
 
 		try
 		{
@@ -93,23 +93,14 @@ internal static class Bootstrap
 
 				Mounting.Directory.LoadAssemblies();
 			}
-
-			//
-			// In testmode (-test) we want to build the .sln files now because we'll be closed
-			// down after this call.
-			//
-			if ( Application.IsUnitTest )
-			{
-				SyncContext.RunBlocking( Project.InitializeBuiltIn() );
-				SyncContext.RunBlocking( Project.GenerateSolution() );
-			}
 		}
 		catch ( Exception ex )
 		{
 			Log.Error( ex );
 			ErrorReporter.Flush();
 			EngineGlobal.Plat_MessageBox( "Bootstrap::PreInit Error", $"Failed to bootstrap engine: {ex.Message}\n\n{ex.StackTrace}" );
-			Environment.Exit( 1 );
+			try { NLog.LogManager.Shutdown(); } catch { }
+			EngineGlobal.Plat_ExitProcess( 1 );
 		}
 	}
 
@@ -119,7 +110,8 @@ internal static class Bootstrap
 	internal static void EnvironmentExit( int nCode )
 	{
 		// When we exit the process from C++, make sure we flush the C# Sdk
-		ErrorReporter.Flush();
+		try { ErrorReporter.Flush(); } catch { }
+		try { NLog.LogManager.Shutdown(); } catch { }
 
 		// Calling Environment.Exit would be ideal but it calls C++ global destructors which fucks everything up
 		// Source 2 depends on the process just being terminated abruptly and doing no cleanup... :)
@@ -193,17 +185,19 @@ internal static class Bootstrap
 			//
 			// Init vr system
 			//
-			if ( VRSystem.WantsInit )
-				VRSystem.Init();
+			VRSystem.Init();
 
 			//
 			// Init common engine shit
 			//
 			{
 				Screen.UpdateFromEngine();
-				Material.UI.Init();
-				Model.Init();
-				Texture.InitStaticTextures();
+				Material.UI.InitStatic();
+				Gizmo.GizmoDraw.InitStatic();
+				Model.InitStatic();
+				Texture.InitStatic();
+				CubemapRendering.InitStatic();
+				Graphics.InitStatic();
 			}
 
 			if ( !Application.IsHeadless && !Application.IsStandalone )
@@ -211,7 +205,7 @@ internal static class Bootstrap
 				// we really want the items available before we continue
 				// here we'll wait up to 5 seconds for them, but they're
 				// generally available completely immediately.
-				var timeout = new CancellationTokenSource( 5000 );
+				using var timeout = new CancellationTokenSource( 5000 );
 				SyncContext.RunBlocking( Services.Inventory.WaitForSteamInventoryItems( timeout.Token ) );
 			}
 
@@ -300,8 +294,8 @@ internal static class Bootstrap
 				This either means that we've messed something up, or you've edited a base addon - in that case, verify your game files.
 				Take a look at your Log files if you're still having problems.
 				""" );
-
-			Environment.Exit( 1 );
+			try { NLog.LogManager.Shutdown(); } catch { }
+			EngineGlobal.Plat_ExitProcess( 1 );
 		}
 	}
 

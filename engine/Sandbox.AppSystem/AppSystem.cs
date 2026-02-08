@@ -1,6 +1,8 @@
 ﻿using Sandbox.Diagnostics;
 using Sandbox.Engine;
 using Sandbox.Internal;
+using Sandbox.Network;
+using Sandbox.Rendering;
 using System;
 using System.Globalization;
 using System.Runtime;
@@ -117,7 +119,7 @@ public class AppSystem
 
 			Console.WriteLine( $"Error: ({e.GetType()}) {e.Message}" );
 
-			Environment.Exit( 1 );
+			CrashShutdown();
 		}
 	}
 
@@ -128,16 +130,90 @@ public class AppSystem
 		return !wantsToQuit;
 	}
 
+	/// <summary>
+	/// Emergency shutdown for crash scenarios. Uses Plat_ExitProcess to immediately
+	/// terminate without running finalizers, DLL destructors, or creating dumps.
+	/// </summary>
+	void CrashShutdown()
+	{
+		// Best effort to sve and flush things.
+		// Might now work because we are in an unstable state.
+
+		try { ConVarSystem.SaveAll(); } catch { }
+
+		try { ErrorReporter.Flush(); } catch { }
+
+		try { Api.Shutdown(); } catch { }
+
+		try { NLog.LogManager.Shutdown(); } catch { }
+
+		NativeEngine.EngineGlobal.Plat_ExitProcess( 1 );
+	}
+
 	public virtual void Shutdown()
 	{
-		// Shut the games down
-		EngineLoop.Exiting();
+		// Make sure game instance is closed
+		IGameInstanceDll.Current?.CloseGame();
+
+		// Send shutdown event, should allow us to track successful shutdown vs crash
+		{
+			var analytic = new Api.Events.EventRecord( "Exit" );
+			analytic.SetValue( "uptime", RealTime.Now );
+			// We could record a bunch of stats during the session and
+			// submit them here. I'm thinking things like num games played
+			// menus visited, time in menus, time in game, files downloaded.
+			// Things to give us a whole session picture.
+			analytic.Submit();
+		}
+
+		ConVarSystem.SaveAll();
+
+		IToolsDll.Current?.Exiting();
+		IMenuDll.Current?.Exiting();
+		IGameInstanceDll.Current?.Exiting();
+
+		SoundFile.Shutdown();
+		SoundHandle.Shutdown();
+		DedicatedServer.Shutdown();
+
+		// Flush API
+		Api.Shutdown();
+
+		ConVarSystem.ClearNativeCommands();
+
+		// Whatever package still exists needs to fuck off
+		PackageManager.UnmountAll();
+
+		// Clear static resources
+		Texture.DisposeStatic();
+		Model.DisposeStatic();
+		Material.UI.DisposeStatic();
+		Gizmo.GizmoDraw.DisposeStatic();
+		CubemapRendering.DisposeStatic();
+		Graphics.DisposeStatic();
+
+		TextRendering.ClearCache();
+
+		NativeResourceCache.Clear();
+
+		// Renderpipeline may hold onto native resources, clear them out
+		RenderPipeline.ClearPool();
+
+		// Run GC and finalizers to clear any resources held by managed
+		GC.Collect();
+		GC.WaitForPendingFinalizers();
+
+		// Run the queue one more time, since some finalizers queue tasks
+		MainThread.RunQueues();
+
+		// print each scene that is leaked
+		foreach ( var leakedScene in Scene.All )
+		{
+			log.Warning( $"Leaked scene {leakedScene.Id} during shutdown." );
+		}
 
 		// Shut the engine down (close window etc)
 		NativeEngine.EngineGlobal.SourceEngineShutdown( _appSystem, false );
-
-		// Flush the api (close actvity, update stats etc)
-		Api.Shutdown();
 
 		if ( _appSystem.IsValid )
 		{
@@ -161,11 +237,14 @@ public class AppSystem
 		Managed.SourceHammer.NativeInterop.Free();
 		Managed.SourceModelDoc.NativeInterop.Free();
 		Managed.SourceAnimgraph.NativeInterop.Free();
+
+		EngineFileSystem.Shutdown();
+		Application.Shutdown();
 	}
 
-	protected void InitGame( AppSystemCreateInfo createInfo )
+	protected void InitGame( AppSystemCreateInfo createInfo, string commandLine = null )
 	{
-		var commandLine = System.Environment.CommandLine;
+		commandLine ??= System.Environment.CommandLine;
 		commandLine = commandLine.Replace( ".dll", ".exe" ); // uck
 
 		_appSystem = CMaterialSystem2AppSystemDict.Create( createInfo.ToMaterialSystem2AppSystemDictCreateInfo() );

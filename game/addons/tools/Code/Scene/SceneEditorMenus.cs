@@ -1,6 +1,4 @@
-﻿using Editor.MapEditor;
-
-namespace Editor;
+﻿namespace Editor;
 
 public static class SceneEditorMenus
 {
@@ -120,23 +118,14 @@ public static class SceneEditorMenus
 		if ( selectedObjects.Length == 0 )
 			return;
 
-		var bbox = new BBox();
+		var bbox = selectedObjects[0].GetBounds()
+			.AddBBox( BBox.FromPositionAndSize( selectedObjects[0].WorldPosition, 16 ) );
 
-		int i = 0;
-		foreach ( var entry in selectedObjects )
+		// Get the bounding box of the selected objects
+		for ( int i = 1; i < selectedObjects.Length; i++ )
 		{
-			if ( i++ == 0 )
-			{
-				bbox = BBox.FromPositionAndSize( entry.WorldPosition, 16 );
-			}
-
-			// get the bounding box of the selected objects
-			bbox = bbox.AddBBox( BBox.FromPositionAndSize( entry.WorldPosition, 16 ) );
-
-			foreach ( var model in entry.Components.GetAll<ModelRenderer>( FindMode.EnabledInSelfAndDescendants ) )
-			{
-				bbox = bbox.AddBBox( model.Bounds );
-			}
+			bbox = bbox.AddBBox( selectedObjects[i].GetBounds() );
+			bbox = bbox.AddBBox( BBox.FromPositionAndSize( selectedObjects[i].WorldPosition, 16 ) );
 		}
 
 		selectedObjects.First().Scene.Editor.FrameTo( bbox );
@@ -146,13 +135,17 @@ public static class SceneEditorMenus
 	[Shortcut( "gameObject.align-to-view", "CTRL+SHIFT+F" )]
 	public static void AlignToView()
 	{
-		if ( !SceneViewportWidget.LastSelected.IsValid() )
+		if ( SceneViewWidget.Current is null )
+			return;
+
+		var lastSelectedViewportWidget = SceneViewWidget.Current.LastSelectedViewportWidget;
+		if ( !lastSelectedViewportWidget.IsValid() )
 			return;
 
 		if ( EditorScene.Selection.Count == 0 )
 			return;
 
-		var targetTransform = new Transform( SceneViewportWidget.LastSelected.State.CameraPosition, SceneViewportWidget.LastSelected.State.CameraRotation );
+		var targetTransform = new Transform( lastSelectedViewportWidget.State.CameraPosition, lastSelectedViewportWidget.State.CameraRotation );
 		var gos = EditorScene.Selection.OfType<GameObject>().ToArray();
 
 		gos.DispatchPreEdited( nameof( GameObject.LocalPosition ) );
@@ -331,13 +324,14 @@ public static class SceneEditorMenus
 		if ( !EditorScene.Selection.OfType<GameObject>().Any() )
 			return;
 
-		if ( !SceneViewportWidget.LastSelected.IsValid() )
+		var lastSelectedViewportWidget = SceneViewWidget.Current?.LastSelectedViewportWidget;
+		if ( !lastSelectedViewportWidget.IsValid() )
 			return;
 
 		var gos = EditorScene.Selection.OfType<GameObject>();
 		using ( SceneEditorSession.Active.UndoScope( "Nudge Object(s)" ).WithGameObjectChanges( gos, GameObjectUndoFlags.Properties ).Push() )
 		{
-			var gizmoInstance = SceneViewportWidget.LastSelected.GizmoInstance;
+			var gizmoInstance = lastSelectedViewportWidget.GizmoInstance;
 
 			var rotation = Rotation.Identity;
 			if ( !gizmoInstance.Settings.GlobalSpace )
@@ -349,7 +343,7 @@ public static class SceneEditorMenus
 
 				foreach ( var go in gos )
 				{
-					go.WorldPosition += delta;
+					go.WorldPosition -= delta;
 				}
 			}
 		}

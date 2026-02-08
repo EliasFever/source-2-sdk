@@ -212,7 +212,7 @@ public partial class ProjectPublisher
 		{
 			if ( !IncludeSourceFiles ) return;
 
-			foreach ( var file in asset.GetAdditionalRelatedFiles() )
+			foreach ( var file in asset.GetAdditionalContentFiles() )
 			{
 				if ( !IncludeSourceFiles && !file.EndsWith( ".rect" ) )
 					continue;
@@ -248,7 +248,7 @@ public partial class ProjectPublisher
 					await CollectInputDependencies( a );
 				}
 
-				foreach ( var file in asset.GetAdditionalRelatedFiles() )
+				foreach ( var file in asset.GetAdditionalContentFiles() )
 				{
 					if ( !IncludeSourceFiles && !file.EndsWith( ".rect" ) )
 						continue;
@@ -259,6 +259,16 @@ public partial class ProjectPublisher
 
 					await CollectInputDependencies( ast );
 					await AddFile( ast.AbsolutePath, ast.RelativePath );
+				}
+
+				// Collect game-side files (data files to be packaged like navdata)
+				foreach ( var file in asset.GetAdditionalGameFiles() )
+				{
+					var absPath = FileSystem.Mounted.GetFullPath( file );
+					if ( !string.IsNullOrEmpty( absPath ) && System.IO.File.Exists( absPath ) )
+					{
+						await AddFile( absPath, file );
+					}
 				}
 
 				progress?.SetProgressMessage( $"Found {AddedAssets.Count:n0}" );
@@ -323,9 +333,42 @@ public partial class ProjectPublisher
 
 				// Add this file
 				await AddFile( abs, rel );
+
+				// Should we add the thumbnail?
+				await TryAddThumbnail( asset );
 			}
 
 			return true;
+		}
+
+		async Task TryAddThumbnail( Asset asset )
+		{
+			if ( asset.AssetType == null ) return;
+
+			// don't do thumbs for built in assets, except models
+			if ( !asset.AssetType.IsGameResource && (asset.AssetType != AssetType.Model) )
+				return;
+
+			// they should explicitly opt into this
+			if ( asset.AssetType.IsGameResource && !asset.AssetType.Flags.Contains( AssetTypeFlags.IncludeThumbnails ) )
+				return;
+
+			var rel = asset.GetCompiledFile( false );
+
+			var thumbName = $"{rel}.t.png";
+
+			//
+			// already added
+			//
+			if ( Assets.Any( x => string.Equals( x.Name, thumbName, StringComparison.OrdinalIgnoreCase ) ) )
+				return;
+
+			var thumb = asset.GetAssetThumb( true );
+
+			if ( thumb is null ) return;
+
+			var png = thumb.GetPng();
+			await AddFile( png, thumbName );
 		}
 
 		private async Task AddFile( string absPath, string relativePath )
@@ -353,7 +396,7 @@ public partial class ProjectPublisher
 				AbsolutePath = absPath
 			};
 
-			// run in a thread to make it super fast
+			// run in a thread to make it happen in the background
 			await Task.Run( async () =>
 			{
 				using ( var stream = info.OpenRead() )
@@ -400,10 +443,7 @@ public partial class ProjectPublisher
 		/// This really exists only to dissallow dangerous extensions like .exe etc.
 		/// So feel free to add anything non dangerous to this list.
 		/// </summary>
-		public static string[] DissallowedExtensions = new string[]
-		{
-			".dll", ".exe", ".csproj", ".sln", ".user", ".slnx"
-		};
+		public static string[] DissallowedExtensions = [".dll", ".exe", ".csproj", ".sln", ".user", ".slnx", ".pdb"];
 
 		public static bool LooseFileAllowed( string file, bool allowSourceFiles )
 		{
@@ -439,6 +479,12 @@ public partial class ProjectPublisher
 
 		internal async Task AddFile( byte[] contents, string relativePath )
 		{
+			//
+			// already added
+			//
+			if ( Assets.Any( x => string.Equals( x.Name, relativePath, StringComparison.OrdinalIgnoreCase ) ) )
+				return;
+
 			var e = new ProjectFile
 			{
 				Name = relativePath,

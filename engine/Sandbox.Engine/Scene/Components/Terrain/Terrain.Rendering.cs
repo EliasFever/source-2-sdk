@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using ExCSS;
+using System.Runtime.InteropServices;
 using static Sandbox.ModelRenderer;
 
 namespace Sandbox;
@@ -17,10 +18,53 @@ public partial class Terrain
 
 	private SceneObject _so { get; set; }
 
+	/// <summary>
+	/// Create buffers needed for terrain rendering, set sane empties, always bound
+	/// </summary>
+	void CreateBuffers()
+	{
+		TerrainBuffer ??= new( 1 );
+		MaterialsBuffer ??= new( 64 );
+
+		var gpuTerrain = new GPUTerrain()
+		{
+			Transform = Matrix.Identity,
+			TransformInv = Matrix.Identity,
+			HeightMapTextureID = 0,
+			ControlMapTextureID = 0,
+			Resolution = 1024,
+			HeightScale = 1024,
+			HeightBlending = false,
+			HeightBlendSharpness = 0
+		};
+
+		var gpuMaterials = new GPUTerrainMaterial[64];
+		for ( int i = 0; i < 64; i++ )
+		{
+			gpuMaterials[i] = new GPUTerrainMaterial
+			{
+				BCRTextureID = 0,
+				NHOTextureID = 0,
+				UVScale = 1.0f,
+				Metalness = 0.0f,
+				NormalStrength = 1.0f,
+				HeightBlendStrength = 1.0f,
+				DisplacementScale = 0.0f,
+				Flags = TerrainFlags.None,
+			};
+		}
+
+		TerrainBuffer.SetData( new List<GPUTerrain>() { gpuTerrain } );
+		MaterialsBuffer.SetData( gpuMaterials );
+	}
+
 	void CreateClipmapSceneObject()
 	{
 		if ( !Active || Application.IsHeadless )
 			return;
+
+		// These get created once
+		CreateBuffers();
 
 		Assert.NotNull( Scene );
 
@@ -46,7 +90,15 @@ public partial class Terrain
 		_so.Flags.CastShadows = RenderType == ShadowRenderType.On || RenderType == ShadowRenderType.ShadowsOnly;
 
 		// If we have no textures, push a grid texture (SUCKS)
-		_so.Attributes.SetCombo( "D_GRID", Storage.Materials.Count == 0 );
+		_so.Attributes.SetCombo( "D_GRID", Storage?.Materials.Count == 0 );
+
+		_so.Attributes.Set( "Terrain", TerrainBuffer );
+		_so.Attributes.Set( "TerrainMaterials", MaterialsBuffer );
+
+		// We want these accessible globally too, probably
+		Scene.RenderAttributes.Set( "Terrain", TerrainBuffer );
+		Scene.RenderAttributes.Set( "TerrainMaterials", MaterialsBuffer );
+		Scene.RenderAttributes.Set( "TerrainCount", 1 );
 
 		_clipMapLodLevels = ClipMapLodLevels;
 		_clipMapLodExtentTexels = ClipMapLodExtentTexels;
@@ -70,13 +122,13 @@ public partial class Terrain
 		public float HeightBlendSharpness;
 	}
 
-	[StructLayout( LayoutKind.Sequential, Pack = 0 )]
+	[StructLayout( LayoutKind.Sequential )]
 	private struct GPUTerrainMaterial
 	{
 		public int BCRTextureID;
 		public int NHOTextureID;
 		public float UVScale;
-		public float UVRotation;
+		public TerrainFlags Flags;
 		public float Metalness;
 		public float HeightBlendStrength;
 		public float NormalStrength;
@@ -98,9 +150,6 @@ public partial class Terrain
 		if ( Storage is null )
 			return;
 
-		if ( TerrainBuffer is null )
-			TerrainBuffer = new( 1 );
-
 		var transform = Matrix.FromTransform( WorldTransform );
 
 		var gpuTerrain = new GPUTerrain()
@@ -116,14 +165,11 @@ public partial class Terrain
 		};
 
 		// Upload to the GPU buffer
-		TerrainBuffer?.SetData( new List<GPUTerrain>() { gpuTerrain } );
-
-		_so.Attributes.Set( "Terrain", TerrainBuffer );
-		Scene.RenderAttributes.Set( "Terrain", TerrainBuffer );
+		TerrainBuffer.SetData( new List<GPUTerrain>() { gpuTerrain } );
 	}
 
 	/// <summary>
-	/// Upload the Terrain buffer, this should be called when materials are added, removed or modified.
+	/// Upload the Materials buffer, this should be called when materials are added, removed or modified.
 	/// </summary>
 	public unsafe void UpdateMaterialsBuffer()
 	{
@@ -134,17 +180,8 @@ public partial class Terrain
 		if ( Storage is null )
 			return;
 
-		// Support up to 32 materials for indexed splatmap
-		int materialCount = Math.Max( 4, Math.Min( Storage.Materials.Count, 32 ) );
-
-		if ( MaterialsBuffer is null || MaterialsBuffer.ElementCount != materialCount )
-		{
-			MaterialsBuffer?.Dispose();
-			MaterialsBuffer = new( materialCount );
-		}
-
-		var gpuMaterials = new GPUTerrainMaterial[materialCount];
-		for ( int i = 0; i < materialCount; i++ )
+		var gpuMaterials = new GPUTerrainMaterial[64];
+		for ( int i = 0; i < 64; i++ )
 		{
 			var layer = Storage.Materials.ElementAtOrDefault( i );
 
@@ -153,18 +190,15 @@ public partial class Terrain
 				BCRTextureID = layer?.BCRTexture?.Index ?? 0,
 				NHOTextureID = layer?.NHOTexture?.Index ?? 0,
 				UVScale = 1.0f / (layer?.UVScale ?? 1.0f),
-				UVRotation = layer?.UVRotation ?? 1.0f,
 				Metalness = layer?.Metalness ?? 0.0f,
 				NormalStrength = 1.0f / (layer?.NormalStrength ?? 1.0f),
 				HeightBlendStrength = layer?.HeightBlendStrength ?? 1.0f,
 				DisplacementScale = layer?.DisplacementScale ?? 0.0f,
+				Flags = layer?.Flags ?? TerrainFlags.None,
 			};
 		}
 
-		MaterialsBuffer?.SetData( gpuMaterials );
-
-		_so.Attributes.Set( "TerrainMaterials", MaterialsBuffer );
-		Scene.RenderAttributes.Set( "TerrainMaterials", MaterialsBuffer );
+		MaterialsBuffer.SetData( gpuMaterials );
 
 		// If we have no textures, push a grid texture (SUCKS)
 		_so.Attributes.SetCombo( "D_GRID", Storage.Materials.Count == 0 );

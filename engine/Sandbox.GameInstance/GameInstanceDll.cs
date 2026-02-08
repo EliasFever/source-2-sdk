@@ -68,15 +68,12 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			}
 		}
 
-		Assert.IsNull( PackageLoader );
+		PackageLoader?.Dispose();
 		PackageLoader = new PackageLoader( "GameMenu", typeof( GameInstanceDll ).Assembly );
 		PackageLoader.HotloadWatch( Game.GameAssembly ); // Sandbox.Game is per instance
 		PackageLoader.OnAfterHotload = OnAfterHotload;
 
-		{
-			ConVarSystem.AddAssembly( GetType().Assembly, "game" );
-			ConVarSystem.AddAssembly( Game.GameAssembly, "game" );
-		}
+		ConVarSystem.AddAssembly( Game.GameAssembly, "game" );
 	}
 
 	public Task Initialize()
@@ -136,6 +133,7 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 
 		if ( DidMountNetworkedFiles )
 		{
+			EngineFileSystem.Mounted.UnMount( NetworkedLargeFiles.Files );
 			EngineFileSystem.Mounted.UnMount( NetworkedSmallFiles.Files );
 			EngineFileSystem.ProjectSettings.UnMount( NetworkedConfigFiles.Files );
 			DidMountNetworkedFiles = false;
@@ -236,11 +234,14 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			}
 		};
 
-		// Clear resource library so resources don't leak between games,
-		// then let IMenuDll reload whatever resources it needs
-
-		Game.Resources.Clear();
 		IMenuDll.Current?.Reset();
+
+		// Run GC and finalizers to clear any native resources held
+		GC.Collect();
+		GC.WaitForPendingFinalizers();
+
+		// Run the queue one more time, since some finalizers queue tasks
+		MainThread.RunQueues();
 	}
 
 	/// <summary>
@@ -281,8 +282,8 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 		//
 		// Strip the SERVER define from the archive's DefineConstants
 		//
-		var parts = config.DefineConstants.Split( ';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries ).ToList();
-		parts.RemoveAll( x => x.Equals( "SERVER", StringComparison.OrdinalIgnoreCase ) );
+		var parts = config.GetPreprocessorSymbols();
+		parts.RemoveWhere( x => x.Equals( "SERVER", StringComparison.OrdinalIgnoreCase ) );
 
 		var newConfig = config with { DefineConstants = string.Join( ";", parts ) };
 
@@ -436,7 +437,12 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			//
 			using ( Performance.Scope( "GameFrame" ) )
 			{
-				RunGameFrame( scene );
+				// The old scene could be invalid here as a network message may end
+				// up destroying it (such as changing a scene)
+				if ( scene.IsValid() )
+				{
+					RunGameFrame( scene );
+				}
 			}
 
 			Networking.PostFrameTick();
@@ -446,7 +452,6 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 
 		if ( !Application.IsDedicatedServer )
 		{
-			ActionGraphDebugger.Tick();
 			RichPresenceSystem.Tick();
 			Services.Achievements.Tick();
 		}
@@ -588,6 +593,8 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 				newInstance = new GameInstance( ident, flags );
 			}
 
+			using var _ = GlobalContext.GameScope();
+
 			ResetEnvironment();
 
 			NativeErrorReporter.Breadcrumb( true, "game", $"Loading game package {ident}" );
@@ -702,7 +709,7 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 	/// Called when the game menu is closed
 	/// </summary>
 	/// <param name="instance"></param>
-	public void OnGameInstanceClosed( IGameInstance instance )
+	public void Shutdown( IGameInstance instance )
 	{
 		NativeErrorReporter.Breadcrumb( true, "game", "Closed game instance" );
 		NativeErrorReporter.SetTag( "game", null );

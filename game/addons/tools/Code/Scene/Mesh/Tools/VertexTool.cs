@@ -39,6 +39,12 @@ public sealed partial class VertexTool( MeshTool tool ) : SelectionTool<MeshVert
 			{
 				var worldPos = transform.PointToWorld( mesh.GetVertexPosition( v ) );
 
+				if ( !Tool.SelectionThrough && IsVertexOccluded( worldPos, Gizmo.Camera.Position ) )
+				{
+					previous.Add( new MeshVertex( component, v ) );
+					continue;
+				}
+
 				if ( frustum.IsInside( worldPos ) )
 				{
 					selection.Add( new MeshVertex( component, v ) );
@@ -50,16 +56,30 @@ public sealed partial class VertexTool( MeshTool tool ) : SelectionTool<MeshVert
 			}
 		}
 
-		foreach ( var v in selection )
+		if ( Application.KeyboardModifiers.HasFlag( KeyboardModifiers.Ctrl ) )
 		{
-			if ( !Selection.Contains( v ) )
-				Selection.Add( v );
+			foreach ( var v in selection )
+			{
+				if ( Selection.Contains( v ) )
+					Selection.Remove( v );
+			}
 		}
-
-		foreach ( var v in previous )
+		else
 		{
-			if ( Selection.Contains( v ) )
-				Selection.Remove( v );
+			foreach ( var v in selection )
+			{
+				if ( !Selection.Contains( v ) )
+					Selection.Add( v );
+			}
+
+			if ( !Application.KeyboardModifiers.HasFlag( KeyboardModifiers.Shift ) )
+			{
+				foreach ( var v in previous )
+				{
+					if ( Selection.Contains( v ) )
+						Selection.Remove( v );
+				}
+			}
 		}
 	}
 
@@ -69,11 +89,11 @@ public sealed partial class VertexTool( MeshTool tool ) : SelectionTool<MeshVert
 
 		using var scope = Gizmo.Scope( "VertexTool" );
 
-		var closestVertex = GetClosestVertex( 8 );
+		var closestVertex = MeshTrace.GetClosestVertex( 8 );
 		if ( closestVertex.IsValid() )
 			Gizmo.Hitbox.TrySetHovered( closestVertex.PositionWorld );
 
-		if ( Gizmo.IsHovered )
+		if ( Gizmo.IsHovered && Tool.MoveMode.AllowSceneSelection )
 		{
 			SelectVertex();
 
@@ -91,9 +111,42 @@ public sealed partial class VertexTool( MeshTool tool ) : SelectionTool<MeshVert
 		}
 	}
 
+	protected override IEnumerable<MeshVertex> ConvertSelectionToCurrentType()
+	{
+		foreach ( var face in Selection.OfType<MeshFace>() )
+		{
+			if ( !face.IsValid() )
+				continue;
+
+			var mesh = face.Component.Mesh;
+			mesh.GetVerticesConnectedToFace( face.Handle, out var vertices );
+
+			foreach ( var vertex in vertices )
+			{
+				if ( vertex.IsValid )
+					yield return new MeshVertex( face.Component, vertex );
+			}
+		}
+
+		foreach ( var edge in Selection.OfType<MeshEdge>() )
+		{
+			if ( !edge.IsValid() )
+				continue;
+
+			var mesh = edge.Component.Mesh;
+			mesh.GetEdgeVertices( edge.Handle, out var vertexA, out var vertexB );
+
+			if ( vertexA.IsValid )
+				yield return new MeshVertex( edge.Component, vertexA );
+
+			if ( vertexB.IsValid )
+				yield return new MeshVertex( edge.Component, vertexB );
+		}
+	}
+
 	private void SelectVertex()
 	{
-		var vertex = GetClosestVertex( 8 );
+		var vertex = MeshTrace.GetClosestVertex( 8 );
 		if ( vertex.IsValid() )
 		{
 			using ( Gizmo.ObjectScope( vertex.Component.GameObject, vertex.Transform ) )
@@ -112,7 +165,7 @@ public sealed partial class VertexTool( MeshTool tool ) : SelectionTool<MeshVert
 
 	private void SelectAllVertices()
 	{
-		var vertex = GetClosestVertex( 8 );
+		var vertex = MeshTrace.GetClosestVertex( 8 );
 		if ( !vertex.IsValid() )
 			return;
 
@@ -135,5 +188,40 @@ public sealed partial class VertexTool( MeshTool tool ) : SelectionTool<MeshVert
 			foreach ( var hVertex in component.Mesh.VertexHandles )
 				yield return new MeshVertex( component, hVertex );
 		}
+	}
+
+	protected override IEnumerable<MeshVertex> GetConnectedSelectionElements()
+	{
+		var unique = new HashSet<MeshVertex>();
+
+		foreach ( var component in Selection.OfType<GameObject>()
+			.Select( x => x.GetComponent<MeshComponent>() )
+			.Where( x => x.IsValid() ) )
+		{
+			foreach ( var vertex in component.Mesh.VertexHandles )
+			{
+				unique.Add( new MeshVertex( component, vertex ) );
+			}
+		}
+
+		foreach ( var face in Selection.OfType<MeshFace>() )
+		{
+			face.Component.Mesh.GetVerticesConnectedToFace( face.Handle, out var vertices );
+
+			foreach ( var vertex in vertices )
+			{
+				unique.Add( new MeshVertex( face.Component, vertex ) );
+			}
+		}
+
+		foreach ( var edge in Selection.OfType<MeshEdge>() )
+		{
+			edge.Component.Mesh.GetVerticesConnectedToEdge( edge.Handle, out var vertexA, out var vertexB );
+
+			unique.Add( new MeshVertex( edge.Component, vertexA ) );
+			unique.Add( new MeshVertex( edge.Component, vertexB ) );
+		}
+
+		return unique;
 	}
 }

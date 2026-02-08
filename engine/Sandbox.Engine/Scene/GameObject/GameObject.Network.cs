@@ -39,21 +39,27 @@ public partial class GameObject
 	/// </summary>
 	public NetworkMode NetworkMode
 	{
-		get => _networkMode;
+		get;
 		set
 		{
 			if ( _net is not null )
 			{
+				// The host can change the network mode of an existing networked object.
+				if ( Networking.IsHost && value != NetworkMode.Object )
+				{
+					field = value;
+					DetachFromNetwork();
+					return;
+				}
+
 				// We must always be `NetworkMode.Object` if we're a networked object.
-				_networkMode = NetworkMode.Object;
+				field = NetworkMode.Object;
 				return;
 			}
 
-			_networkMode = value;
+			field = value;
 		}
-	}
-
-	private NetworkMode _networkMode = NetworkMode.Snapshot;
+	} = NetworkMode.Snapshot;
 
 	/// <summary>
 	/// A component that can control our network visibility to a specific <see cref="Connection"/>.
@@ -72,6 +78,13 @@ public partial class GameObject
 	/// </summary>
 	[Sync, Expose] private NetworkOrphaned NetworkOrphaned { get; set; } = NetworkOrphaned.Destroy;
 
+
+	/// <summary>
+	/// Network flags that describe the behavior of this <see cref="GameObject"/> as a <see cref="NetworkObject"/>.
+	/// </summary>
+	[Property, Sync( SyncFlags.FromHost ), Expose]
+	private NetworkFlags NetworkFlags { get; set; } = NetworkFlags.None;
+
 	/// <summary>
 	/// Determines whether updates for this networked object are always transmitted to clients. Otherwise,
 	/// they are only transmitted when the object is determined as visible to each client.
@@ -81,8 +94,29 @@ public partial class GameObject
 	/// <summary>
 	/// Whether our networked transform will be interpolated. This property will only
 	/// be synchronized for a root network object.
+	///
+	/// Obsolete: 09/12/2025
 	/// </summary>
-	[Property, Sync, Expose] public bool NetworkInterpolation { get; set; } = true;
+	[Obsolete( "Use Network.Interpolation or Network.Flags" )]
+	[Property, Expose] public bool NetworkInterpolation { get; set; } = true;
+
+	/// <summary>
+	/// Detach the network connection for this networked object. This will turn it into a regular
+	/// object for all clients, and it will no longer receive network updates.
+	/// </summary>
+	internal void DetachFromNetwork()
+	{
+		if ( _net is null )
+			return;
+
+		if ( Networking.IsHost )
+		{
+			_net.SendNetworkDetach();
+		}
+
+		ClearNetworking();
+		UpdateNetworkRoot();
+	}
 
 	/// <summary>
 	/// Spawn on the network. If you have permission to spawn entities, this will spawn on
@@ -115,11 +149,6 @@ public partial class GameObject
 			return false;
 		}
 
-		if ( IsPrefabInstanceRoot )
-		{
-			PrefabInstanceData.BreakAllPrefabInstanceInHierarchy( this );
-		}
-
 		// We may contain other networked children. In which case we want to send
 		// them all in a singular message to keep any references
 		using ( SceneNetworkSystem.Instance?.NetworkSpawnBatch() )
@@ -135,13 +164,16 @@ public partial class GameObject
 			if ( options.AlwaysTransmit.HasValue )
 				AlwaysTransmit = options.AlwaysTransmit.Value;
 
+			if ( options.Flags.HasValue )
+				NetworkFlags = options.Flags.Value;
+
 			// Give us a network object
 			_net = new NetworkObject( this );
 
 			// Tell all children that we're the network root
 			UpdateNetworkRoot();
 
-			// Make this connection the owner
+			// Give ownership to this connection
 			_net.InitializeForConnection( options.Owner, options.StartEnabled );
 		}
 
@@ -183,6 +215,8 @@ public partial class GameObject
 		_net = new NetworkObject( this );
 		_net.Initialize( msg );
 
+		NetworkMode = NetworkMode.Object;
+
 		UpdateNetworkRoot();
 	}
 
@@ -201,7 +235,8 @@ public partial class GameObject
 
 	void ClearNetworking()
 	{
-		if ( _net is null ) return;
+		if ( _net is null )
+			return;
 
 		_net.Dispose();
 		_net = null;
@@ -210,11 +245,10 @@ public partial class GameObject
 	/// <summary>
 	/// Make a request from the host to stop being the network owner of this game object.
 	/// </summary>
-	[Rpc.Broadcast]
+	[Rpc.Host]
 	void Msg_RequestDropOwnership( ushort snapshotVersion )
 	{
 		if ( _net is null ) return;
-		if ( !Networking.IsHost ) return;
 		if ( OwnerTransfer != OwnerTransfer.Request ) return;
 
 		var caller = Rpc.Caller;
@@ -261,11 +295,10 @@ public partial class GameObject
 	/// <summary>
 	/// Make a request from the host to become the network owner of this game object.
 	/// </summary>
-	[Rpc.Broadcast]
+	[Rpc.Host]
 	void Msg_RequestTakeOwnership( ushort snapshotVersion )
 	{
 		if ( _net is null ) return;
-		if ( !Networking.IsHost ) return;
 		if ( OwnerTransfer != OwnerTransfer.Request ) return;
 
 		// Can this caller take ownership?
@@ -331,11 +364,10 @@ public partial class GameObject
 	/// <summary>
 	/// Make a request from the host to assign ownership of this game object to the specified connection <see cref="Guid"/>.
 	/// </summary>
-	[Rpc.Broadcast]
+	[Rpc.Host]
 	void Msg_RequestAssignOwnership( Guid guid, ushort snapshotVersion )
 	{
 		if ( _net is null ) return;
-		if ( !Networking.IsHost ) return;
 		if ( OwnerTransfer != OwnerTransfer.Request ) return;
 
 		// Can this caller assign ownership?
@@ -412,9 +444,16 @@ public partial class GameObject
 
 	[EditorBrowsable( EditorBrowsableState.Never )]
 	[MethodImpl( MethodImplOptions.AggressiveInlining )]
+	protected void __rpc_Wrapper<T>( in WrappedMethod m, T[] argument )
+	{
+		Rpc.OnCallInstanceRpc( this, null, m, [argument] );
+	}
+
+	[EditorBrowsable( EditorBrowsableState.Never )]
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	protected void __rpc_Wrapper( in WrappedMethod m, params object[] argumentList )
 	{
-		Rpc.OnCallInstanceRpc( this, default, m, argumentList );
+		Rpc.OnCallInstanceRpc( this, null, m, argumentList );
 	}
 
 	/// <summary>
@@ -515,7 +554,7 @@ public partial class GameObject
 		}
 
 		/// <summary>
-		/// Is this object networked
+		/// Is this object networked?
 		/// </summary>
 		public bool Active => go._net is not null;
 
@@ -525,7 +564,7 @@ public partial class GameObject
 		public GameObject RootGameObject => go;
 
 		/// <summary>
-		/// Are we the owner of this network object
+		/// Are we the owner of this network object?
 		/// </summary>
 		[ActionGraphInclude]
 		public bool IsOwner => OwnerId == Connection.Local.Id;
@@ -542,13 +581,13 @@ public partial class GameObject
 		public bool IsCreator => CreatorId == Connection.Local.Id;
 
 		/// <summary>
-		/// The Id of the create of this object
+		/// The Id of the creator of this object
 		/// </summary>
 		public Guid CreatorId => go._net?.Creator ?? Guid.Empty;
 
 		/// <summary>
-		/// Is this object a network proxy. A network proxy is a network object that is not being simulated on the local pc.
-		/// This means it's either owned by no-one and is being simulated by the host, or owned by another client.
+		/// Is this object a network proxy? A network proxy is a network object that is not being simulated on the local pc.
+		/// This means it's either owned by no-one and is being simulated by the host or owned by another client.
 		/// </summary>
 		[ActionGraphInclude]
 		public bool IsProxy => go._net?.IsProxy ?? false;
@@ -583,6 +622,16 @@ public partial class GameObject
 		internal ushort SnapshotVersion => go._net?.SnapshotVersion ?? 0;
 
 		/// <summary>
+		/// Network flags which describe the behavior of this networked object.
+		/// <b>Can only be changed by the host after the networked object has been spawned.</b>
+		/// </summary>
+		public NetworkFlags Flags
+		{
+			get => go.NetworkFlags;
+			set => go.NetworkFlags = value;
+		}
+
+		/// <summary>
 		/// Determines whether updates for this networked object are always transmitted to clients. Otherwise,
 		/// they are only transmitted when the object is determined as visible to each client.
 		/// </summary>
@@ -604,25 +653,49 @@ public partial class GameObject
 		/// <summary>
 		/// Whether the networked object's transform is interpolated.
 		/// </summary>
-		public bool Interpolation => go.NetworkInterpolation;
+		public bool Interpolation
+		{
+			get => (Flags & NetworkFlags.NoInterpolation) == 0;
+			set
+			{
+				if ( IsProxy && !Networking.IsHost )
+					return;
+
+				if ( Interpolation == value )
+					return;
+
+				if ( value )
+					Flags &= ~NetworkFlags.NoInterpolation;
+				else
+					Flags |= NetworkFlags.NoInterpolation;
+			}
+		}
 
 		/// <summary>
 		/// Enable interpolation for the networked object's transform.
+		/// Obsolete: 09/12/2025
 		/// </summary>
+		[Obsolete( "Use Interpolation Property" )]
 		public bool EnableInterpolation()
 		{
-			if ( IsProxy ) return false;
-			go.NetworkInterpolation = true;
+			if ( IsProxy && !Networking.IsHost )
+				return false;
+
+			Interpolation = true;
 			return true;
 		}
 
 		/// <summary>
 		/// Disable interpolation for the networked object's transform.
+		/// Obsolete: 09/12/2025
 		/// </summary>
+		[Obsolete( "Use Interpolation Property" )]
 		public bool DisableInterpolation()
 		{
-			if ( IsProxy ) return false;
-			go.NetworkInterpolation = false;
+			if ( IsProxy && !Networking.IsHost )
+				return false;
+
+			Interpolation = false;
 			return true;
 		}
 
@@ -661,7 +734,8 @@ public partial class GameObject
 		/// </summary>
 		public void Refresh()
 		{
-			if ( IsProxy && !Networking.IsHost ) return;
+			if ( !Active || (IsProxy && !Networking.IsHost) )
+				return;
 
 			var connection = Connection.Local;
 			if ( !connection.CanRefreshObjects )
@@ -681,7 +755,8 @@ public partial class GameObject
 		/// </summary>
 		public void Refresh( GameObject descendent )
 		{
-			if ( IsProxy && !Networking.IsHost ) return;
+			if ( !Active || (IsProxy && !Networking.IsHost) )
+				return;
 
 			var connection = Connection.Local;
 			if ( !connection.CanRefreshObjects )
@@ -700,7 +775,8 @@ public partial class GameObject
 		/// </summary>
 		public void Refresh( Component component )
 		{
-			if ( IsProxy && !Networking.IsHost ) return;
+			if ( !Active || (IsProxy && !Networking.IsHost) )
+				return;
 
 			var connection = Connection.Local;
 			if ( !connection.CanRefreshObjects )
@@ -757,12 +833,7 @@ public partial class GameObject
 
 			if ( !IsProxy )
 			{
-				// Clear interpolation and set that flag here.
-				go.Transform.ClearInterpolation();
-
-				// Force a delta snapshot for this object since we changed owner.
-				var system = SceneNetworkSystem.Instance;
-				system?.DeltaSnapshots?.Send( go._net, NetFlags.Reliable, true );
+				UpdateStateBeforeOwnerChange();
 			}
 
 			if ( !Networking.IsHost && go.OwnerTransfer == OwnerTransfer.Request )
@@ -787,12 +858,7 @@ public partial class GameObject
 
 			if ( !IsProxy )
 			{
-				// Clear interpolation and set that flag here.
-				go.Transform.ClearInterpolation();
-
-				// Force a delta snapshot for this object since we changed owner.
-				var system = SceneNetworkSystem.Instance;
-				system?.DeltaSnapshots?.Send( go._net, NetFlags.Reliable, true );
+				UpdateStateBeforeOwnerChange();
 			}
 
 			go.Msg_AssignOwnership( connectionId, go.Network.SnapshotVersion );
@@ -834,12 +900,7 @@ public partial class GameObject
 
 			if ( !IsProxy )
 			{
-				// Clear interpolation and set that flag here.
-				go.Transform.ClearInterpolation();
-
-				// Force a delta snapshot for this object since we changed owner.
-				var system = SceneNetworkSystem.Instance;
-				system?.DeltaSnapshots?.Send( go._net, NetFlags.Reliable, true );
+				UpdateStateBeforeOwnerChange();
 			}
 
 			if ( Networking.IsHost )
@@ -877,6 +938,26 @@ public partial class GameObject
 		public bool Spawn( Connection owner )
 		{
 			return go.NetworkSpawn( owner );
+		}
+
+		/// <summary>
+		/// Before we drop ownership (or assign ownership to somebody else), there are a few things
+		/// we want to do first. We want to let any listeners know so that they can react to it, we
+		/// want to clear interpolation, and finally, we want to force a full delta snapshot of the
+		/// object's state.
+		/// </summary>
+		private void UpdateStateBeforeOwnerChange()
+		{
+			// Let any listeners know that we're about to drop ownership and send
+			// a full state update to everyone
+			IGameObjectNetworkEvents.PostToGameObject( go, x => x.BeforeDropOwnership() );
+
+			// Clear interpolation and set that flag here
+			go.Transform.ClearInterpolation();
+
+			// Force a delta snapshot for this object since we changed the owner
+			var system = SceneNetworkSystem.Instance;
+			system?.DeltaSnapshots?.Send( go._net, NetFlags.Reliable, true );
 		}
 	}
 }

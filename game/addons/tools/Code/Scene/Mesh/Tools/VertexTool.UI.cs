@@ -14,11 +14,15 @@ partial class VertexTool
 		private readonly MeshVertex[] _vertices;
 		private readonly List<IGrouping<MeshComponent, MeshVertex>> _vertexGroups;
 		private readonly List<MeshComponent> _components;
+		readonly MeshTool _tool;
 
 		public enum MergeRange
 		{
+			[Icon( "all_inclusive" ), Description( "Merge all vertices regardless of distance." )]
 			Infinite,
+			[Icon( "grid_on" ), Description( "Merge vertices within the current grid spacing." )]
 			Grid,
+			[Icon( "straighten" ), Description( "Merge vertices within a fixed distance." )]
 			Fixed,
 		}
 
@@ -39,6 +43,8 @@ partial class VertexTool
 
 		public VertexSelectionWidget( SerializedObject so, MeshTool tool ) : base()
 		{
+			_tool = tool;
+
 			AddTitle( "Vertex Mode", "workspaces" );
 
 			{
@@ -56,42 +62,56 @@ partial class VertexTool
 			_components = _vertexGroups.Select( x => x.Key ).ToList();
 
 			{
-				var row = new Widget { Layout = Layout.Row() };
-				row.Layout.Spacing = 4;
+				var group = AddGroup( "Operations" );
 
-				CreateButton( "Merge", "merge", "mesh.merge", Merge, _vertices.Length > 1, row.Layout );
+				{
+					var row = new Widget { Layout = Layout.Row() };
+					row.Layout.Spacing = 4;
 
-				var mergeObject = mergeProperties.GetSerialized();
-				var range = ControlWidget.Create( mergeObject.GetProperty( nameof( MergeProperties.Range ) ) );
-				var distance = ControlWidget.Create( mergeObject.GetProperty( nameof( MergeProperties.Distance ) ) );
-				distance.HorizontalSizeMode = SizeMode.Expand;
+					CreateButton( "Merge", "merge", "mesh.merge", Merge, _vertices.Length > 1, row.Layout );
 
-				range.FixedHeight = Theme.ControlHeight;
-				distance.FixedHeight = Theme.ControlHeight;
+					var mergeObject = mergeProperties.GetSerialized();
+					var range = ControlWidget.Create( mergeObject.GetProperty( nameof( MergeProperties.Range ) ) );
+					var distance = ControlWidget.Create( mergeObject.GetProperty( nameof( MergeProperties.Distance ) ) );
+					distance.HorizontalSizeMode = SizeMode.Expand;
 
-				row.Layout.Add( range );
-				row.Layout.Add( distance );
+					range.FixedHeight = Theme.ControlHeight;
+					distance.FixedHeight = Theme.ControlHeight;
 
-				Layout.Add( row );
-			}
-			{
-				var row = new Widget { Layout = Layout.Row() };
-				row.Layout.Spacing = 4;
+					row.Layout.Add( range );
+					row.Layout.Add( distance );
 
-				CreateButton( "Snap To Vertex", "gps_fixed", "mesh.snap_to_vertex", SnapToVertex, _vertices.Length > 1, row.Layout );
-				CreateButton( "Weld UVs", "scatter_plot", "mesh.vertex-weld-uvs", WeldUVs, _vertices.Length > 0, row.Layout );
-				CreateButton( "Bevel", "straighten", "mesh.bevel", Bevel, _vertices.Length > 0, row.Layout );
-				CreateButton( "Connect", "link", "mesh.connect", Connect, _vertices.Length > 1, row.Layout );
+					group.Add( row );
+				}
 
-				row.Layout.AddStretchCell();
+				{
+					var row = new Widget { Layout = Layout.Row() };
+					row.Layout.Spacing = 4;
 
-				Layout.Add( row );
+					CreateButton( "Snap To Vertex", "gps_fixed", "mesh.snap_to_vertex", SnapToVertex, _vertices.Length > 1, row.Layout );
+					CreateButton( "Weld UVs", "scatter_plot", "mesh.vertex-weld-uvs", WeldUVs, _vertices.Length > 0, row.Layout );
+					CreateButton( "Bevel", "straighten", "mesh.bevel", Bevel, _vertices.Length > 0, row.Layout );
+					CreateButton( "Connect", "link", "mesh.connect", Connect, _vertices.Length > 1, row.Layout );
+					CreateButton( "Edge Cut Tool", "content_cut", "mesh.edge-cut-tool", OpenEdgeCutTool, true, row.Layout );
+
+					row.Layout.AddStretchCell();
+
+					group.Add( row );
+				}
 			}
 
 			Layout.AddStretchCell();
 		}
 
-		[Shortcut( "mesh.connect", "V", typeof( SceneViewportWidget ) )]
+		[Shortcut( "mesh.edge-cut-tool", "C", typeof( SceneViewWidget ) )]
+		void OpenEdgeCutTool()
+		{
+			var tool = new EdgeCutTool( nameof( VertexTool ) );
+			tool.Manager = _tool.Manager;
+			_tool.CurrentTool = tool;
+		}
+
+		[Shortcut( "mesh.connect", "V", typeof( SceneViewWidget ) )]
 		private void Connect()
 		{
 			if ( _vertices.Length < 2 )
@@ -154,7 +174,7 @@ partial class VertexTool
 			}
 		}
 
-		[Shortcut( "mesh.snap_to_vertex", "B", typeof( SceneViewportWidget ) )]
+		[Shortcut( "mesh.snap_to_vertex", "B", typeof( SceneViewWidget ) )]
 		private void SnapToVertex()
 		{
 			if ( _vertices.Length < 2 )
@@ -172,7 +192,7 @@ partial class VertexTool
 			}
 		}
 
-		[Shortcut( "mesh.vertex-weld-uvs", "CTRL+F", typeof( SceneViewportWidget ) )]
+		[Shortcut( "mesh.vertex-weld-uvs", "CTRL+F", typeof( SceneViewWidget ) )]
 		private void WeldUVs()
 		{
 			if ( _vertices.Length < 1 )
@@ -193,7 +213,7 @@ partial class VertexTool
 			}
 		}
 
-		[Shortcut( "mesh.bevel", "F", typeof( SceneViewportWidget ) )]
+		[Shortcut( "mesh.bevel", "F", typeof( SceneViewWidget ) )]
 		private void Bevel()
 		{
 			if ( _vertices.Length <= 0 )
@@ -221,7 +241,7 @@ partial class VertexTool
 			}
 		}
 
-		[Shortcut( "mesh.merge", "M", typeof( SceneViewportWidget ) )]
+		[Shortcut( "mesh.merge", "M", typeof( SceneViewWidget ) )]
 		private void Merge()
 		{
 			if ( _vertices.Length < 2 )
@@ -273,7 +293,7 @@ partial class VertexTool
 			}
 		}
 
-		[Shortcut( "editor.delete", "DEL", typeof( SceneViewportWidget ) )]
+		[Shortcut( "editor.delete", "DEL", typeof( SceneViewWidget ) )]
 		private void DeleteSelection()
 		{
 			var groups = _vertices.GroupBy( face => face.Component );
@@ -288,6 +308,156 @@ partial class VertexTool
 				foreach ( var group in groups )
 					group.Key.Mesh.RemoveVertices( group.Select( x => x.Handle ) );
 			}
+		}
+
+		[Shortcut( "mesh.grow-selection", "KP_ADD", typeof( SceneViewWidget ) )]
+		private void GrowSelection()
+		{
+			if ( _vertices.Length == 0 ) return;
+
+			using var scope = SceneEditorSession.Scope();
+
+			using ( SceneEditorSession.Active.UndoScope( "Grow Selection" )
+				.WithComponentChanges( _components )
+				.Push() )
+			{
+				var selection = SceneEditorSession.Active.Selection;
+				var newVertices = new HashSet<MeshVertex>();
+
+				foreach ( var vertex in _vertices )
+				{
+					if ( !vertex.IsValid() )
+						continue;
+
+					newVertices.Add( vertex );
+				}
+
+				foreach ( var vertex in _vertices )
+				{
+					if ( !vertex.IsValid() )
+						continue;
+
+					var mesh = vertex.Component.Mesh;
+
+					mesh.GetEdgesConnectedToVertex( vertex.Handle, out var edges );
+
+					foreach ( var edge in edges )
+					{
+						mesh.GetEdgeVertices( edge, out var vertexA, out var vertexB );
+
+						var otherVertex = vertexA == vertex.Handle ? vertexB : vertexA;
+						if ( otherVertex.IsValid )
+							newVertices.Add( new MeshVertex( vertex.Component, otherVertex ) );
+					}
+				}
+
+				selection.Clear();
+				foreach ( var vertex in newVertices )
+				{
+					if ( vertex.IsValid() )
+						selection.Add( vertex );
+				}
+			}
+		}
+
+		[Shortcut( "mesh.shrink-selection", "KP_MINUS", typeof( SceneViewWidget ) )]
+		private void ShrinkSelection()
+		{
+			if ( _vertices.Length == 0 ) return;
+
+			using var scope = SceneEditorSession.Scope();
+
+			using ( SceneEditorSession.Active.UndoScope( "Shrink Selection" )
+				.WithComponentChanges( _components )
+				.Push() )
+			{
+				var selection = SceneEditorSession.Active.Selection;
+				var verticesToKeep = new HashSet<MeshVertex>();
+
+				foreach ( var vertex in _vertices )
+				{
+					if ( !vertex.IsValid() )
+						continue;
+
+					var mesh = vertex.Component.Mesh;
+					mesh.GetEdgesConnectedToVertex( vertex.Handle, out var edges );
+
+					bool isInterior = true;
+
+					foreach ( var edge in edges )
+					{
+						mesh.GetEdgeVertices( edge, out var vertexA, out var vertexB );
+						var otherVertex = vertexA == vertex.Handle ? vertexB : vertexA;
+
+						if ( !otherVertex.IsValid )
+						{
+							isInterior = false;
+							break;
+						}
+
+						var otherMeshVertex = new MeshVertex( vertex.Component, otherVertex );
+						if ( !_vertices.Contains( otherMeshVertex ) )
+						{
+							isInterior = false;
+							break;
+						}
+					}
+
+					if ( isInterior )
+					{
+						verticesToKeep.Add( vertex );
+					}
+				}
+
+				selection.Clear();
+				foreach ( var vertex in verticesToKeep )
+				{
+					if ( vertex.IsValid() )
+						selection.Add( vertex );
+				}
+			}
+		}
+
+		[Shortcut( "mesh.snap-to-grid", "CTRL+B", typeof( SceneViewWidget ) )]
+		private void SnapToGrid()
+		{
+			if ( _vertices.Length == 0 )
+				return;
+
+			using var scope = SceneEditorSession.Scope();
+
+			var grid = EditorScene.GizmoSettings.GridSpacing;
+			if ( grid <= 0 )
+				return;
+
+			using ( SceneEditorSession.Active.UndoScope( "Snap Vertices To Grid" )
+				.WithComponentChanges( _components )
+				.Push() )
+			{
+				foreach ( var vertex in _vertices )
+				{
+					var world = vertex.PositionWorld;
+
+					world = new Vector3(
+						MathF.Round( world.x / grid ) * grid,
+						MathF.Round( world.y / grid ) * grid,
+						MathF.Round( world.z / grid ) * grid
+					);
+
+					var local = vertex.Transform.PointToLocal( world );
+
+					vertex.Component.Mesh.SetVertexPosition( vertex.Handle, local );
+				}
+			}
+		}
+
+		[Shortcut( "mesh.frame-selection", "SHIFT+A", typeof( SceneViewWidget ) )]
+		private void FrameSelection()
+		{
+			if ( _vertices.Length == 0 )
+				return;
+
+			SelectionFrameUtil.FramePoints( _vertices.Select( v => v.PositionWorld ) );
 		}
 	}
 }

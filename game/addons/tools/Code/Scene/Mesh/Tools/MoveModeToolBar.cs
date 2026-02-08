@@ -20,21 +20,24 @@ class MoveModeToolBar : Widget
 
 	void SetMode( string id )
 	{
-		_tool.CurrentMoveMode = EditorTypeLibrary.Create<MoveMode>( id );
+		_tool.MoveMode = EditorTypeLibrary.Create<MoveMode>( id );
 		Update();
 	}
 
-	[Shortcut( "mesh.position.mode", "w", typeof( SceneDock ) )]
+	[Shortcut( "tools.position-tool", "w", typeof( SceneViewWidget ) )]
 	public void ActivatePositionMode() => SetMode( "mesh.position.mode" );
 
-	[Shortcut( "mesh.rotate.mode", "e", typeof( SceneDock ) )]
+	[Shortcut( "tools.rotate-tool", "e", typeof( SceneViewWidget ) )]
 	public void ActivateRotateMode() => SetMode( "mesh.rotate.mode" );
 
-	[Shortcut( "mesh.scale.mode", "r", typeof( SceneDock ) )]
+	[Shortcut( "tools.scale-tool", "r", typeof( SceneViewWidget ) )]
 	public void ActivateScaleMode() => SetMode( "mesh.scale.mode" );
 
-	[Shortcut( "mesh.pivot.mode", "t", typeof( SceneDock ) )]
+	[Shortcut( "tools.pivot-tool", "t", typeof( SceneViewWidget ) )]
 	public void ActivatePivotMode() => SetMode( "mesh.pivot.mode" );
+
+	[Shortcut( "tools.resize-tool", "y", typeof( SceneViewWidget ) )]
+	public void ActivateResizeMode() => SetMode( "mesh.resize.mode" );
 }
 
 file class MoveModeButton : Widget
@@ -72,9 +75,9 @@ file class MoveModeButton : Widget
 
 	public void Activate()
 	{
-		if ( _type.TargetType == _tool.CurrentMoveMode?.GetType() ) return;
+		if ( _type.TargetType == _tool.MoveMode?.GetType() ) return;
 
-		_tool.CurrentMoveMode = _type.Create<MoveMode>();
+		_tool.MoveMode = _type.Create<MoveMode>();
 	}
 
 	protected override void OnPaint()
@@ -82,7 +85,7 @@ file class MoveModeButton : Widget
 		Paint.Antialiasing = true;
 		Paint.TextAntialiasing = true;
 
-		if ( _type.TargetType == _tool.CurrentMoveMode?.GetType() )
+		if ( _type.TargetType == _tool.MoveMode?.GetType() )
 		{
 			Paint.ClearPen();
 			Paint.SetBrush( Theme.Blue );

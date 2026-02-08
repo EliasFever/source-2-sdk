@@ -470,11 +470,11 @@ public sealed partial class CameraComponent : Component, Component.ExecuteInEdit
 
 			if ( RenderTarget is not null && RenderTarget.native.IsValid )
 			{
-				SceneCamera.RenderToTexture( RenderTarget, size ?? CustomSize, default );
+				SceneCamera.RenderToTexture( RenderTarget, CustomSize ?? size, default );
 			}
 			else
 			{
-				SceneCamera.AddToRenderList( swapChain, size ?? CustomSize );
+				SceneCamera.AddToRenderList( swapChain, CustomSize ?? size );
 			}
 		}
 	}
@@ -653,9 +653,11 @@ public sealed partial class CameraComponent : Component, Component.ExecuteInEdit
 		if ( target is null || target.native.IsNull )
 			return false;
 
+		// TODO: we need to get rid of this guard, it's a hack
 		if ( !Graphics.IsActive )
 		{
 			Scene.PreCameraRender();
+			// TODO: not sure why we call this again PreCameraRender should init all cameras
 			InitializeRendering();
 		}
 
@@ -687,7 +689,7 @@ public sealed partial class CameraComponent : Component, Component.ExecuteInEdit
 
 	/// <summary>
 	/// Allows specifying a custom aspect ratio for this camera.
-	/// By default the camera size is screen size or render target size.
+	/// By default (or when null) the camera size is screen size or render target size.
 	/// </summary>
 	[JsonIgnore, Hide]
 	public Vector2? CustomSize { get; set; }

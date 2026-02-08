@@ -6,80 +6,65 @@ namespace Editor.MeshEditor;
 /// </summary>
 public abstract class MoveMode
 {
-	protected IReadOnlyDictionary<MeshVertex, Vector3> TransformVertices => _transformVertices;
+	/// <summary>
+	/// If false, the standard Gizmo.Select() (scene object selection) will be skipped
+	/// while this mode is active.
+	/// </summary>
+	public virtual bool AllowSceneSelection => true;
 
-	private readonly Dictionary<MeshVertex, Vector3> _transformVertices = [];
-	private List<MeshFace> _transformFaces;
-	private IDisposable _undoScope;
+	bool _dirty = true;
+	bool _globalSpace;
+
+	protected bool CanUseGizmo = true;
+	private Vector2 _lastCursorPos;
 
 	public void Update( SelectionTool tool )
 	{
-		if ( !tool.Selection.OfType<IMeshElement>().Any() )
-			return;
+		if ( tool.DragStarted )
+		{
+			if ( Gizmo.Pressed.Any == false )
+			{
+				tool.EndDrag();
 
+				_dirty = true;
+			}
+		}
+		else if ( _globalSpace != tool.GlobalSpace )
+		{
+			_dirty = true;
+		}
+
+		_globalSpace = tool.GlobalSpace;
+
+		if ( _dirty )
+		{
+			OnBegin( tool );
+
+			_dirty = false;
+		}
+
+		UpdateGizmoFromCursor();
 		OnUpdate( tool );
+	}
+
+	protected void UpdateGizmoFromCursor()
+	{
+		if ( Gizmo.IsLeftMouseDown )
+		{
+			CanUseGizmo = false;
+			_lastCursorPos = Gizmo.CursorPosition;
+		}
+		else if ( !CanUseGizmo && Gizmo.CursorPosition.DistanceSquared( _lastCursorPos ) > 4f )
+		{
+			CanUseGizmo = true;
+		}
 	}
 
 	protected virtual void OnUpdate( SelectionTool tool )
 	{
 	}
 
-	protected void StartDrag( SelectionTool tool )
+	public virtual void OnBegin( SelectionTool tool )
 	{
-		if ( _transformVertices.Count != 0 )
-			return;
-
-		var components = tool.Selection.OfType<IMeshElement>()
-			.Select( x => x.Component )
-			.Distinct();
-
-		_undoScope ??= SceneEditorSession.Active.UndoScope( $"{(Gizmo.IsShiftPressed ? "Extrude" : "Move")} Selection" )
-			.WithComponentChanges( components )
-			.Push();
-
-		if ( Gizmo.IsShiftPressed )
-		{
-			_transformFaces = tool.ExtrudeSelection();
-		}
-
-		foreach ( var vertex in tool.VertexSelection )
-		{
-			_transformVertices[vertex] = vertex.PositionWorld;
-		}
-	}
-
-	protected void UpdateDrag()
-	{
-		if ( _transformFaces is not null )
-		{
-			foreach ( var group in _transformFaces.GroupBy( x => x.Component ) )
-			{
-				var mesh = group.Key.Mesh;
-				var faces = group.Select( x => x.Handle ).ToArray();
-
-				foreach ( var face in faces )
-				{
-					mesh.TextureAlignToGrid( mesh.Transform, face );
-				}
-			}
-		}
-
-		var meshes = TransformVertices
-			.Select( x => x.Key.Component.Mesh )
-			.Distinct();
-
-		foreach ( var mesh in meshes )
-		{
-			mesh.ComputeFaceTextureCoordinatesFromParameters();
-		}
-	}
-
-	protected void EndDrag()
-	{
-		_transformVertices.Clear();
-		_transformFaces = null;
-
-		_undoScope?.Dispose();
-		_undoScope = null;
 	}
 }

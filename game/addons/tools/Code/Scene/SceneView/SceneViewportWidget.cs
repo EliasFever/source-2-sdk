@@ -2,7 +2,6 @@
 
 public partial class SceneViewportWidget : Widget
 {
-	public static SceneViewportWidget LastSelected { get; private set; }
 	public static Vector2 MousePosition { get; private set; }
 
 	public int Id { get; private set; }
@@ -43,7 +42,7 @@ public partial class SceneViewportWidget : Widget
 		Id = id;
 		if ( Id == 0 )
 		{
-			LastSelected = this;
+			SceneView.LastSelectedViewportWidget = this;
 		}
 
 		if ( ProjectCookie.Get<ViewportState>( $"SceneView.Viewport{Id}.Settings", null ) is ViewportState savedSettings )
@@ -94,11 +93,20 @@ public partial class SceneViewportWidget : Widget
 	float cameraOrbitDistance = 400;
 	bool doubleClick;
 
+	bool blockCameraForToolInput;
+	Vector2 blockCameraMousePosition;
+
 	protected override void OnDoubleClick( MouseEvent e )
 	{
 		base.OnDoubleClick( e );
 
 		doubleClick = true;
+
+		if ( Application.KeyboardModifiers.HasFlag( KeyboardModifiers.Alt ) )
+		{
+			blockCameraForToolInput = true;
+			blockCameraMousePosition = e.LocalPosition;
+		}
 	}
 
 	protected override void OnVisibilityChanged( bool visible )
@@ -154,10 +162,11 @@ public partial class SceneViewportWidget : Widget
 			return;
 		}
 
-		var hoveredWidget = Application.HoveredWidget;
-		var hovered = hoveredWidget == Renderer;
-
-		hasMouseInput = IsActiveWindow && hovered;
+		//
+		// tony: Check if the mouse is hovering this viewport
+		// we were previously using Application.HoveredWidget but Qt is unreliable at providing the hovered widget at fractional DPI scales, and I can't figure out why
+		//
+		hasMouseInput = IsActiveWindow && Renderer.IsUnderMouse;
 	}
 
 	protected override void OnPaint()
@@ -377,7 +386,7 @@ public partial class SceneViewportWidget : Widget
 		if ( e.KeyboardModifiers == KeyboardModifiers.None && e.Button == MouseButtons.Right &&
 			 Vector2.DistanceBetween( initialMousePosition, e.LocalPosition ) < 6 )
 		{
-			var menu = new ContextMenu( this );
+			var menu = new ContextMenu( this ) { Searchable = true };
 			bool HasSelection = Session.Selection.OfType<GameObject>().Any();
 			menu.AddOption( "Cut", "content_cut", EditorScene.Cut, "editor.cut" ).Enabled = HasSelection;
 			menu.AddOption( "Copy", "content_copy", EditorScene.Copy, "editor.copy" ).Enabled = HasSelection;
@@ -447,22 +456,51 @@ public partial class SceneViewportWidget : Widget
 		//
 
 		var hasMouseFocus = hasMouseInput;
-		if ( IsFocused )
+		if ( IsFocused && SceneViewWidget.Current.IsValid() )
 		{
-			LastSelected = this;
+			SceneViewWidget.Current.LastSelectedViewportWidget = this;
 		}
 
 		GizmoInstance.Input.IsHovered = hasMouseFocus;
 
 		if ( IsActiveWindow ) // don't update camera input if the editor window isn't active
 		{
-			var rightMouse = Application.MouseButtons.HasFlag( MouseButtons.Right );
-			var modifiers = Application.KeyboardModifiers != KeyboardModifiers.None;
-			blockCamera = modifiers && (!blockCamera ? !rightMouse : blockCamera);
+			// Block camera input when shift or ctrl was down first and right mouse pressed.
+			var rightDown = Application.MouseButtons.HasFlag( MouseButtons.Right );
+			var modifiers = Application.KeyboardModifiers;
+			var modifiersDown = modifiers.Contains( KeyboardModifiers.Shift ) || modifiers.HasFlag( KeyboardModifiers.Ctrl );
+
+			blockCamera = !blockCamera ? modifiersDown && !rightDown : modifiersDown;
+
+			if ( modifiers.HasFlag( KeyboardModifiers.Alt ) && rightDown && GizmoInstance.Input.IsHovered && !blockCameraForToolInput )
+			{
+				blockCameraForToolInput = true;
+				blockCameraMousePosition = Renderer.FromScreen( Application.CursorPosition );
+			}
+
+			if ( blockCameraForToolInput )
+			{
+				if ( Application.MouseButtons == MouseButtons.None )
+				{
+					blockCameraForToolInput = false;
+				}
+				else if ( Renderer.IsValid() )
+				{
+					var currentMousePos = Renderer.FromScreen( Application.CursorPosition );
+					var dragDistance = Vector2.DistanceBetween( blockCameraMousePosition, currentMousePos );
+
+					if ( dragDistance > 3f )
+					{
+						blockCameraForToolInput = false;
+					}
+				}
+			}
+
+			bool shouldBlockOrbit = blockCamera || (blockCameraForToolInput && GizmoInstance.Input.IsHovered);
 
 			_activeCamera.OrthographicHeight = State.CameraOrthoHeight;
 
-			if ( !blockCamera )
+			if ( !shouldBlockOrbit )
 			{
 				if ( GizmoInstance.OrbitCamera( _activeCamera, Renderer, ref cameraOrbitDistance ) )
 				{
@@ -475,7 +513,7 @@ public partial class SceneViewportWidget : Widget
 					GizmoInstance.Input.IsHovered = false;
 				}
 			}
-			else
+			else if ( blockCamera )
 			{
 				Renderer.Cursor = CursorShape.None;
 			}
@@ -530,7 +568,7 @@ public partial class SceneViewportWidget : Widget
 			UpdateHovered();
 		}
 
-		Tools.Frame( _activeCamera, Session );
+		Tools.Frame( _activeCamera, Session, GizmoInstance.Input.IsHovered );
 
 		EditorEvent.RunInterface<EditorEvent.ISceneView>( x => x.DrawGizmos( Session.Scene ) );
 		Session.Scene.EditorDraw();
