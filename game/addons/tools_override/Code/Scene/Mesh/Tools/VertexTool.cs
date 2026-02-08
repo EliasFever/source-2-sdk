@@ -84,11 +84,12 @@ public sealed partial class VertexTool( MeshTool tool ) : SelectionTool<MeshVert
 		using ( Gizmo.Scope( "Vertex Selection" ) )
 		{
 			Gizmo.Draw.IgnoreDepth = true;
-			Gizmo.Draw.Color = Color.White;
+			Gizmo.Draw.Color = Color.Yellow;
 
 			foreach ( var vertex in Selection.OfType<MeshVertex>() )
 				Gizmo.Draw.Sprite( vertex.PositionWorld, 8, null, false );
 		}
+
 	}
 
 	private void SelectVertex()
@@ -101,7 +102,7 @@ public sealed partial class VertexTool( MeshTool tool ) : SelectionTool<MeshVert
 				using ( Gizmo.Scope( "Vertex Hover" ) )
 				{
 					Gizmo.Draw.IgnoreDepth = true;
-					Gizmo.Draw.Color = Color.White;
+					Gizmo.Draw.Color = Color.Yellow;
 					Gizmo.Draw.Sprite( vertex.PositionLocal, 8, null, false );
 				}
 			}

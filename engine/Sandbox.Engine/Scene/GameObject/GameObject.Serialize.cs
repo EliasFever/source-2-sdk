@@ -622,7 +622,8 @@ public partial class GameObject
 						GameObjectFlags.NotNetworked |
 						GameObjectFlags.Absolute |
 						GameObjectFlags.PhysicsBone |
-						GameObjectFlags.Hidden;
+						GameObjectFlags.Hidden |
+						GameObjectFlags.HideInHierarchy;
 
 		// Clear the flags we're about to deserialize
 		Flags &= ~FlagsToKeep;

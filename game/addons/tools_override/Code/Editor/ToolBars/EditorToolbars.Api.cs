@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 public static partial class EditorToolBars
 {
-	public static bool ShowLegacyToolbar { get; set; }
+	public static bool ShowLegacyToolbar { get; set; } = true;
 
 	/// <summary>
 	/// Stores all registered toolbars for easy access by name.

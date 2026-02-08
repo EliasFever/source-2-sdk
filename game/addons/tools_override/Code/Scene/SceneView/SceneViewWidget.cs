@@ -44,7 +44,7 @@ public partial class SceneViewWidget : Widget
 	private List<LinkableSplitter> _splitters;
 	public Dictionary<int, SceneViewportWidget> _viewports;
 
-	ViewportTools _viewportTools;
+	public ViewportTools _viewportTools;
 
 	public SceneViewWidget( SceneEditorSession session, Widget parent ) : base( parent )
 	{
@@ -354,6 +354,9 @@ file class ViewportToolBar : Widget
 	[EditorEvent.Frame]
 	public void Frame()
 	{
+		if ( !EditorToolBars.ShowLegacyToolbar ) this.Visible = false;
+		else this.Visible = true;
+
 		var tool = SceneViewWidget.Current?.Tools.CurrentSubTool ?? SceneViewWidget.Current?.Tools.CurrentTool;
 		var selectionHash = tool?.Selection?.GetHashCode() ?? 0;
 

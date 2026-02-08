@@ -1,6 +1,8 @@
 ﻿namespace Editor;
 
 using Editor;
+using Editor.MeshEditor;
+using Editor.TerrainEditor;
 using Sandbox;
 using Sandbox.UI;
 using System.Collections.Generic;
@@ -30,6 +32,8 @@ public static partial class EditorToolBars
 				Group = "MainTools",
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.ActivateMove,
 				Description="Translate. Move the selected objects" },
 
 			new() { Name="Rotate",
@@ -40,6 +44,8 @@ public static partial class EditorToolBars
 				Group = "MainTools",
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.ActivateRotate,
 				Description="Rotate. Rotate the selected objects" },
 
 			new() { Name="Scale",
@@ -50,6 +56,8 @@ public static partial class EditorToolBars
 				Group = "MainTools",
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.ActivateScale,
 				Description="Scale. Scale the selected objects" },
 
 			new() { Name="Pivot",
@@ -59,6 +67,8 @@ public static partial class EditorToolBars
 				Group = "MainTools",
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.ActivatePivot,
 				Description="Pivot Manipulation. Set the location of the gizmo for the current selection" },
 
 			new() { Separator=true },
@@ -82,6 +92,8 @@ public static partial class EditorToolBars
 				Group = "MainTools",
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.SelectBlockTool,
 				Description="Create new shapes by dragging out a box" },
 
 			new() { Name="Path Tool",
@@ -91,6 +103,8 @@ public static partial class EditorToolBars
 				Group = "MainTools",
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.SelectPathTool,
 				Description="Create path entities or primitives" },
 
 			new() { Name="Polygon Tool",
@@ -150,6 +164,8 @@ public static partial class EditorToolBars
 				Group = "MainTools",
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.SelectPhysicsTool,
 				Description="Manipulate objects using physics simulation" },
 
 			new() { Name="Terrain Tool",
@@ -158,6 +174,8 @@ public static partial class EditorToolBars
 				Group = "MainTools",
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.SelectTerraintool,
 				Description="Create and modify terrain" },
 
 			new() { Name="Asset Spray Tool",
@@ -195,23 +213,24 @@ public static partial class EditorToolBars
 		return
 		[
 			new() { Name="Vertices",
-				ShortcutAction = "mesh.vertex",
 				Icon="hammer/selection_mode_vertices.png",
 				ToggledIcon="hammer/selection_mode_vertices_activated.png",
 				Hotkey="Vertex",
 				Checkable=true,
 				Group="SelectionMode",
-				GroupType=ToolBarOptionGroupType.SingleExclusive,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.SelectVertices,
 				Description="Selection Mode: Vertices" },
 
 			new() { Name="Edges",
-				ShortcutAction = "mesh.edge",
 				Icon="hammer/selection_mode_edges.png",
 				ToggledIcon="hammer/selection_mode_edges_activated.png",
 				Hotkey="Edge",
 				Checkable=true,
 				Group="SelectionMode",
 				GroupType=ToolBarOptionGroupType.SingleExclusive,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.SelectEdges,
 				Description="Selection Mode: Edges" },
 
 			new() { Name="Faces",
@@ -222,6 +241,8 @@ public static partial class EditorToolBars
 				Checkable=true,
 				Group="SelectionMode",
 				GroupType=ToolBarOptionGroupType.SingleExclusive,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.SelectFaces,
 				Description="Selection Mode: Faces" },
 
 			new() { Name="Meshes",
@@ -232,6 +253,8 @@ public static partial class EditorToolBars
 				Checkable=true,
 				Group="SelectionMode",
 				GroupType=ToolBarOptionGroupType.SingleExclusive,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.SelectMeshes,
 				Description="Selection Mode: Meshes" },
 
 			new() { Name="Objects",
@@ -242,6 +265,8 @@ public static partial class EditorToolBars
 				Checkable=true,
 				Group="SelectionMode",
 				GroupType=ToolBarOptionGroupType.SingleExclusive,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.SelectObjects,
 				Description="Selection Mode: Objects",
 				Active = true },
 
@@ -262,6 +287,8 @@ public static partial class EditorToolBars
 				Checkable=true,
 				Group="SelectionMode",
 				GroupType=ToolBarOptionGroupType.SingleExclusive,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.SelectNavigation,
 				Description="Selection Mode: Navigation" },
 		];
 	}
@@ -279,6 +306,8 @@ public static partial class EditorToolBars
 			Description = "Use World Space Axes for Gizmo",
 			Group = "3DTypeSpace",
 			GroupType = ToolBarOptionGroupType.SingleExclusive,
+			ActionType = ToolActionType.PropertySet,
+    		SetterAction = () => EditorScene.GizmoSettings.GlobalSpace = true,
 			Active = true },
 
 		new() { Name = "Local Space",
@@ -288,6 +317,8 @@ public static partial class EditorToolBars
 			Checkable = true,
 			Description = "Use Selection's Local Space Axes for Gizmo",
 			Group = "3DTypeSpace",
+			ActionType = ToolActionType.PropertySet,
+    		SetterAction = () => EditorScene.GizmoSettings.GlobalSpace = false,
 			GroupType = ToolBarOptionGroupType.SingleExclusive },
 
 		new() { Name = "Pick Workplane",
@@ -356,16 +387,32 @@ public static partial class EditorToolBars
 			ToggledIcon = "hammer/run_map_activated.png",
 			Hotkey = "F5",
 			Description = "Run Game",
+			ActionType = ToolActionType.MethodCall,
+			Method = () =>
+			{
+				if ( !Game.IsPlaying )
+				{
+					EditorScene.Play( SceneViewWidget.Current.Session );
+				}
+				else
+				{
+					EditorScene.Stop();
+				}           
+			},
+			DisableDuringPlay = false,
 			Checkable = true },
 
 		new() { Name = "Pause Game",
-			ShortcutAction = "editor.pausef",
+			ShortcutAction = "editor.pause",
 			Icon = "hammer/pause_map.png",
 			ToggledIcon = "hammer/pause_map_activated.png",
 			Hotkey = "F6",
 			Description = "Pause Game",
 			Checkable = true,
 			GroupType = ToolBarOptionGroupType.ConditionalClearState,
+			ActionType = ToolActionType.PropertySet,
+			SetterAction = () => Game.IsPaused = !Game.IsPaused,
+			DisableDuringPlay = false,
 			ConditionalOn = "Run Game"
 		},
 
@@ -377,6 +424,9 @@ public static partial class EditorToolBars
 			Description = "Eject",
 			Checkable = true,
 			GroupType = ToolBarOptionGroupType.ConditionalClearState,
+			ActionType = ToolActionType.MethodCall,
+			Method = () => SceneViewWidget.Current.ToggleEject(),
+			DisableDuringPlay = false,
 			ConditionalOn = "Run Game"
 		},
 	];
@@ -428,6 +478,8 @@ public static partial class EditorToolBars
 				ToggledIcon="hammer/toggle_collision_hulls_activated.png",
 				Checkable=true,
 				Hotkey="Ctrl+Shift+F3",
+				ActionType = ToolActionType.PropertySet,
+				SetterAction = () => DebuggingMenus.ShowPhysicsDebug = !DebuggingMenus.ShowPhysicsDebug,              
 				Description="Show Collision Models" },
 
 			new() { Name="Selection Overlay",

@@ -12,6 +12,7 @@ public sealed partial class FaceTool( MeshTool tool ) : SelectionTool<MeshFace>(
 {
 	MeshFace _hoverFace;
 	SceneDynamicObject _faceObject;
+	public MeshTool ParentTool => Tool;
 
 	public override void OnEnabled()
 	{
@@ -80,7 +81,7 @@ public sealed partial class FaceTool( MeshTool tool ) : SelectionTool<MeshFace>(
 			_hoverFace = default;
 		}
 
-		var selectionColor = Color.Yellow.WithAlpha( 0.1f );
+		var selectionColor = Color.Parse( "#cc9427" ).Value.WithAlpha( 0.2f );
 		foreach ( var face in Selection.OfType<MeshFace>() )
 		{
 			var mesh = face.Component.Mesh;

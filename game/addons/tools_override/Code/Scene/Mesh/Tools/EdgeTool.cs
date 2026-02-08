@@ -38,7 +38,7 @@ public sealed partial class EdgeTool( MeshTool tool ) : SelectionTool<MeshEdge>(
 
 			foreach ( var edge in edges )
 			{
-				Gizmo.Draw.LineThickness = edge.IsOpen ? 2 : 4;
+				Gizmo.Draw.LineThickness = edge.IsOpen ? 1.5f : 3f;
 				var line = edge.Line;
 				var a = edge.Transform.PointToWorld( line.Start );
 				var b = edge.Transform.PointToWorld( line.End );
@@ -191,7 +191,7 @@ public sealed partial class EdgeTool( MeshTool tool ) : SelectionTool<MeshEdge>(
 			{
 				Gizmo.Draw.IgnoreDepth = true;
 				Gizmo.Draw.Color = Color.Green;
-				Gizmo.Draw.LineThickness = edge.IsOpen ? 2 : 4;
+				Gizmo.Draw.LineThickness = edge.IsOpen ? 1.5f : 3f;
 
 				if ( edge.IsOpen )
 					DrawOpenEdge( edge );
@@ -203,21 +203,73 @@ public sealed partial class EdgeTool( MeshTool tool ) : SelectionTool<MeshEdge>(
 				{
 					Gizmo.Draw.IgnoreDepth = true;
 					Gizmo.Draw.Color = Color.Green;
-					Gizmo.Draw.LineThickness = edge.IsOpen ? 2 : 4;
+					Gizmo.Draw.LineThickness = edge.IsOpen ? 1.5f : 3f;
 
 					var line = edge.Line;
 					Gizmo.Draw.Line( line );
 
-					var textSize = 22 * Gizmo.Settings.GizmoScale * Application.DpiScale;
+					var textSize = 12 * Gizmo.Settings.GizmoScale * Application.DpiScale;
 					var distance = line.Start.Distance( line.End );
+
+					var center = edge.Transform.PointToWorld( line.Center );
+					var edgeDir = (edge.Transform.PointToWorld( line.End ) - edge.Transform.PointToWorld( line.Start )).Normal;
+
+					var camUp = Gizmo.Camera.Rotation.Up;
+					var liftDir = edgeDir.Cross( camUp ).Cross( edgeDir ).Normal;
+
+					var camDist = center.Distance( Gizmo.Camera.Position );                    // Camera distance
+					var lift = liftDir * (camDist * 0.05f);                                    // Distance-scaled lift
+
+					// Sideways shift for near-vertical edges
+					if ( MathF.Abs( edgeDir.y ) > 0.7f )
+					{
+						var sideShift = edgeDir.Cross( liftDir ).Normal;
+						lift += sideShift * (camDist * 0.015f);
+					}
+
+					// Use camera ray through center to push text slightly toward viewer
+					var camRay = Gizmo.Camera.GetRay( center );
+					lift += camRay.Forward * (camDist * 0.015f);     // small forward push
+					
 					Gizmo.Draw.Color = Color.White;
-					Gizmo.Draw.ScreenText( $"{distance:0.##}", edge.Transform.PointToWorld( line.Center ), 0, size: textSize );
+
+					// TODO: Outline makes the whole thing shift, we need to fix this before using it.
+					Gizmo.Draw.ScreenText( $"{distance:0.00}", center + lift, 0, size: textSize, font: "Tahoma" );		// Delete this after outline works
+
+					//Gizmo.Draw.ScreenText(
+					//	$"{distance:0.00}",
+					//	center + lift,
+					//	font: "Tahoma",
+					//	size: textSize,
+					//	hasOutline: true,
+					//	outlineSize: 3f,
+					//	outlineColor: Color.Black );
+
 				}
+
+				// Legacy Code. This is for reference sake why I've changed it to be the more complex solution, that's above this code
+
+				//using ( Gizmo.Scope( "Edge Hover" ) )
+				//{
+				//	Gizmo.Draw.IgnoreDepth = true;
+				//	Gizmo.Draw.Color = Color.Green;
+				//	Gizmo.Draw.LineThickness = edge.IsOpen ? 1.5f : 3f;
+
+				//	var line = edge.Line;
+				//	Gizmo.Draw.Line( line );
+
+				//	var textSize = 22 * Gizmo.Settings.GizmoScale * Application.DpiScale;
+				//	var distance = line.Start.Distance( line.End );
+				//	Gizmo.Draw.Color = Color.White;
+				//	Gizmo.Draw.ScreenText( $"{distance:0.##}", edge.Transform.PointToWorld( line.Center ), 0, size: textSize );
+				//}
 			}
 		}
 
 		UpdateSelection( edge );
 	}
+
+
 
 	protected override IEnumerable<IMeshElement> GetAllSelectedElements()
 	{

@@ -53,7 +53,7 @@ partial class ViewportTools
 	}
 
 
-	private void PlayStop()
+	public void PlayStop()
 	{
 		if ( !Game.IsPlaying )
 		{

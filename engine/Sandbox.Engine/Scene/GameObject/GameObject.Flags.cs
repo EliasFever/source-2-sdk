@@ -80,6 +80,11 @@ public enum GameObjectFlags
 	/// Stops this object being interpolated, either via the network system or the physics system
 	/// </summary>
 	NoInterpolation = 16384,
+
+	/// <summary>
+	/// Hide this object only in hierarchy
+	/// </summary>
+	HideInHierarchy = 32768,
 }
 
 

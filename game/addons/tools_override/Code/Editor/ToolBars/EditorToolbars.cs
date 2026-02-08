@@ -1,18 +1,22 @@
 ﻿namespace Editor;
 
 using Editor;
+using Editor.MeshEditor;
 using Sandbox;
 using Sandbox.UI;
 using System;
 
 public static partial class EditorToolBars
 {
+	private static List<ToolBarContext> _allToolbars = new();
+
 	public static ToolBar MainTools;
 	public static ToolBar SelectionModes;
 	public static ToolBar EditingSettings;
 	public static ToolBar ViewSettings;
 
 	private static DockWindow MainWindow;
+	private static ViewportTools ViewportTools;
 
 	/// <summary>
 	/// On the first creation of the editor - initializes all the necessary toolbars,
@@ -22,17 +26,18 @@ public static partial class EditorToolBars
     public static void InitToolbars( EditorMainWindow window )
     {		
 		MainWindow = window;
+		ViewportTools = SceneViewWidget.Current._viewportTools;
 
-		BuildShortcutCache();
-		BuildAllToolbars();
+		BuildToolbars();
 	}
 
 	[Menu( "Editor", "HL2K/Editor/Debug/Force Rebuild Toolbars", "hammer/appicon.ico" ), Order( 100 )]
-	static void ForceRebuildToolbars()
+	static void BuildToolbars()
     {
-       	TryClearToolbars();
+		TryClearToolbars();
 		BuildShortcutCache();
 		BuildAllToolbars();
+		RegisterEditorEventSubscriptions();
     }
 
 	/// <summary>
@@ -83,8 +88,38 @@ public static partial class EditorToolBars
 	{
 		BuildShortcutCache();
 	}
+	
+	[Event( "editor.created" )]
+	private static void RegisterEditorEventSubscriptions()
+	{
+		SceneViewWidget.Current.Tools.ToolChanged += tool =>
+		{
+			if ( _pendingSubtool != null && tool?.GetType().Name == nameof( MeshTool ) )
+			{
+				Log.Info( $"Applying delayed subtool: '{_pendingSubtool}'" );
+				EditorToolManager.SetSubTool( _pendingSubtool );
+				_pendingSubtool = null;
+			}
+		};
+	}
 
-	// Important TODO: Registering toolbars as dockables is vital, however it creats a problem
+	[Event( "scene.play", Priority = 100 )]
+	private async static void OnPlay()
+	{
+		await GameTask.Delay( 100 );
+
+		EditorToolBars.SetPlayMode( true );
+	}
+
+	[Event( "scene.stop", Priority = 100 )]
+	private async static void OnStop()
+	{
+		await GameTask.Delay( 100 );
+
+		EditorToolBars.SetPlayMode( false );
+	}
+
+	// Important TODO: Registering toolbars as dockables is vital, however it creates a problem
 	// that if you were to try and access them in the view dropdown you'll get a window, not a toolbar!
 	// We'll fix this eventually, just need to do other stuff first.
 

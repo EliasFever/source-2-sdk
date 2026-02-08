@@ -20,8 +20,8 @@ public static partial class Gizmo
 				Sandbox.Gizmo.Draw.LineThickness = 4.0f;
 				Sandbox.Gizmo.Draw.Color = color;
 
-				if ( !Sandbox.Gizmo.IsHovered )
-					Sandbox.Gizmo.Draw.Color = Sandbox.Gizmo.Draw.Color.Darken( 0.33f );
+				if ( Sandbox.Gizmo.IsHovered )
+					Sandbox.Gizmo.Draw.Color = Sandbox.Gizmo.Colors.Active;
 
 				if ( Pressed.Any && !Pressed.This )
 					return false;

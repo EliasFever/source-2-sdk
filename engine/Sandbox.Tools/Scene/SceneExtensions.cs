@@ -68,7 +68,7 @@ public static partial class SceneExtensions
 	public static bool ShouldShowInHierarchy( this GameObject target )
 	{
 		if ( target is null ) return false;
-		if ( target.Flags.Contains( GameObjectFlags.Hidden ) ) return false;
+		if ( target.Flags.Contains( GameObjectFlags.Hidden | GameObjectFlags.HideInHierarchy ) ) return false;
 		return true;
 	}
 

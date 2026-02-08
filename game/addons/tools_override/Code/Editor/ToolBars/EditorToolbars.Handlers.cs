@@ -1,11 +1,15 @@
 ﻿namespace Editor;
 
 using Editor;
+using Editor.MapEditor;
+using Editor.MeshEditor;
+using Editor.TerrainEditor;
 using Sandbox;
 using Sandbox.UI;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using static Editor.EditorToolBars;
 
 public static partial class EditorToolBars
 {
@@ -17,6 +21,14 @@ public static partial class EditorToolBars
 		ConditionalPreserveState,   // Child disabled but state preserved
 		ConditionalClearState,      // Child disabled and gets reset
 		ExternallyControlled        // Disabled unless explicitly activated by code
+	}
+
+	public enum ToolActionType
+	{
+    	Shortcut,        			// Existing behavior
+    	MethodCall,      			// Call a bound delegate
+    	PropertyToggle,  			// Toggle a boolean property
+    	PropertySet      			// Set specific value
 	}
 
 	public class ToolOptionDef
@@ -37,19 +49,38 @@ public static partial class EditorToolBars
 
 		public bool Checkable = false;
 		public bool Separator = false;
-		public bool Active = false;				// Current active state
+		public bool Active = false;             // Current active state
+		public bool DisableDuringPlay = true;   // Disable/Enable buttons when in Play mode
 
 		public string Group = null;
 		public string ConditionalOn = null;     // Only used if GroupType == Conditional
 
 		public bool ExternalEnabled = false;
 
-		public string ShortcutAction;			// e.g. "mesh.vertex"
+		public string ShortcutAction;			// Mapping to a shortcut e.g. "mesh.vertex"
+
+		public ToolActionType ActionType = ToolActionType.Shortcut;
+
+    	/// If ActionType is MethodCall
+    	public Action Method;
+
+    	/// If ActionType is PropertyToggle
+	    public Func<bool> Getter;
+    	public Action<bool> Setter;
+
+    	/// If ActionType is PropertySet
+	    public Action SetterAction;
 
 		public ToolBarOptionGroupType GroupType = ToolBarOptionGroupType.None;
 	}
 
 	private static Dictionary<string, MethodInfo> s_shortcutCache;
+	private static Dictionary<ToolOptionDef, (bool Active, bool Checked)> s_prePlayState = new();
+
+	private static bool s_inPlayMode = false;
+
+	private static string _pendingSubtool = null;
+	private static string s_lastTransformMode;
 
 	/// <summary>
 	/// Adds a collection of tool option definitions to the specified toolbar, configuring their selection behavior and
@@ -64,6 +95,12 @@ public static partial class EditorToolBars
 	/// multiple options to be active.</param>
 	public static void AddDefs( ToolBar bar, List<ToolOptionDef> defs, bool singleSelect = false )
 	{
+		_allToolbars.Add( new ToolBarContext
+		{
+			Bar = bar,
+			Definitions = defs
+		} );
+
 		foreach ( var def in defs )
 		{
 			if ( def.Separator )
@@ -143,7 +180,7 @@ public static partial class EditorToolBars
 				HandleSpecialLogic( defs, def );
 
 				// Here, fishy-fishy!
-				ExecuteShortcutAction( def );
+				ExecuteToolAction( def );
 			}
 
 			// Add the option to the toolbar
@@ -296,25 +333,224 @@ public static partial class EditorToolBars
 		//}
 	}
 
-	private static void ExecuteShortcutAction( ToolOptionDef def )
+	private static void ExecuteToolAction(ToolOptionDef def)
 	{
-		if ( string.IsNullOrWhiteSpace( def.ShortcutAction ) )
+		switch (def.ActionType)
+		{
+			// This was stupid I think, we'll just listen to shortcuts instead
+			// case ToolActionType.Shortcut:
+			// 	if (!string.IsNullOrEmpty(def.ShortcutAction))
+			// 		Shortcut.Execute(def.ShortcutAction);
+			// 	break;
+
+			case ToolActionType.MethodCall:
+				def.Method?.Invoke();
+				break;
+
+			case ToolActionType.PropertyToggle:
+				bool v = !def.Getter();
+				def.Setter(v);
+				break;
+
+			case ToolActionType.PropertySet:
+				def.SetterAction?.Invoke();
+				break;
+		}
+	}
+
+	private static void SetPlayMode( bool playing )
+	{
+		s_inPlayMode = playing;
+
+		if ( _allToolbars == null )
 			return;
 
-		if ( !s_shortcutCache.TryGetValue( def.ShortcutAction, out var method ) )
+		foreach ( var barCtx in _allToolbars )
 		{
-			Log.Warning( $"[Toolbar] No ShortcutAction found: {def.ShortcutAction}" );
+			if ( barCtx?.Definitions == null )
+				continue;
+
+			foreach ( var def in barCtx.Definitions )
+			{
+				if ( def?.Widget == null || !def.DisableDuringPlay )
+					continue;
+
+				if ( playing )
+				{
+					// Save current state before disabling
+					s_prePlayState[def] = (def.Active, def.Widget.Checked);
+
+					def.Widget.Enabled = false;
+					def.Active = false;
+					def.Widget.Checked = false;
+					def.Widget.Icon = def.Icon;
+				}
+				else
+				{
+					// Restore previous state
+					if ( s_prePlayState.TryGetValue( def, out var state ) )
+					{
+						def.Active = state.Active;
+						def.Widget.Checked = state.Checked;
+						UpdateOptionIcon( def );
+					}
+
+					def.Widget.Enabled = true;
+				}
+			}
+		}
+
+		if ( !playing )
+			s_prePlayState.Clear(); // clean up
+	}
+
+	public static void SelectTransformMode( string mode, bool userClicked = true )
+	{
+		var tools = SceneViewWidget.Current.Tools;
+		var tool = tools.CurrentTool;
+
+		if ( tool == null )
+			return;
+
+		// If restoring, use the global stored mode
+		if ( mode == null )
+		{
+			if ( string.IsNullOrEmpty( s_lastTransformMode ) )
+				return;
+
+			mode = s_lastTransformMode;
+			userClicked = false;
+		}
+
+		// Always store the new mode globally
+		if ( userClicked )
+			s_lastTransformMode = mode;
+
+		//	Log.Info( $"Currently Selected: {mode} for {tool}" );
+
+		switch ( tool )
+		{
+			case MeshTool meshTool:
+				var type = EditorTypeLibrary
+					.GetTypes<MoveMode>()
+					.FirstOrDefault( t =>
+						t.GetAttribute<AliasAttribute>()?.Value?.FirstOrDefault() == $"mesh.{mode}.mode" );
+
+				if ( type != null )
+					meshTool.SetMoveMode( type );
+				break;
+
+			case ObjectEditorTool:
+				switch ( mode )
+				{
+					case "move": PositionEditorTool.ActivateSubTool(); break;
+					case "rotate": RotationEditorTool.ActivateSubTool(); break;
+					case "scale": ScaleEditorTool.ActivateSubTool(); break;
+				}
+				break;
+		}
+	}
+}
+
+public class ToolBarContext
+{
+	public ToolBar Bar;
+	public List<ToolOptionDef> Definitions;
+}
+
+public static class EditorToolBarsActions
+{
+	//
+	// Transform selection modes
+	//
+	public static void ActivateMove() 
+		=> EditorToolBars.SelectTransformMode( "move", true );
+	public static void ActivateRotate() 
+		=> EditorToolBars.SelectTransformMode( "rotate", true );
+	public static void ActivateScale() 
+		=> EditorToolBars.SelectTransformMode( "scale", true );
+	public static void ActivatePivot() 
+		=> EditorToolBars.SelectTransformMode( "pivot", true );
+
+	//
+	// Mesh selection modes
+	//
+	public static void SelectVertices()
+		=> Activate( nameof( MeshTool ), nameof( VertexTool ) );
+
+	public static void SelectEdges()
+		=> Activate( nameof( MeshTool ), nameof( EdgeTool ) );
+
+	public static void SelectFaces()
+		=> Activate( nameof( MeshTool ), nameof( FaceTool ) );
+
+	public static void SelectMeshes()
+		=> Activate( nameof( ObjectEditorTool ) );
+
+	public static void SelectObjects()
+		=> Activate( nameof( ObjectEditorTool ) );
+
+	public static void SelectNavigation()
+		=> Activate( nameof( NavMeshTool ) );
+
+	//
+	// General tools modes
+	//
+	public static void SelectBlockTool()
+		=> Activate( nameof( MeshTool ), nameof( BlockTool ) );
+
+	public static void SelectPathTool()
+		=> ActiveProjectTool( "PathTool" );
+
+	public static void SelectPhysicsTool()
+		=> Activate( nameof( PhysicsEditorTool ) );
+
+	public static void SelectTerraintool()
+		=> Activate( nameof( TerrainEditorTool ) );
+
+	//
+	// Core static activator
+	//
+	private static void Activate( string toolName, string subToolName = null )
+	{
+		var tools = SceneViewWidget.Current.Tools;
+
+		if ( string.IsNullOrEmpty( subToolName ) )
+		{
+			EditorToolManager.SetTool( toolName );
+			tools.UpdateTool( EditorToolManager.CurrentModeName );
 			return;
 		}
 
-		try
+		var current = tools.CurrentTool;
+		if ( current != null && current.GetType().Name == toolName )
 		{
-			method.Invoke( null, null );
+			EditorToolManager.SetSubTool( subToolName );
+			tools.UpdateSubTool( EditorToolManager.CurrentSubModeName );
+			return;
 		}
-		catch ( Exception e )
-		{
-			Log.Warning( $"[Toolbar] ShortcutAction error '{def.ShortcutAction}': {e}" );
-		}
-	} 
 
+		EditorToolManager.SetTool( toolName );
+		tools.UpdateTool( EditorToolManager.CurrentModeName );
+
+		EditorToolManager.SetSubTool( subToolName );
+		tools.UpdateSubTool( EditorToolManager.CurrentSubModeName );
+	}
+
+	public static void ActiveProjectTool( string tool )
+	{
+		string toolName = nameof( tool );
+
+		// Try to get the type by name, including assembly-qualified name if needed
+		Type? toolType = AppDomain.CurrentDomain.GetAssemblies()
+			.Select( a => a.GetType( toolName ) )
+			.FirstOrDefault( t => t != null );
+
+		if ( toolType != null )
+		{
+			// Found the type, activate it
+			Activate( toolType.Name ); // or use any activation logic
+		}
+		else Log.Warning( $"Tool '{toolName}' not found. Skipping activation." );
+	}
 }

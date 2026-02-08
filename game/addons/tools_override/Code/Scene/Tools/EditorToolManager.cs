@@ -10,12 +10,15 @@ public class EditorToolManager
 	/// </summary>
 	public static string CurrentModeName { get; set; } = "ObjectEditorTool";
 	public static string LastModeName { get; set; } = CurrentModeName;
-	private static string CurrentSubModeName { get; set; }
+	public static string CurrentSubModeName { get; set; }
 
 	public EditorTool CurrentTool { get; private set; }
 
 	public EditorTool CurrentSubTool => CurrentTool?.CurrentTool;
 	public List<EditorTool> ComponentTools { get; private set; } = new List<EditorTool>();
+
+	public event Action<EditorTool> ToolChanged;
+	public event Action<EditorTool> SubToolChanged;
 
 	private SceneEditorSession _session;
 	public SceneEditorSession CurrentSession
@@ -88,9 +91,10 @@ public class EditorToolManager
 
 		CurrentTool = bestType.Type.Create<EditorTool>();
 		CurrentTool.InitializeInternal( this );
+		ToolChanged?.Invoke( CurrentTool );
 	}
 
-	private void UpdateSubTool( string editMode )
+	public void UpdateSubTool( string editMode )
 	{
 		if ( currentSubMode == editMode ) return;
 		if ( CurrentTool is not { } parentTool ) return;
@@ -100,6 +104,8 @@ public class EditorToolManager
 		parentTool.CurrentTool = parentTool.Tools.FirstOrDefault( x => editMode == x.GetType().Name )
 			?? parentTool.CurrentTool
 			?? parentTool.Tools.FirstOrDefault();
+
+		SubToolChanged?.Invoke( parentTool.CurrentTool );
 	}
 
 	int previousHash;
@@ -196,6 +202,9 @@ public class EditorToolManager
 	{
 		LastModeName = CurrentModeName;
 		CurrentModeName = name;
+
+		SceneViewWidget.Current.Tools.UpdateTool( EditorToolManager.CurrentModeName );
+		EditorToolBars.SelectTransformMode(null, false);
 	}
 
 	/// <summary>

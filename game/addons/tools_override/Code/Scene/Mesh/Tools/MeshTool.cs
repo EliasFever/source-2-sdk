@@ -40,4 +40,9 @@ public partial class MeshTool : EditorTool
 	{
 		EditorToolManager.SetTool( nameof( MeshTool ) );
 	}
+
+	public void SetMoveMode( TypeDescription type )
+	{
+		CurrentMoveMode = type.Create<MoveMode>();
+	}
 }

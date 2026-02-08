@@ -156,7 +156,7 @@ public abstract class SelectionTool<T>( MeshTool tool ) : SelectionTool
 			{
 				using ( Gizmo.Scope( "Vertices" ) )
 				{
-					var vertexColor = new Color( 1.0f, 1.0f, 0.3f, 1f );
+					var vertexColor = new Color( 0.3137f, 0.7843f, 1.0f, 1f );
 
 					Gizmo.Draw.Color = vertexColor;
 					Gizmo.Draw.IgnoreDepth = false;

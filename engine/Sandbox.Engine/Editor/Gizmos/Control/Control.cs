@@ -170,10 +170,9 @@ public static partial class Gizmo
 
 			Sandbox.Gizmo.Hitbox.BBox( new BBox( new Vector3( 0, -girth, -girth ), new Vector3( length, girth, girth ) ) );
 
-			if ( !Sandbox.Gizmo.IsHovered ) Sandbox.Gizmo.Draw.Color = Sandbox.Gizmo.Draw.Color.Darken( 0.33f );
+			if ( Sandbox.Gizmo.IsHovered ) Sandbox.Gizmo.Draw.Color = Sandbox.Gizmo.Colors.Active;
 
 			Sandbox.Gizmo.Draw.LineThickness = girth;
-
 
 			var lineLength = length;
 			var headLength = 4.0f;
@@ -226,12 +225,10 @@ public static partial class Gizmo
 			Sandbox.Gizmo.Hitbox.BBox( box );
 
 			// Draw
-			if ( !Sandbox.Gizmo.IsHovered )
+			if ( Sandbox.Gizmo.IsHovered )
 			{
-				Sandbox.Gizmo.Draw.Color = Sandbox.Gizmo.Draw.Color.Darken( 0.33f );
+				Sandbox.Gizmo.Draw.Color = Sandbox.Gizmo.Colors.Active;
 			}
-
-			if ( !Sandbox.Gizmo.IsHovered ) Sandbox.Gizmo.Draw.Color = Sandbox.Gizmo.Draw.Color.Darken( 0.03f );
 
 			Sandbox.Gizmo.Draw.SolidBox( box );
 
@@ -284,7 +281,7 @@ public static partial class Gizmo
 			// drawing
 			//
 
-			if ( !Sandbox.Gizmo.IsHovered ) Sandbox.Gizmo.Draw.Color = Sandbox.Gizmo.Draw.Color.Darken( 0.33f );
+			if ( Sandbox.Gizmo.IsHovered ) Sandbox.Gizmo.Draw.Color = Sandbox.Gizmo.Colors.Active;
 
 			if ( drawHandle == null )
 			{
