@@ -60,6 +60,10 @@ partial class StandaloneExporter
 			if ( AddIfExists( "addons/base/Assets" ) )
 				continue;
 
+			// Check base
+			if ( AddIfExists( "addons/base_override/Assets" ) )
+				continue;
+
 			Logger.Warning( $"Code resource '{relativePath}' was NOT found in base or core?" );
 		}
 

@@ -61,7 +61,7 @@ internal static class ManagedTools
 		QDir.addSearchPath( "toolimages", $"{root}/core/tools/images" );
 		QDir.addSearchPath( "toolimages", $"{root}/addons/tools/assets" );
 
-		foreach ( var file in System.IO.Directory.EnumerateFiles( $"{root}/addons/base/assets/fonts/", "*.ttf" ) )
+		foreach ( var file in System.IO.Directory.EnumerateFiles( $"{root}/addons/base_override/assets/fonts/", "*.ttf" ) )
 		{
 			QFontDatabase.addApplicationFont( file );
 		}

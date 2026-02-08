@@ -97,7 +97,7 @@ public partial class ProjectPublisher
 			if ( project.Config.Type == "game" )
 			{
 				progress?.SetProgressMessage( "Collecting base code assets" );
-				await IncludeFiles( FileSystem.Root.GetFullPath( "/addons/base/code/" ), "*", cancel );
+				await IncludeFiles( FileSystem.Root.GetFullPath( "/addons/base_override/code/" ), "*", cancel );
 			}
 
 			await Task.Delay( 10 );

@@ -270,6 +270,8 @@ internal static class Bootstrap
 			{
 				LoadLibrary( Path.GetFullPath( "bin/thirdparty/fmod.dll" ) );
 				LoadLibrary( Path.GetFullPath( "bin/thirdparty/fmodstudio.dll" ) );
+				LoadLibrary( Path.GetFullPath( "bin/thirdparty/phonon.dll" ) );
+				LoadLibrary( Path.GetFullPath( "bin/thirdparty/phonon_fmod.dll" ) );
 			}
 
 

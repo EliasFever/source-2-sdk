@@ -26,8 +26,10 @@ partial class StandaloneExporter
 	{
 		var nativeDlls = GetBlacklistedFiles( DllBlacklist, Path.Combine( engineDir, "bin", "win64" ) );
 		var managedDlls = GetBlacklistedFiles( [], Path.Combine( engineDir, "bin", "managed" ) );
+		var fmodDlls = GetBlacklistedFiles( [], Path.Combine( engineDir, "bin", "thirdparty" ) );
 
 		var files = nativeDlls.Concat( managedDlls );
+		files = files.Concat( fmodDlls );
 
 		return files.Where( x => x.EndsWith( ".dll" ) );
 	}
