@@ -7,6 +7,27 @@ QToolBar {
 	min-height: 26px;
 }
 
+.CQHammerSelectModeBar, .CQMapSettingsBar, 
+.CQMapSettingsBar, .CQHammerGlobalModeBar, 
+.CQHammerGlobalViewBar
+{
+	border-top: 2px solid #363636;
+	border-left: 1px solid #363636;
+
+}
+
+.CQHammerSelectModeBar, .CQMapSettingsBar, 
+.CQMapSettingsBar, .CQHammerGlobalModeBar 
+{
+	background: #262626 !important;
+} 
+
+.CQHammerGlobalViewBar {
+	background: #262626 !important;
+
+	/* background: #363636 !important; */
+}
+
 QToolBar QLabel {
 	margin: 1px;
 }
@@ -19,11 +40,12 @@ QToolBar QPushButton {
 QToolBar QToolButton,
 QToolBar QPushButton,
 QToolBar QComboBox {
-	background-color: transparent;
+	background: #323232;
 	margin: 0px;
 	padding: 2px;
-	border: 0px;
-	border-radius: $ControlRadius;
+	border-radius: $ControlRadius;	
+	border: 1px solid #606060;
+
 }
 
 QToolBar QToolButton[popupMode="1"] {
@@ -37,21 +59,25 @@ QToolBar QComboBox::drop-down {
 QToolBar QToolButton:checked,
 QToolBar QPushButton:checked,
 QToolBar QComboBox:checked {
-	background: $WidgetBackground;
-	color: $Text;
+	background: #555555;
+	/* color: $Text; */
+	color: #af7149;
+	border: 1px solid #bf773b;
 }
 
 QToolBar QToolButton:hover,
 QToolBar QPushButton:hover,
 QToolBar QComboBox:hover {
-	background: $WidgetBackground;
+	background:#555e71;
+	/* background: $WidgetBackground; */
+	border: 1px solid #bf773b;
 	color: $Text;
 }
 
 QToolBar QToolButton:pressed,
 QToolBar QPushButton:pressed,
 QToolBar QComboBox:pressed {
-	background: $WidgetBackground;
+	background: #485061;
 	color: $Text;
 }
 
@@ -78,14 +104,13 @@ QToolBar::handle:horizontal {
 
 QToolBar::separator {
 	background: $SurfaceLightBackground;
-	margin: 5px;
+	margin: 2px;
 	width: 1px;
 	height: 1px;
 }
 
 QToolBar LineEdit {
 	padding: 3px 5px;
-	border: 0px;
 	min-height: 18px;
 }
 
@@ -116,6 +141,7 @@ CQCordonEditorDockWidget,
 CQHammerGlobalModeBar,
 CQHammerGlobalViewBar {
 	background-color: $WindowBackground;
+	/* background-color: #363636 !important; */
 }
 
 ScrollArea {

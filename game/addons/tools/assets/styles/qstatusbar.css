@@ -11,10 +11,7 @@ QStatusBar>QLabel {
 	margin: 4px 2px;
 	color: $TextControl;
 	font-size: 11px;
-}
-
-QStatusBar::item {
-	border: 0px;
+	padding: 2px;
 }
 
 QStatusBar>QComboBox {

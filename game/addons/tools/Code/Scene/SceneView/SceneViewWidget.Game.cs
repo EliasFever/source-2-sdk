@@ -24,7 +24,7 @@ public partial class SceneViewWidget
 		_gameViewport.SetGameView();
 
 		OnViewModeChanged();
-		_viewportTools.UpdateViewportFromCookie();
+		ViewportTools.UpdateViewportFromCookie();
 	}
 
 	[Event( "scene.stop" )]
@@ -58,7 +58,7 @@ public partial class SceneViewWidget
 
 		if ( CurrentView == ViewMode.Game )
 		{
-			_viewportTools.UpdateViewportFromCookie();
+			ViewportTools.UpdateViewportFromCookie();
 		}
 	}
 
@@ -67,7 +67,7 @@ public partial class SceneViewWidget
 	/// </summary>
 	void OnViewModeChanged()
 	{
-		_viewportTools.Rebuild();
+		ViewportTools.Rebuild();
 		_sidePanel?.Visible = CurrentView != ViewMode.Game;
 
 		foreach ( var viewport in _viewports.Values )

@@ -46,7 +46,7 @@ public partial class SceneViewWidget : Widget
 	private List<LinkableSplitter> _splitters;
 	public Dictionary<int, SceneViewportWidget> _viewports;
 
-	ViewportTools _viewportTools;
+	public ViewportTools ViewportTools;
 
 	public SceneViewWidget( SceneEditorSession session, Widget parent ) : base( parent )
 	{
@@ -120,7 +120,7 @@ public partial class SceneViewWidget : Widget
 
 		if ( lastView != CurrentView )
 		{
-			_viewportTools.Update();
+			ViewportTools.Update();
 			lastView = CurrentView;
 		}
 	}
@@ -160,7 +160,7 @@ public partial class SceneViewWidget : Widget
 	{
 		Layout.Clear( true );
 
-		_viewportTools = Layout.Add( new ViewportTools( this ) );
+		ViewportTools = Layout.Add( new ViewportTools( this ) );
 
 		var sideLayout = Layout.AddRow( 1 );
 		_sidePanel = sideLayout.Add( new ViewportToolBar( this ) );
@@ -304,7 +304,7 @@ file class ViewportToolBar : Widget
 		_sidebar = middle.AddColumn();
 	}
 
-	void OnToolChanged()
+	public void OnToolChanged()
 	{
 		// Prevent flicker when changing tools
 		using var x = SuspendUpdates.For( this );

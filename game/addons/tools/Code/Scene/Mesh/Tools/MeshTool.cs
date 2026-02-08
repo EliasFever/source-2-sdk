@@ -33,6 +33,13 @@ public partial class MeshTool : EditorTool
 		MoveMode = EditorTypeLibrary.Create<MoveMode>( typeof( T ) );
 	}
 
+	// legacy compat version of the above
+	public void SetMoveMode( TypeDescription type )
+	{
+		if ( MoveMode?.GetType() == type.TargetType ) return;
+		MoveMode = EditorTypeLibrary.Create<MoveMode>( type.TargetType );
+	}
+
 	public override IEnumerable<EditorTool> GetSubtools()
 	{
 		yield return new PrimitiveTool( this );

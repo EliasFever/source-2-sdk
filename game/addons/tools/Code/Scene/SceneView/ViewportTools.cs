@@ -32,6 +32,12 @@ public partial class ViewportTools : Widget
 		//
 		// Toolbar
 		//
+
+		// TODO: Eventually we can hide this toolbar at this stage.
+
+		//if ( !EditorToolBars.ShowLegacyToolbar )
+		//	return;
+
 		toolbarWidget = Layout.Add( new Widget() );
 		toolbarWidget.Name = "ViewportToolbar";
 		toolbarWidget.FixedHeight = Theme.ControlHeight + Margin * 2;
@@ -96,9 +102,14 @@ public partial class ViewportTools : Widget
 	[EditorEvent.Frame]
 	public void OnViewportToolsFrame()
 	{
-		UpdateDimensions();
-		UpdateChildren();
-		UpdateToolExtensionToolbar();
+		this.Visible = EditorToolBars.ShowLegacyToolbar;
+
+		if ( this.Visible )
+		{
+			UpdateDimensions();
+			UpdateChildren();
+			UpdateToolExtensionToolbar();
+		}
 	}
 
 	int lastGeometryHash = -1;

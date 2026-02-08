@@ -10,11 +10,14 @@ public class EditorToolManager
 	/// </summary>
 	public static string CurrentModeName { get; set; } = "ObjectEditorTool";
 	public static string LastModeName { get; set; } = CurrentModeName;
-	private static string CurrentSubModeName { get; set; }
+	public static string CurrentSubModeName { get; set; }
 
 	public EditorTool CurrentTool { get; private set; }
 
 	public bool IsCurrentViewFocused { get; private set; }
+
+	public event Action<EditorTool> ToolChanged;
+
 
 	public EditorTool CurrentSubTool => CurrentTool?.CurrentTool;
 	public List<EditorTool> ComponentTools { get; private set; } = new List<EditorTool>();
@@ -82,8 +85,7 @@ public class EditorToolManager
 		CurrentTool = null;
 
 		var bestType = EditorTypeLibrary.GetTypesWithAttribute<EditorToolAttribute>()
-			.Where( x => x.Type.IsNamed( currentMode ) )
-			.FirstOrDefault();
+			.FirstOrDefault( x => x.Type.IsNamed( currentMode ) );
 
 		if ( bestType.Type is null )
 		{
@@ -92,9 +94,10 @@ public class EditorToolManager
 
 		CurrentTool = bestType.Type.Create<EditorTool>();
 		CurrentTool.InitializeInternal( this );
+		ToolChanged?.Invoke( CurrentTool );
 	}
 
-	private void UpdateSubTool( string editMode )
+	public void UpdateSubTool( string editMode )
 	{
 		if ( currentSubMode == editMode ) return;
 		if ( CurrentTool is not { } parentTool ) return;

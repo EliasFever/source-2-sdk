@@ -11,10 +11,10 @@ QComboBox {
 QComboBox::drop-down {
 	subcontrol-origin: padding;
 	subcontrol-position: top right;
-	width: 24px;
-	border-top-right-radius: 3px;
+	width: 22px;
+	/* border-top-right-radius: 3px; */
 	/* same radius as the QComboBox */
-	border-bottom-right-radius: 3px;
+	/* border-bottom-right-radius: 3px; */
 	color: $TextControl;
 }
 

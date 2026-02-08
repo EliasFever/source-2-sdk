@@ -1,44 +1,44 @@
 QTabBar {
-	border: 0px;
+	border-top: 1px solid #505050;
 	font-family: $DefaultFont;
 	margin: 0px;
 	padding: 0px;
 	qproperty-drawBase: 0;
-	qproperty-iconSize: 13px;
+	qproperty-iconSize: 15px;
 	font-weight: 500;
 	background-color: $TabBarBackground;
-	border-top-left-radius: $ControlRadius;
-	border-top-right-radius: $ControlRadius;
+	/* border-top-left-radius: $ControlRadius;
+	border-top-right-radius: $ControlRadius; */
 }
 
 QTabBar::tab {
 	background-color: $TabInactiveBackground;
 	color: $TextLight;
-	padding: 0px 8px;
-	padding-left: 12px;
+	padding: 0px 5px;
+	padding-left: 8px;
 	padding-bottom: 2px;
 	background-color: transparent;
-	min-height: 24px;
-	max-height: 24px;
-	border-top-left-radius: $ControlRadius;
-	border-top-right-radius: $ControlRadius;
-	border-top: 2px solid transparent;
+	min-height: 22px;
+	max-height: 22px;
+	/* border-top-left-radius: $ControlRadius;
+	border-top-right-radius: $ControlRadius; */
+	border-top: 1px solid transparent;
 }
 
 QTabBar::tab:hover {
 	color: $Text;
-	background-color: $SurfaceBackground;
 }
 
 QTabBar::tab:selected {
 	color: $Text;
 	background-color: $TabBackground;
-	border-top: 2px solid $Primary;
+	border-top: 1px solid #505050;
+	border-right: 1px solid #505050;
 }
 
 QTabBar::tab:bottom {
-	border-bottom-left-radius: $ControlRadius;
-	border-bottom-right-radius: $ControlRadius;
+	/* border-bottom-left-radius: $ControlRadius;
+	border-bottom-right-radius: $ControlRadius; */
 }
 
 QTabBar::close-button {
@@ -66,8 +66,4 @@ QTabWidget::pane {
 	background-color: $ControlBackground;
 	margin: 0px;
 	padding: 0px;
-}
-
-ToolWindowManagerTabBar > QToolButton {
-	background-color: $WindowBackground;
 }

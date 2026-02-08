@@ -50,10 +50,10 @@ Label[type="subtitle"] {
 
 TextEdit,
 QLineEdit {
+	padding: 0 5px;
+	/* border-radius: $ControlRadius; */
 	background-color: $ControlBackground;
-	padding: 0 8px;
-	border-radius: $ControlRadius;
-	color: $Text;
+	/* color: $Text; */
 }
 
 TextEdit:disabled,
@@ -62,7 +62,7 @@ QLineEdit:disabled {
 }
 
 QLineEdit {
-	min-height: $ControlHeight;
+	/* min-height: $ControlHeight; */
 }
 
 TextEdit::placeholder,
@@ -110,7 +110,7 @@ QSlider::handle:horizontal {
 	border: 1px solid $Border;
 	width: 8px;
 	margin: -4px 0;
-	border-radius: $ControlRadius;
+	/* border-radius: $ControlRadius; */
 }
 
 /*
@@ -122,7 +122,7 @@ CQPreviewOutlinerTreeWidget {
 }
 
 QLineEdit {
-	background-color: $ControlBackground;
+	/* background-color: $ControlBackground; */
 }
 
 CQModelDocEditorViewControls {
@@ -132,20 +132,38 @@ CQModelDocEditorViewControls {
 /*
  * Material Editor
  */
-CQMaterialEditor CQTextureControl {
-	background-color: transparent;
-}
 
 CQMaterialEditor #group_label {
-	background-color: $SurfaceBackground;
+	background-color: #515151;
 }
 
 CQMaterialEditor #group_options_button {
 	background-color: $ButtonBackground;
 }
 
+CQMaterialEditor QToolBar {
+	background-color: #262626;
+	border-top: 2px solid #363636;
+}
+
 CQMaterialEditor QFrame {
-	background-color: $WidgetBackground;
+	background-color: #363636;
+}
+
+CQMaterialEditor CQFeaturesList CQTitledGroupBox QFrame {
+	background-color: #313131;
+}
+
+CQMaterialEditor CQFeaturesWindow CQFeaturesList {
+	border: 1px solid #6e6e6e;
+}
+
+CQMaterialEditor QStackedWidget {
+	border: 1px solid #6e6e6e;
+}
+
+CQMaterialEditor QStackedWidget CQTitledGroupBox QFrame {
+	background-color: #323232;
 }
 
 CQStylizedGroupBoxControllable {
@@ -156,12 +174,20 @@ CQMaterialEditor CQAssetsWindow QHeaderView QWidget {
 	background-color: $TabBarBackground;
 }
 
-CQMaterialEditor CQAssetsWindow QTableWidget {
-	background-color: $ControlBackground;
+CQMaterialEditor CQAssetsWindow QTableWidget  {
+	background-color:#262627;
 }
 
 CQMaterialEditor CQAssetsWindow QTableWidget::item {
 	color: $Text;
+}
+
+CQStylizedGroupBoxControllableCQStylizedGroupBoxControllable {
+	background-color: rgb(208, 255, 0);
+}
+
+CQMaterialEditor QWidget QFrame CQTextureControl QLabel {
+	background-color: #2a2a2a;
 }
 
 /*

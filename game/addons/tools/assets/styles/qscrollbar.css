@@ -1,3 +1,5 @@
+/* TODO: Undo most of this, need some padding however  */
+
 QScrollBar {
 	background: transparent;
 	margin: 0px 0px 0px 0px;
@@ -10,6 +12,11 @@ QScrollBar:horizontal {
 
 QScrollBar:vertical {
 	width: 8px;
+}
+
+ToolWindowManagerTabBar {
+	background-color: #262626;
+	max-height: 20px;
 }
 
 QScrollBar::handle {

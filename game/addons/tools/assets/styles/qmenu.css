@@ -24,59 +24,59 @@ QMenuBar::item:pressed {
     color: $Text;
 }
 
-QMenu {
-    background-color: $WidgetBackground;
-    border: 0px;
-    padding: 5px 0;
-    margin: 0px;
-    color: $Text;
-    font-family: $DefaultFont;
-    font-size: 11px;
-}
 
-QMenu::icon,
-QMenu::indicator {
-    left: 10px;
-    padding: 2px;
-}
+    /* QMenu {
+        background-color: #2e2e2e;
+        border: 0px;
+        padding: 5px 0;
+        color: $Text;
+        font-family: $DefaultFont;
+        font-size: 11px;
+    } 
 
-QMenu::item {
-    padding: 5px 20px;
-    margin: 0px 5px;
-    min-width: 120px;
-    border-radius: $ControlRadius;
-}
+    QMenu::icon,
+    QMenu::indicator {
+        left: 5px;
+        padding: 2px;
+    } 
 
-QMenu::item:checked {
-    color: $Text;
-    font-weight: bold;
-    border-left: 3px solid $Primary;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    margin-left: 0;
-}
+    QMenu::item {
+        padding: 5px 20px; 
+        margin: 0px 5px;
+        min-width: 120px;
+        border-radius: $ControlRadius;
+    }
 
-QMenu::item:selected {
-    background: $SurfaceBackground;
-    color: $Text;
-}
+    QMenu::item:checked {
+        color: $Text;
+        font-weight: bold;
+        border-left: 3px solid $Primary;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        margin-left: 0;
+    }
 
-QMenu::item:disabled {
-    color: $TextDisabled;
-}
+    QMenu::item:selected {
+        background: $SurfaceBackground;
+        color: $Text;
+    }
 
-QMenu::item:disabled:selected {
-    color: $TextDisabled;
-    background: transparent;
-}
+    QMenu::item:disabled {
+        color: $TextDisabled;
+    }
 
-QMenu::separator {
-    height: 1px;
-    background: $Border;
-    margin: 5px 0px;
-}
+    QMenu::item:disabled:selected {
+        color: $TextDisabled;
+        background: transparent;
+    }
 
-QMenu::indicator {
-    width: 13px;
-    height: 13px;
-}
+    QMenu::separator {
+        height: 1px;
+        background: $Border;
+        margin: 5px 0px;
+    }
+
+    QMenu::indicator {
+        width: 13px;
+        height: 13px;
+    } */

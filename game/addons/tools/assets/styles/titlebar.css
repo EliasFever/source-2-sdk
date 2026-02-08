@@ -1,10 +1,11 @@
 #TitleBar {
-	min-height: 35px;
-	max-height: 35px;
+	min-height: 32px;
+	max-height: 32px;
+	background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(68, 68, 70, 255), stop:1 rgba(34, 34, 34, 255));  new
 }
 
 #TitleBar QMenuBar {
-	background-color: transparent;
+	/* background-color: transparent; */
 	border: 0px;
 	padding: 0px;
 	spacing: 0px;
@@ -13,24 +14,23 @@
 	font-family: $DefaultFont;
 	color: $Text;
 	font-size: 11px;
-	font-weight: 500;
+	font-weight: 450;
 }
 
 #TitleBar QMenuBar::item {
-	padding: 4px 8px;
+	padding: 5px 8px;
 	margin: 0px;
 	min-height: 200px;
 	height: 200px;
 	margin: 0px;
-	border-radius: $ControlRadius;
 }
 
 #TitleBar QMenuBar::item:selected {
-	background: $WidgetBackground;
+	background: #4f5259;
 }
 
 #TitleBar QMenuBar::item:pressed {
-	background: $WidgetBackground;
-	border-bottom-left-radius: 0px;
-	border-bottom-right-radius: 0px;
+	background: #4f5259;
+	/* border-bottom-left-radius: 0px;
+	border-bottom-right-radius: 0px; */
 }
