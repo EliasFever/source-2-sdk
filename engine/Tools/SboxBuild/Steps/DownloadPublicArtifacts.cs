@@ -81,6 +81,8 @@ internal class DownloadPublicArtifacts( string name ) : Step( name )
 		}
 	}
 
+	const string BlacklistPath = "bootstrap_blacklist";
+
 	private static ExitCode DownloadArtifacts( HttpClient httpClient, ArtifactManifest manifest, string repoRoot )
 	{
 		var updatedCount = 0;
@@ -98,6 +100,23 @@ internal class DownloadPublicArtifacts( string name ) : Step( name )
 			}
 
 			var destination = Path.Combine( repoRoot, entry.Path.Replace( '/', Path.DirectorySeparatorChar ) );
+
+			if ( !string.IsNullOrEmpty( BlacklistPath ) )
+			{
+				var path = Path.GetFullPath( Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + BlacklistPath + ".txt" );
+
+				foreach ( var line in File.ReadLines( path ) )
+				{
+					if ( string.IsNullOrEmpty( line ) ) continue;
+
+					if ( line.Replace( '/', Path.DirectorySeparatorChar ) == entry.Path.Replace( '/', Path.DirectorySeparatorChar ) )
+					{
+						Log.Info( $"{entry.Path} was blacklisted from being replaced!" );
+						Interlocked.Increment( ref skippedCount );
+						return;
+					}
+				}
+			}
 
 			if ( FileMatchesHash( destination, entry.Sha256 ) )
 			{
