@@ -308,7 +308,7 @@ public partial class StandaloneExporter
 		{
 			var sbprojPath = Path.Combine( baseDir, Standalone.GamePath, ".sbproj" );
 			QueueCopy( $"{_exportConfig.Project.ConfigFilePath}", sbprojPath, BuildStep.CopyMisc );
-			QueueCopy( $"{engineDir}/addons/base/.sbproj", $"{baseDir}/addons/base_override/.sbproj", BuildStep.CopyMisc );
+			QueueCopy( $"{engineDir}/addons/base/.sbproj", $"{baseDir}/addons/base/.sbproj", BuildStep.CopyMisc );
 		}
 
 		//
