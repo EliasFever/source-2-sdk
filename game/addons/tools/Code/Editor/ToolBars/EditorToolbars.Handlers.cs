@@ -496,8 +496,8 @@ public static class EditorToolBarsActions
 	//
 	// General tools modes
 	//
-	//	public static void SelectBlockTool()
-	//		=> Activate( nameof( MeshTool ), nameof( BlockTool ) );
+	public static void SelectBlockTool()
+		=> Activate( nameof( MeshTool ), nameof( MeshTool ) );
 
 	public static void SelectPathTool()
 		=> ActiveProjectTool( "PathTool" );
@@ -542,7 +542,7 @@ public static class EditorToolBarsActions
 		string toolName = nameof( tool );
 
 		// Try to get the type by name, including assembly-qualified name if needed
-		Type? toolType = AppDomain.CurrentDomain.GetAssemblies()
+		Type toolType = AppDomain.CurrentDomain.GetAssemblies()
 			.Select( a => a.GetType( toolName ) )
 			.FirstOrDefault( t => t != null );
 

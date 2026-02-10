@@ -17,6 +17,7 @@ public static partial class EditorToolBars
 
 	private static DockWindow MainWindow;
 	private static ViewportTools ViewportTools;
+	private static bool _toolChangeHooked;
 
 	/// <summary>
 	/// On the first creation of the editor - initializes all the necessary toolbars,
@@ -26,12 +27,18 @@ public static partial class EditorToolBars
 	public static void InitToolbars( EditorMainWindow window )
 	{
 		MainWindow = window;
-		ViewportTools = SceneViewWidget.Current.ViewportTools;
+		var sceneView = SceneViewWidget.Current;
+		if ( sceneView != null )
+		{
+			ViewportTools = sceneView.ViewportTools;
+		}
 
-		BuildToolbars();
+		if ( Preferences.CustomEditorPreferences.BuildToolbarsOnStartup )
+		{
+			BuildToolbars();
+		}
 	}
 
-	[Menu( "Editor", "HL2K/Editor/Debug/Force Rebuild Toolbars", "hammer/appicon.ico" ), Order( 100 )]
 	static void BuildToolbars()
 	{
 		TryClearToolbars();
@@ -89,10 +96,23 @@ public static partial class EditorToolBars
 		BuildShortcutCache();
 	}
 
-	[Event( "editor.created" )]
 	private static void RegisterEditorEventSubscriptions()
 	{
-		SceneViewWidget.Current.Tools.ToolChanged += tool =>
+		TryRegisterSceneViewToolEvents();
+	}
+
+	[EditorEvent.Frame]
+	private static void TryRegisterSceneViewToolEvents()
+	{
+		if ( _toolChangeHooked )
+			return;
+
+		var sceneView = SceneViewWidget.Current;
+		var tools = sceneView?.Tools;
+		if ( tools == null )
+			return;
+
+		tools.ToolChanged += tool =>
 		{
 			if ( _pendingSubtool != null && tool?.GetType().Name == nameof( MeshTool ) )
 			{
@@ -101,6 +121,8 @@ public static partial class EditorToolBars
 				_pendingSubtool = null;
 			}
 		};
+
+		_toolChangeHooked = true;
 	}
 
 	[Event( "scene.play", Priority = 100 )]

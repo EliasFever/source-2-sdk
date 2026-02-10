@@ -84,7 +84,7 @@ public static partial class EditorToolBars
 				Checkable=true,
 				Description="Add new objects to the scene" },
 
-/*			new() { Name="Block Tool",
+			new() { Name="Block Tool",
 				ShortcutAction = "tools.block-tool",
 				Icon="hammer/block_tool_icon.png",
 				ToggledIcon="hammer/block_tool_icon_activated.png",
@@ -94,7 +94,7 @@ public static partial class EditorToolBars
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectBlockTool,
-				Description="Create new shapes by dragging out a box" },*/
+				Description="Create new shapes by dragging out a box" },
 
 			new() { Name="Path Tool",
 				Icon="hammer/path_tool_icon.png",
