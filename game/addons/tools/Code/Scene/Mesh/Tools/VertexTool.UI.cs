@@ -63,22 +63,38 @@ partial class VertexTool
 
 			{
 				var group = AddGroup( "Operations" );
+				var mergeObject = mergeProperties.GetSerialized();
+
+				{
+					var row = new Widget { Layout = Layout.Row() };
+					row.Layout.Spacing = 4;
+					
+					var range = ControlWidget.Create( mergeObject.GetProperty( nameof( MergeProperties.Range ) ) );
+					
+					range.HorizontalSizeMode = SizeMode.CanShrink;
+					range.FixedHeight = Theme.ControlHeight;
+
+					row.Layout.Add( range );
+					
+					group.Add( row );
+				}
 
 				{
 					var row = new Widget { Layout = Layout.Row() };
 					row.Layout.Spacing = 4;
 
-					CreateButton( "Merge", "merge", "mesh.merge", Merge, _vertices.Length > 1, row.Layout );
+					// CreateButton( "Merge", "merge", "mesh.merge", Merge, _vertices.Length > 1, row.Layout );
 
-					var mergeObject = mergeProperties.GetSerialized();
-					var range = ControlWidget.Create( mergeObject.GetProperty( nameof( MergeProperties.Range ) ) );
+					// var mergeObject = mergeProperties.GetSerialized();
+					// var range = ControlWidget.Create( mergeObject.GetProperty( nameof( MergeProperties.Range ) ) );
 					var distance = ControlWidget.Create( mergeObject.GetProperty( nameof( MergeProperties.Distance ) ) );
-					distance.HorizontalSizeMode = SizeMode.Expand;
-
-					range.FixedHeight = Theme.ControlHeight;
+					distance.HorizontalSizeMode = SizeMode.CanShrink;
+					// range.HorizontalSizeMode = SizeMode.CanShrink;
+					
+					// range.FixedHeight = Theme.ControlHeight;
 					distance.FixedHeight = Theme.ControlHeight;
 
-					row.Layout.Add( range );
+					// row.Layout.Add( range );
 					row.Layout.Add( distance );
 
 					group.Add( row );
@@ -87,7 +103,8 @@ partial class VertexTool
 				{
 					var row = new Widget { Layout = Layout.Row() };
 					row.Layout.Spacing = 4;
-
+					
+					CreateButton( "Merge", "merge", "mesh.merge", Merge, _vertices.Length > 1, row.Layout );
 					CreateButton( "Snap To Vertex", "gps_fixed", "mesh.snap_to_vertex", SnapToVertex, _vertices.Length > 1, row.Layout );
 					CreateButton( "Weld UVs", "scatter_plot", "mesh.vertex-weld-uvs", WeldUVs, _vertices.Length > 0, row.Layout );
 					CreateButton( "Bevel", "straighten", "mesh.bevel", Bevel, _vertices.Length > 0, row.Layout );

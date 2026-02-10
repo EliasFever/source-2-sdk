@@ -108,9 +108,10 @@ partial class FaceTool
 				var group = AddGroup( "Slice" );
 
 				var grid = Layout.Row();
-				grid.Spacing = 4;
+				grid.Spacing = 2;
 
 				var control = ControlWidget.Create( this.GetSerialized().GetProperty( nameof( NumCuts ) ) );
+				control.MinimumWidth = 100; // John: This makes it scale correctly in ToolProperties
 				control.FixedHeight = Theme.ControlHeight;
 				grid.Add( control );
 

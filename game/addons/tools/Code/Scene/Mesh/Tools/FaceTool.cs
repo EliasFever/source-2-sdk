@@ -14,6 +14,7 @@ public sealed partial class FaceTool( MeshTool tool ) : SelectionTool<MeshFace>(
 {
 	MeshFace _hoverFace;
 	SceneDynamicObject _faceObject;
+	public MeshTool ParentTool => Tool;
 
 	//Selection
 	public bool SelectByMaterial { get; set; } = false;

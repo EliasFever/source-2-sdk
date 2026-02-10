@@ -339,9 +339,45 @@ public sealed class BlockEditor( PrimitiveTool tool ) : PrimitiveEditor( tool )
 			var group = w.AddGroup( $"{title} Properties" );
 			var so = _primitive.GetSerialized();
 			so.OnPropertyChanged += ( e ) => _onEdited?.Invoke();
-			var sheet = new ControlSheet();
-			sheet.AddObject( so );
-			group.Add( sheet );
+			
+			{
+				var row = new Widget { Layout = Layout.Row() };
+				row.Layout.Spacing = 24;
+				row.Layout.Alignment = TextFlag.LeftCenter;
+				
+				var label = new Label(text: "Sides:");
+
+				var range = ControlWidget.Create( so.GetProperty( nameof( BlockPrimitive.Sides ) ) );
+					
+				range.HorizontalSizeMode = SizeMode.CanShrink;
+				range.FixedHeight = Theme.ControlHeight;
+				range.MinimumWidth = 100;
+
+				row.Layout.Add( label );
+				row.Layout.Add( range );
+					
+				group.Add( row );
+			}
+
+			{
+				var row = new Widget { Layout = Layout.Row() };
+				row.Layout.Spacing = 14;
+				row.Layout.Alignment = TextFlag.LeftCenter;
+
+				var label = new Label(text: "Hollow:");
+
+				var boolean = ControlWidget.Create( so.GetProperty( nameof( BlockPrimitive.Hollow ) ) );
+
+				row.Layout.Add( label );
+				var t = row.Layout.Add( boolean );
+
+				group.Add( row );
+			}
+
+			//  John: This was the old way, it didn't scale very well so fuck this.
+			//	var sheet = new ControlSheet();
+			//	sheet.AddObject( so );
+			//	group.Add( sheet );
 		}
 
 		[EditorEvent.Frame]

@@ -1,6 +1,6 @@
 ﻿namespace Editor;
 
-[Dock( "Editor", "Tool Properties", "tool_properties" )]
+[Dock( "Editor", "Tool Properties", "build" )]
 public class ToolPropertiesWindow : Widget
 {
 	Layout Root;
@@ -11,12 +11,22 @@ public class ToolPropertiesWindow : Widget
 	private EditorTool _activeTool;
 	private int _selectionHash;
 
+	private enum ToolWidgetSizing
+	{
+		Fill,
+		FixedWidthLeft,
+		Natural
+	}
+
+
 	public ToolPropertiesWindow( Widget parent ) : base( parent )
 	{
 		Root = Layout.Column();
 		Layout = Root;
 
 		Root.AddSeparator();
+
+		this.MinimumWidth = 240f;
 
 		var scroll = new ScrollArea( this )
 		{
@@ -28,15 +38,18 @@ public class ToolPropertiesWindow : Widget
 
 		var scrollContentWidget = new Widget( scroll )
 		{
-			Layout = Layout.Column()
+			Layout = Layout.Column(),
+			VerticalSizeMode = SizeMode.CanGrow,
+			HorizontalSizeMode = SizeMode.Flexible
 		};
 
 		// Assign the layout to _content for later updates
 		_content = scrollContentWidget.Layout;
 		_content.Spacing = 5;
+		_content.AddStretchCell();
 
 		scroll.Canvas = scrollContentWidget;
-
+		scroll.Canvas.MinimumWidth = 0f;
 		Root.Add( scroll, 1 );
 	}
 
@@ -72,16 +85,14 @@ public class ToolPropertiesWindow : Widget
 
 	private void ShowNoToolSelected()
 	{
-		if ( _currentToolWidget is not null )
-		{
-			_currentToolWidget.Destroy();
-			_currentToolWidget = null;
-		}
+		_currentToolWidget?.Destroy();
+		_currentToolWidget = null;
 
 		using var x = SuspendUpdates.For( this );
 		_content.Clear( true );
 
 		_content.Add( new Label( "No tool selected" ) );
+		_content.AddStretchCell();
 	}
 
 	private void RebuildForTool( EditorTool tool )
@@ -89,15 +100,42 @@ public class ToolPropertiesWindow : Widget
 		using var x = SuspendUpdates.For( this );
 
 		_content.Clear( true );
+		
+		// Edge case: We need to pass Terrain Tool a specific way here
+		// In the future they might add a new subtool/handle a certain existing one diff
+		// So might need to update this in the future (?)
+		if ( tool is TerrainEditor.BaseBrushTool || tool is TerrainEditor.PaintTextureTool )
+		{
+			var activeView = SceneViewWidget.Current;
+			var terrainRootTool = activeView?.Tools?.CurrentTool as TerrainEditor.TerrainEditorTool;
+
+			var terrainWidget =
+				terrainRootTool?.CreateToolSidebar()
+				?? terrainRootTool?.CreateToolFooter()
+				?? terrainRootTool?.CreateShortcutsWidget();
+
+			AddWidgetToContent( terrainWidget );
+			_content.AddStretchCell();
+			
+			return;
+		}
 
 		// Edge case: If FaceTool is active, show TextureTool as well
 		// I don't care what Garry says, face and texture tools come hand in hand
 		if ( tool is MeshEditor.FaceTool faceTool )
 		{
+			// FaceTool comes first
+			var faceWidget =
+				faceTool.CreateToolSidebar()
+				?? faceTool.CreateToolFooter()
+				?? faceTool.CreateShortcutsWidget();
+
+			AddWidgetToContent( faceWidget );
+
 			var activeView = SceneViewWidget.Current;
 			if ( activeView != null )
 			{
-				// TextureTool comes first
+				// TextureTool comes after
 				var textureTool = faceTool.ParentTool.Tools
 					.OfType<MeshEditor.TextureTool>()
 					.FirstOrDefault();
@@ -113,48 +151,39 @@ public class ToolPropertiesWindow : Widget
 				}
 			}
 
-			// FaceTool comes afterwards
-			var faceWidget =
-				faceTool.CreateToolSidebar()
-				?? faceTool.CreateToolFooter()
-				?? faceTool.CreateShortcutsWidget();
-
-			AddWidgetToContent( faceWidget );
-
 			return;
 		}
 
-		// Only show the tool's widget
 		var widget =
 			tool.CreateToolSidebar()
 			?? tool.CreateToolFooter()
 			?? tool.CreateShortcutsWidget();
 
 		AddWidgetToContent( widget );
+		_content.AddStretchCell();
 	}
 
 	private void AddWidgetToContent( Widget widget )
 	{
 		if ( widget == null || !widget.IsValid() )
 		{
-			var fallback = new Label( "This tool has no properties." )
+			var fallback = new Label( $"This tool has no properties." )
 			{
 				HorizontalSizeMode = SizeMode.Flexible,
 				MinimumWidth = 0
 			};
-
+			_content.Margin = 16;
 			_content.Add( fallback );
 			_currentToolWidget = fallback;
 			return;
 		}
 
-		widget.MinimumWidth = 0; // Allow shrinking
-		widget.HorizontalSizeMode = SizeMode.Flexible;
+		widget.MinimumWidth = 240f;
+		widget.HorizontalSizeMode = SizeMode.Expand | SizeMode.CanGrow;
 		widget.VerticalSizeMode = SizeMode.Default;
-
-		widget.ForceFlexibleWidth();		// Make sure it fits our panel
-
-		_content.Add( widget, 0 );
+		
+		_content.Margin = 0;
+		_content.Add( widget, 1 );
 		_currentToolWidget = widget;
 	}
 
