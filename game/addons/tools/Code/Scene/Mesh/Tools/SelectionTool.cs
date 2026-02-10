@@ -374,15 +374,6 @@ public abstract class SelectionTool<T>( MeshTool tool ) : SelectionTool where T 
 			{
 				var edgeColor = new Color( 0.3137f, 0.7843f, 1.0f, 1f );
 
-				Gizmo.Draw.LineThickness = 1;
-				Gizmo.Draw.IgnoreDepth = true;
-				Gizmo.Draw.Color = edgeColor.Darken( 0.3f ).WithAlpha( 0.1f );
-
-				foreach ( var v in mesh.Mesh.GetEdges() )
-				{
-					Gizmo.Draw.Line( v );
-				}
-
 				Gizmo.Draw.Color = edgeColor;
 				Gizmo.Draw.IgnoreDepth = false;
 				Gizmo.Draw.LineThickness = 2;
@@ -399,14 +390,6 @@ public abstract class SelectionTool<T>( MeshTool tool ) : SelectionTool where T 
 
 				using ( Gizmo.Scope( "Vertices" ) )
 				{
-					Gizmo.Draw.IgnoreDepth = true;
-					Gizmo.Draw.Color = vertexColor.Darken( 0.3f ).WithAlpha( 0.2f );
-
-					foreach ( var v in mesh.Mesh.GetVertexPositions() )
-					{
-						Gizmo.Draw.Sprite( v, 8, null, false );
-					}
-
 					Gizmo.Draw.Color = vertexColor;
 					Gizmo.Draw.IgnoreDepth = false;
 
