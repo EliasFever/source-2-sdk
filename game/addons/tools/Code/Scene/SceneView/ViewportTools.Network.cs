@@ -38,7 +38,7 @@ partial class ViewportTools
 		}
 	}
 
-	private void OpenNetworkSettings()
+	public void OpenNetworkSettings()
 	{
 		var menu = new ContextMenu( this );
 

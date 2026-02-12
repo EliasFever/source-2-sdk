@@ -68,7 +68,7 @@ public partial class SceneViewWidget
 	void OnViewModeChanged()
 	{
 		ViewportTools.Rebuild();
-		_sidePanel?.Visible = CurrentView != ViewMode.Game;
+		UpdateSidebarVisibility();
 
 		foreach ( var viewport in _viewports.Values )
 		{

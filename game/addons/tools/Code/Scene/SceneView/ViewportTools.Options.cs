@@ -4,6 +4,8 @@ partial class ViewportTools
 {
 	private void BuildToolbarRight( Layout layout )
 	{
+		// John: All of this now moved to toolbar and viewport
+
 		{
 			var group = AddGroup();
 
@@ -33,7 +35,7 @@ partial class ViewportTools
 	private static readonly Pixmap LayoutThreeBottom = Pixmap.FromFile( "toolimages:qcontrols/split_two_top_one_bottom.png" );
 	private static readonly Pixmap LayoutFour = Pixmap.FromFile( "toolimages:qcontrols/split_four_way.png" );
 
-	void OpenSceneViewModeMenu()
+	public void OpenSceneViewModeMenu()
 	{
 		var menu = new ContextMenu( null );
 
@@ -61,5 +63,35 @@ partial class ViewportTools
 		}
 
 		menu.OpenAtCursor();
+	}
+
+	public void OpenSceneViewModeMenuForViewport( Widget anchorWidget )
+	{
+		var menu = new ContextMenu( anchorWidget );
+
+		foreach ( var entry in EditorTypeLibrary.GetEnumDescription( typeof( SceneViewWidget.ViewportLayoutMode ) ) )
+		{
+			var layout = (SceneViewWidget.ViewportLayoutMode)entry.ObjectValue;
+			var icon = layout switch
+			{
+				SceneViewWidget.ViewportLayoutMode.One => LayoutOne,
+				SceneViewWidget.ViewportLayoutMode.TwoHorizontal => LayoutTwoH,
+				SceneViewWidget.ViewportLayoutMode.TwoVertical => LayoutTwoV,
+				SceneViewWidget.ViewportLayoutMode.ThreeLeft => LayoutThreeLeft,
+				SceneViewWidget.ViewportLayoutMode.ThreeRight => LayoutThreeRight,
+				SceneViewWidget.ViewportLayoutMode.ThreeTop => LayoutThreeTop,
+				SceneViewWidget.ViewportLayoutMode.ThreeBottom => LayoutThreeBottom,
+				SceneViewWidget.ViewportLayoutMode.Four => LayoutFour,
+				_ => null
+			};
+
+			var o = menu.AddOption( entry.Title, null, () => sceneViewWidget.ViewportLayout = layout );
+			o.SetIcon( icon );
+			o.Checkable = true;
+			o.Checked = sceneViewWidget.ViewportLayout == layout;
+			o.Enabled = !sceneViewWidget.Session.IsPlaying;
+		}
+
+		menu.OpenAt( anchorWidget.ScreenRect.BottomLeft, false );
 	}
 }

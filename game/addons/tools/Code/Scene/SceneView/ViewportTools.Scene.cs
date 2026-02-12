@@ -82,7 +82,7 @@ partial class ViewportTools
 		}
 	}
 
-	private void OpenGizmosMenu()
+	public void OpenGizmosMenu()
 	{
 		var menu = new Menu();
 		menu.ContentMargins = 0;

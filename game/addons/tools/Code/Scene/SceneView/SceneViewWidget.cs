@@ -123,6 +123,8 @@ public partial class SceneViewWidget : Widget
 			ViewportTools.Update();
 			lastView = CurrentView;
 		}
+
+		UpdateSidebarVisibility();
 	}
 
 	public bool TryGetViewport( int id, out SceneViewportWidget viewport )
@@ -155,6 +157,20 @@ public partial class SceneViewWidget : Widget
 	/// Side panel widget to hide when in game view.
 	/// </summary>
 	Widget _sidePanel;
+	bool? _lastSidebarVisible;
+
+	void UpdateSidebarVisibility()
+	{
+		if ( !_sidePanel.IsValid() )
+			return;
+
+		var showSidebar = CurrentView != ViewMode.Game && EditorToolBars.ShowLegacyToolbar;
+		if ( _lastSidebarVisible == showSidebar )
+			return;
+
+		_sidePanel.Visible = showSidebar;
+		_lastSidebarVisible = showSidebar;
+	}
 
 	public void RebuildLayout()
 	{
@@ -164,6 +180,8 @@ public partial class SceneViewWidget : Widget
 
 		var sideLayout = Layout.AddRow( 1 );
 		_sidePanel = sideLayout.Add( new ViewportToolBar( this ) );
+		_lastSidebarVisible = null;
+		UpdateSidebarVisibility();
 
 		var viewportLayout = sideLayout.AddRow( 1 );
 
@@ -350,13 +368,16 @@ file class ViewportToolBar : Widget
 		if ( rootTool?.CreateShortcutsWidget() is { } rootShortcutWidget ) _footer.Add( rootShortcutWidget );
 		if ( subTool?.CreateShortcutsWidget() is { } subShortcutWidget ) _footer.Add( subShortcutWidget );
 	}
-
+	
 	EditorTool _activeTool;
 	int _selectionHash;
 
 	[EditorEvent.Frame]
 	public void Frame()
 	{
+		if ( !Visible )
+			return;
+
 		var tool = SceneViewWidget.Current?.Tools.CurrentSubTool ?? SceneViewWidget.Current?.Tools.CurrentTool;
 		var selectionHash = tool?.Selection?.GetHashCode() ?? 0;
 

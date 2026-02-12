@@ -1,4 +1,4 @@
-﻿namespace Editor;
+namespace Editor;
 
 public partial class ViewportTools : Widget
 {
@@ -32,11 +32,6 @@ public partial class ViewportTools : Widget
 		//
 		// Toolbar
 		//
-
-		// TODO: Eventually we can hide this toolbar at this stage.
-
-		//if ( !EditorToolBars.ShowLegacyToolbar )
-		//	return;
 
 		toolbarWidget = Layout.Add( new Widget() );
 		toolbarWidget.Name = "ViewportToolbar";
@@ -102,7 +97,11 @@ public partial class ViewportTools : Widget
 	[EditorEvent.Frame]
 	public void OnViewportToolsFrame()
 	{
-		this.Visible = EditorToolBars.ShowLegacyToolbar;
+		var sceneView = GetAncestor<SceneViewWidget>();
+		var isFullscreen = EditorWindow.IsFullscreen( sceneView );
+		var showToolbar = EditorToolBars.ShowLegacyToolbar || isFullscreen;
+		
+		this.Visible = showToolbar;
 
 		if ( this.Visible )
 		{
@@ -204,3 +203,4 @@ file class Separator : Widget
 		Paint.DrawRect( LocalRect );
 	}
 }
+

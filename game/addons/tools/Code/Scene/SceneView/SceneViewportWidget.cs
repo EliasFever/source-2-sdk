@@ -207,7 +207,7 @@ public partial class SceneViewportWidget : Widget
 			_activeCamera = Renderer.Camera;
 		}
 
-		_activeCamera.BackgroundColor = "#32415e";
+		_activeCamera.BackgroundColor = "#080808";
 		_activeCamera.WorldPosition = State.CameraPosition;
 		_activeCamera.WorldRotation = State.CameraRotation;
 
