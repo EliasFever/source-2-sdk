@@ -7,9 +7,9 @@ partial class SceneNode : GameObjectNode
 
 	}
 
-	public override bool HasChildren => Value.Children.Where( x => x.ShouldShowInHierarchy() ).Any();
+	public override bool HasChildren => Value.Children.Where( x => SceneTreeWidget.ShouldShowGameObjectInHierarchy( x ) ).Any();
 
-	protected override void BuildChildren() => SetChildren( Value.Children.Where( x => x.ShouldShowInHierarchy() ), x => new GameObjectNode( x ) );
+	protected override void BuildChildren() => SetChildren( Value.Children.Where( x => SceneTreeWidget.ShouldShowGameObjectInHierarchy( x ) ), x => new GameObjectNode( x ) );
 	protected override bool HasDescendant( object obj ) => obj is GameObject go && Value.IsDescendant( go );
 
 	public override void OnPaint( VirtualWidget item )
@@ -62,7 +62,7 @@ partial class SceneNode : GameObjectNode
 
 			foreach ( var val in Value.Children )
 			{
-				if ( !val.ShouldShowInHierarchy() ) continue;
+				if ( !SceneTreeWidget.ShouldShowGameObjectInHierarchy( val ) ) continue;
 				hc.Add( val );
 			}
 

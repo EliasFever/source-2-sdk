@@ -11,6 +11,7 @@ public partial class SceneTreeWidget : Widget
 	Layout SubHeader;
 	LineEdit Search;
 	ToolButton SearchClear;
+	IconButton ShowHiddenButton;
 
 	IDisposable _selectionUndoScope = null;
 
@@ -44,7 +45,7 @@ public partial class SceneTreeWidget : Widget
 		Search.Layout.AddStretchCell( 1 );
 		Search.TextChanged += x => queryDirty = true;
 		Search.FixedHeight = Theme.RowHeight;
-
+		
 		SearchClear = Search.Layout.Add( new ToolButton( string.Empty, "clear", this ) );
 		SearchClear.MouseLeftPress = () =>
 		{
@@ -65,7 +66,23 @@ public partial class SceneTreeWidget : Widget
 			}
 		};
 		SearchClear.Visible = false;
+		
+		SubHeader.AddSpacingCell( 2 );
 
+		ShowHiddenButton = SubHeader.Add( new IconButton( "visibility" )
+		{
+			ToolTip = "Show Hidden GameObjects",
+			IsToggle = true,
+			IsActive = ShowHiddenGameObjects,
+			Background = Theme.ControlBackground
+		} );
+		ShowHiddenButton.OnClick = () =>
+		{
+			ShowHiddenGameObjects = ShowHiddenButton.IsActive;
+			queryDirty = true;
+			Rebuild();
+		};
+		
 		TreeView = new TreeView();
 		TreeView.MultiSelect = true;
 		TreeView.BodyDropTarget = TreeView.DragDropTarget.LastRoot;
@@ -127,6 +144,18 @@ public partial class SceneTreeWidget : Widget
 
 	WeakReference<Scene> _lastScene = new( null );
 	bool queryDirty = false;
+	public static bool ShowHiddenGameObjects { get; private set; } = false;
+
+	public static bool ShouldShowGameObjectInHierarchy( GameObject go )
+	{
+		if ( go is null )
+			return false;
+
+		if ( ShowHiddenGameObjects )
+			return !go.Flags.HasFlag( GameObjectFlags.HideInHierarchy );
+
+		return go.ShouldShowInHierarchy();
+	}
 
 	[EditorEvent.Frame]
 	public void CheckForChanges()
@@ -194,7 +223,7 @@ public partial class SceneTreeWidget : Widget
 			{
 				if ( !go.IsValid() ) continue;
 
-				if ( go.Parent is null || go.Flags.HasFlag( GameObjectFlags.Hidden ) )
+				if ( go.Parent is null || !ShouldShowGameObjectInHierarchy( go ) )
 					continue;
 
 				if ( go.IsPrefabInstance && !go.IsPrefabInstanceRoot )

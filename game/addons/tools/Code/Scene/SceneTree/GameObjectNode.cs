@@ -43,7 +43,7 @@ partial class GameObjectNode : TreeNode<GameObject>
 
 	public override bool CanEdit => true;
 
-	protected override void BuildChildren() => SetChildren( Value.Children.Where( x => x.ShouldShowInHierarchy() ), x => new GameObjectNode( x ) );
+	protected override void BuildChildren() => SetChildren( Value.Children.Where( x => SceneTreeWidget.ShouldShowGameObjectInHierarchy( x ) ), x => new GameObjectNode( x ) );
 	protected override bool HasDescendant( object obj ) => obj is GameObject go && Value.IsDescendant( go );
 
 	public override int ValueHash
@@ -62,7 +62,7 @@ partial class GameObjectNode : TreeNode<GameObject>
 
 			foreach ( var val in Value.Children )
 			{
-				if ( !val.ShouldShowInHierarchy() ) continue;
+				if ( !SceneTreeWidget.ShouldShowGameObjectInHierarchy( val ) ) continue;
 
 				hc.Add( val );
 			}
