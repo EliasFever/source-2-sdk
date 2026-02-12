@@ -27,7 +27,7 @@ public sealed partial class CameraComponent : Component, Component.ExecuteInEdit
 	/// The background color of this camera's view if there's no 2D Sky in the scene.
 	/// </summary>
 	[Property]
-	public Color BackgroundColor { get; set; } = "#557685";
+	public Color BackgroundColor { get; set; } = "#0E0E0E";
 
 	bool _isMainCamera = true;
 	int _priority = 1;

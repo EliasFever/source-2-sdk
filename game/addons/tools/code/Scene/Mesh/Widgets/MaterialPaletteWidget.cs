@@ -50,7 +50,9 @@ public class MaterialPaletteWidget : Widget
 			var slot = new PaletteMaterialSlotWidget( this )
 			{
 				ShowFilename = false,
-				FixedSize = 32
+				VerticalSizeMode = SizeMode.Flexible,
+				HorizontalSizeMode = SizeMode.Flexible,
+				MinimumSize = 32
 			};
 
 			_slots[i] = slot;

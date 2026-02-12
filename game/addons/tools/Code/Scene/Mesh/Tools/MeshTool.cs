@@ -10,19 +10,10 @@ namespace Editor.MeshEditor;
 [Alias( "mesh" )]
 public partial class MeshTool : EditorTool
 {
-	private Material _activeMaterial;
-
 	public Material ActiveMaterial
 	{
-		get => _activeMaterial;
-		set
-		{
-			if ( _activeMaterial != value )
-			{
-				_activeMaterial = value;
-				SaveActiveMaterial();
-			}
-		}
+		get => MeshActiveMaterialState.Instance.ActiveMaterial;
+		set => MeshActiveMaterialState.Instance.ActiveMaterial = value;
 	}
 
 	public MoveMode MoveMode { get; set; }
@@ -61,8 +52,6 @@ public partial class MeshTool : EditorTool
 		Selection.Clear();
 
 		SetMoveMode<PositionMode>();
-
-		LoadActiveMaterial();
 		LoadToolbarCookies();
 	}
 
@@ -77,28 +66,4 @@ public partial class MeshTool : EditorTool
 		EditorToolManager.SetTool( nameof( MeshTool ) );
 	}
 
-	private void SaveActiveMaterial()
-	{
-		if ( _activeMaterial != null && _activeMaterial.IsValid() )
-		{
-			ProjectCookie.Set( "MeshTool.ActiveMaterial", _activeMaterial.ResourcePath );
-		}
-	}
-
-	private void LoadActiveMaterial()
-	{
-		var savedPath = ProjectCookie.Get( "MeshTool.ActiveMaterial", string.Empty );
-
-		if ( !string.IsNullOrEmpty( savedPath ) )
-		{
-			var material = Material.Load( savedPath );
-			if ( material != null && material.IsValid() )
-			{
-				_activeMaterial = material;
-				return;
-			}
-		}
-
-		_activeMaterial = Material.Load( "materials/dev/reflectivity_30.vmat" );
-	}
 }

@@ -10,22 +10,33 @@ class ActiveMaterialWidget : ControlWidget
 
 	public ActiveMaterialWidget( SerializedProperty property ) : base( property )
 	{
-		FixedHeight = 220;
+		//FixedHeight = 220;
 		Layout = Layout.Row();
-
+		Layout.Alignment = TextFlag.Center;
 		ToolTip = "";
 
 		_materialWidget = Layout.Add( new MaterialWidget( this ) );
 		_materialWidget.ToolTip = "Active Material";
-		_materialWidget.FixedSize = FixedHeight - 22;
+		_materialWidget.HorizontalSizeMode = SizeMode.Flexible;
+		_materialWidget.VerticalSizeMode = SizeMode.Flexible;
+		
+		_materialWidget.MinimumWidth = 200;
+		_materialWidget.MaximumWidth = 312;
+		_materialWidget.MaximumHeight = 512;
+
 		_materialWidget.Cursor = CursorShape.Finger;
 
 		Layout.AddSpacingCell( 1 );
 
 		_paletteStrip = Layout.Add( new MaterialPaletteWidget() );
 		_paletteStrip.MaterialClicked += OnPaletteMaterialClicked;
-		_paletteStrip.FixedHeight = FixedHeight - 8;
-		_paletteStrip.FixedWidth = 64;
+		_paletteStrip.HorizontalSizeMode = SizeMode.Flexible;
+		_paletteStrip.VerticalSizeMode = SizeMode.Flexible;
+
+		_paletteStrip.MinimumWidth = 64;
+		_paletteStrip.MaximumWidth = 74;
+
+		_paletteStrip.MaximumHeight = 512;
 		_paletteStrip.GetActiveMaterial = () => _materialWidget.Material;
 
 		Frame();
