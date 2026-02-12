@@ -243,6 +243,8 @@ public sealed partial class IndirectLightVolume : Component, Component.ExecuteIn
 		var bounds = Bounds;
 		Gizmo.Control.BoundingBox( "Bounds", bounds, out bounds );
 		Gizmo.Draw.LineBBox( bounds );
+		Gizmo.Draw.Color = Color.Cyan.WithAlpha( 0.1f );
+		Gizmo.Draw.SolidBox( bounds );
 		Bounds = bounds;
 
 		// Use gizmo pooling so it follows gizmo visibility rules (hidden when gizmos disabled, not in cubemaps)

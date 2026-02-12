@@ -17,27 +17,14 @@ public partial class EnvmapProbe
 
 		if ( Gizmo.IsSelected )
 		{
-			for ( int i = 0; i < 2; i++ )
-			{
-				float alpha;
+			Gizmo.Draw.Color = TintColor.WithAlpha( 1 );
+			Gizmo.Draw.LineBBox( Bounds );
 
-				if ( i == 0 )
-				{
-					Gizmo.Draw.IgnoreDepth = true;
-					alpha = 0.2f;
-				}
-				else
-				{
-					Gizmo.Draw.IgnoreDepth = false;
-					alpha = 1f;
-				}
+			Gizmo.Draw.Color = Color.Cyan.WithAlpha( 0.1f );
+			Gizmo.Draw.SolidBox( Bounds );
 
-				Gizmo.Draw.Color = TintColor.WithAlpha( 1 * alpha );
-				Gizmo.Draw.LineBBox( Bounds );
-
-				Gizmo.Draw.Color = TintColor.WithAlpha( 0.2f * alpha );
-				Gizmo.Draw.LineBBox( Bounds.Grow( Feathering ) );
-			}
+			Gizmo.Draw.Color = TintColor.WithAlpha( 0.2f );
+			Gizmo.Draw.LineBBox( Bounds.Grow( Feathering ) );
 		}
 	}
 }
