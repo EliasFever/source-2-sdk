@@ -202,7 +202,7 @@ public static class EditorPreferences
 	[Title( "Backface Selection" )]
 	public static bool BackfaceSelection
 	{
-		get => EditorCookie.Get( "SceneView.BackfaceSelection", true );
+		get => EditorCookie.Get( "SceneView.BackfaceSelection", false );
 		set => EditorCookie.Set( "SceneView.BackfaceSelection", value );
 	}
 
