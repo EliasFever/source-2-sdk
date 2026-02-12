@@ -50,7 +50,7 @@ public static partial class Gizmo
 		/// <summary>
 		/// Snap positions to the grid
 		/// </summary>
-		public bool SnapToGrid { get; set; } = false;
+		public bool SnapToGrid { get; set; } = true;
 
 		/// <summary>
 		/// Snap angles
