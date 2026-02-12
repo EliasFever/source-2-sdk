@@ -57,6 +57,18 @@ public class TerrainEditorTool : EditorTool
 		var sidebar = new ToolSidebarWidget();
 		sidebar.AddTitle( "Brush Settings", "brush" );
 
+		// Tool Mode
+		{
+			var group = sidebar.AddGroup( "Tool Mode" );
+
+			var list = new TerrainSubToolListView( sidebar, this );
+			list.HorizontalSizeMode = SizeMode.Flexible;
+			list.SetItems( GetSubToolTypes() );
+			list.SelectActiveTool();
+			list.BuildLayout();
+			group.Add( list );
+		}
+
 		// Brush Type
 		{
 			var group = sidebar.AddGroup( "Brush Type" );
@@ -141,6 +153,13 @@ public class TerrainEditorTool : EditorTool
 		return sidebar;
 	}
 
+	private IEnumerable<TypeDescription> GetSubToolTypes()
+	{
+		return Tools
+			.Select( x => EditorTypeLibrary.GetType( x.GetType() ) )
+			.Where( x => x is not null );
+	}
+
 	static void NewTerrainMaterial( Terrain terrain, TerrainMaterialList materialList )
 	{
 		var filepath = EditorUtility.SaveFileDialog( "Create Terrain Material", "tmat", $"{Project.Current.GetAssetsPath()}/" );
@@ -190,6 +209,118 @@ public class TerrainEditorTool : EditorTool
 			var asset = AssetSystem.FindByPath( terrain.Storage.ResourcePath );
 			asset?.SaveToDisk( terrain.Storage );
 		}
+	}
+}
+
+internal class TerrainSubToolListView : ListView
+{
+	private readonly TerrainEditorTool _tool;
+	private Type _selectedType;
+
+	public TerrainSubToolListView( Widget parent, TerrainEditorTool tool ) : base( parent )
+	{
+		_tool = tool;
+
+		ItemSpacing = new Vector2( 2, 2 );
+		ItemSize = new Vector2( 98, 32 );
+		Margin = 0;
+
+		HorizontalScrollbarMode = ScrollbarMode.Off;
+		VerticalScrollbarMode = ScrollbarMode.Off;
+		HorizontalSizeMode = SizeMode.CanShrink;
+
+		ItemSelected = OnItemSelected;
+	}
+
+	protected override void DoLayout()
+	{
+		base.DoLayout();
+		BuildLayout();
+	}
+
+	public void BuildLayout()
+	{
+		var rect = CanvasRect;
+		var itemSize = ItemSize;
+		var itemSpacing = ItemSpacing;
+		var itemsPerRow = 1;
+		var itemCount = Items.Count();
+
+		if ( itemSize.x > 0 )
+			itemsPerRow = ((rect.Width + itemSpacing.x) / (itemSize.x + itemSpacing.x)).FloorToInt();
+
+		itemsPerRow = Math.Max( 1, itemsPerRow );
+
+		var rowCount = MathX.CeilToInt( itemCount / (float)itemsPerRow );
+		FixedHeight = rowCount * (itemSize.y + itemSpacing.y) + Margin.EdgeSize.y;
+	}
+
+	public void SelectActiveTool()
+	{
+		var activeType = _tool.CurrentTool?.GetType();
+		if ( _selectedType == activeType )
+			return;
+
+		_selectedType = activeType;
+
+		var selected = Items.FirstOrDefault( x => (x as TypeDescription)?.TargetType == activeType );
+		if ( selected is not null )
+		{
+			SelectItem( selected );
+		}
+	}
+
+	private void OnItemSelected( object value )
+	{
+		if ( value is not TypeDescription type )
+			return;
+
+		_selectedType = type.TargetType;
+		_tool.CurrentTool = _tool.Tools.FirstOrDefault( x => x.GetType() == type.TargetType );
+	}
+
+	protected override string GetTooltip( object obj )
+	{
+		if ( obj is not TypeDescription type )
+			return string.Empty;
+
+		var info = DisplayInfo.ForType( type.TargetType );
+		return info.Name ?? type.Title;
+	}
+
+	protected override void PaintItem( VirtualWidget item )
+	{
+		if ( item.Object is not TypeDescription type )
+			return;
+
+		var info = DisplayInfo.ForType( type.TargetType );
+
+		if ( item.Selected )
+		{
+			Paint.ClearPen();
+			Paint.SetBrush( Theme.Blue );
+			Paint.DrawRect( item.Rect, 4 );
+		}
+		else if ( item.Hovered )
+		{
+			Paint.ClearPen();
+			Paint.SetBrush( Theme.ControlBackground.WithAlpha( 0.6f ) );
+			Paint.DrawRect( item.Rect, 4 );
+		}
+
+		Paint.SetPen( item.Selected ? Theme.TextButton : Theme.Text );
+
+		var iconRect = new Rect( item.Rect.Left + 8, item.Rect.Top, 20, item.Rect.Height );
+		Paint.DrawIcon( iconRect, info.Icon ?? "brush", HeaderBarStyle.IconSize, TextFlag.LeftCenter );
+
+		var textRect = new Rect( iconRect.Right + 6, item.Rect.Top, item.Rect.Right - iconRect.Right - 8, item.Rect.Height );
+		Paint.DrawText( textRect, info.Name ?? type.Title, TextFlag.LeftCenter );
+	}
+
+	[EditorEvent.Frame]
+	public void Frame()
+	{
+		SelectActiveTool();
 	}
 }
 
