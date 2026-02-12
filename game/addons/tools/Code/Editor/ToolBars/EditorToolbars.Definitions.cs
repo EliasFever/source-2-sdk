@@ -380,6 +380,20 @@ public static partial class EditorToolBars
 		new() { Separator=true },
 		new() { Separator=true },
 		new() { Separator=true },
+		
+		new() { Name = "Toggle Fullscreen",
+			ShortcutAction = "editor.eject",
+			Icon = "hammer/fullscreen_activated.png",
+			Hotkey = "F3",
+			Description = "Toggle Fullscreen",
+			Checkable = false,
+			ActionType = ToolActionType.MethodCall,
+			Method = () => ViewportTools.ToggleFullscreen(),
+			DisableDuringPlay = false,
+			ConditionalOn = "Run Game"
+		},
+
+		new() { Separator=true },		
 
 		new() { Name = "Run Game",
 			ShortcutAction = "editor.toggle-play",
@@ -400,7 +414,8 @@ public static partial class EditorToolBars
 				}
 			},
 			DisableDuringPlay = false,
-			Checkable = true },
+			Checkable = true 
+		},
 
 		new() { Name = "Pause Game",
 			ShortcutAction = "editor.pause",
@@ -426,6 +441,20 @@ public static partial class EditorToolBars
 			GroupType = ToolBarOptionGroupType.ConditionalClearState,
 			ActionType = ToolActionType.MethodCall,
 			Method = () => SceneViewWidget.Current.ToggleEject(),
+			DisableDuringPlay = false,
+			ConditionalOn = "Run Game"
+		},
+
+		new() { Separator=true },		
+		new() { Separator=true },		
+
+		new() { Name = "Network Settings",
+			ShortcutAction = "editor.eject",
+			Icon = "hammer/eject.png",
+			Description = "Network Settings",
+			Checkable = false,
+			ActionType = ToolActionType.MethodCall,
+			Method = () => SceneViewWidget.Current.ViewportTools.OpenNetworkSettings(),
 			DisableDuringPlay = false,
 			ConditionalOn = "Run Game"
 		},

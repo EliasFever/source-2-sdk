@@ -1,10 +1,7 @@
 ﻿namespace Editor;
 
-using Editor;
 using Editor.MeshEditor;
 using Sandbox;
-using Sandbox.UI;
-using System;
 
 public static partial class EditorToolBars
 {

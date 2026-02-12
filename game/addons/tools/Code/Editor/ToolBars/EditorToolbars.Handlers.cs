@@ -485,7 +485,7 @@ public static class EditorToolBarsActions
 		=> Activate( nameof( MeshTool ), nameof( FaceTool ) );
 
 	public static void SelectMeshes()
-		=> Activate( nameof( ObjectEditorTool ) );
+		=> Activate( nameof( MeshTool ), nameof( MeshSelection ) );
 
 	public static void SelectObjects()
 		=> Activate( nameof( ObjectEditorTool ) );
