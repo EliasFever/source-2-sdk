@@ -98,8 +98,8 @@ public partial class ViewportTools : Widget
 	public void OnViewportToolsFrame()
 	{
 		var sceneView = GetAncestor<SceneViewWidget>();
-		var isFullscreen = EditorWindow.IsFullscreen( sceneView );
-		var showToolbar = EditorToolBars.ShowLegacyToolbar || isFullscreen;
+		var isGameRunning = sceneView.CurrentView == SceneViewWidget.ViewMode.Game;
+		var showToolbar = EditorToolBars.ShowLegacyToolbar || isGameRunning;
 		
 		this.Visible = showToolbar;
 
