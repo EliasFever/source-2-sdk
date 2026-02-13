@@ -87,9 +87,48 @@ public static partial class EditorToolBars
 	private static Dictionary<ToolOptionDef, (bool Active, bool Checked)> s_prePlayState = new();
 
 	private static bool s_inPlayMode = false;
+	private static bool s_needsFullRefresh = true;
+	private static string s_lastModeName;
+	private static string s_lastSubModeName;
+	private static bool s_lastGamePlaying;
+	private static bool s_lastGamePaused;
+	private static bool s_lastGlobalSpace;
+	private static bool s_lastGizmosEnabled;
+	private static SceneViewWidget.ViewMode? s_lastViewMode;
 
 	private static string _pendingSubtool = null;
 	private static string s_lastTransformMode;
+
+	private sealed class ToolBarEvalContext
+	{
+		public List<ToolOptionDef> Definitions;
+		public Dictionary<string, ToolOptionDef> DefinitionsByName;
+	}
+
+	private delegate void GroupHandler( ToolOptionDef def, ToolBarEvalContext context );
+
+	private static readonly Dictionary<ToolActionType, Func<ToolOptionDef, bool>> s_actionValidators = new()
+	{
+		[ToolActionType.Shortcut] = ValidateShortcutAction,
+		[ToolActionType.MethodCall] = ValidateMethodCallAction,
+		[ToolActionType.PropertyToggle] = ValidatePropertyToggleAction,
+		[ToolActionType.PropertySet] = ValidatePropertySetAction
+	};
+
+	private static readonly Dictionary<ToolActionType, Action<ToolOptionDef>> s_actionExecutors = new()
+	{
+		[ToolActionType.MethodCall] = ExecuteMethodCallAction,
+		[ToolActionType.PropertyToggle] = ExecutePropertyToggleAction,
+		[ToolActionType.PropertySet] = ExecutePropertySetAction
+	};
+
+	private static readonly Dictionary<ToolBarOptionGroupType, GroupHandler> s_groupHandlers = new()
+	{
+		[ToolBarOptionGroupType.ConditionalPreserveState] = ApplyConditionalState,
+		[ToolBarOptionGroupType.ConditionalClearState] = ApplyConditionalState,
+		[ToolBarOptionGroupType.ExternallyControlled] = ApplyExternallyControlledState,
+		[ToolBarOptionGroupType.SingleExclusive] = ApplySingleExclusiveState
+	};
 
 	/// <summary>
 	/// Adds a collection of tool option definitions to the specified toolbar, configuring their selection behavior and
@@ -212,15 +251,7 @@ public static partial class EditorToolBars
 
 	private static bool HasValidAction( ToolOptionDef def )
 	{
-		return def.ActionType switch
-		{
-			ToolActionType.Shortcut => !string.IsNullOrWhiteSpace( def.ShortcutAction )
-				&& s_shortcutCache?.ContainsKey( def.ShortcutAction ) == true,
-			ToolActionType.MethodCall => def.Method != null,
-			ToolActionType.PropertyToggle => def.Getter != null && def.Setter != null,
-			ToolActionType.PropertySet => def.SetterAction != null,
-			_ => false
-		};
+		return s_actionValidators.TryGetValue( def.ActionType, out var validator ) && validator( def );
 	}
 
 	private static void ValidateAndApplyActionAvailability( ToolOptionDef def )
@@ -230,12 +261,7 @@ public static partial class EditorToolBars
 		if ( def.Widget == null || def.ActionAvailable )
 			return;
 
-		def.Active = false;
-		if ( def.Checkable )
-			def.Widget.Checked = false;
-
-		def.Widget.Enabled = false;
-		def.Widget.Icon = def.Icon;
+		ApplyDisabledState( def );
 	}
 
 	private static void ValidateAllToolActionAvailability()
@@ -263,78 +289,18 @@ public static partial class EditorToolBars
 	/// </summary>
 	private static void HandleSpecialLogic( List<ToolOptionDef> defs, ToolOptionDef activated )
 	{
+		var context = BuildEvalContext( defs );
+
 		foreach ( var def in defs )
 		{
 			if ( !def.ActionAvailable )
 			{
-				if ( def.Widget != null )
-				{
-					def.Active = false;
-					if ( def.Checkable )
-						def.Widget.Checked = false;
-
-					def.Widget.Enabled = false;
-					def.Widget.Icon = def.Icon;
-				}
-
+				ApplyDisabledState( def );
 				continue;
 			}
 
-			// CONDITIONAL LOGIC (Preserve or Reset)
-			if ( (def.GroupType == ToolBarOptionGroupType.ConditionalPreserveState ||
-				  def.GroupType == ToolBarOptionGroupType.ConditionalClearState)
-				 && !string.IsNullOrEmpty( def.ConditionalOn ) )
-			{
-				// Find parent
-				var parent = defs.Find( d => d.Name == def.ConditionalOn );
-				bool parentActive = parent?.Active ?? false;
-
-				if ( def.Widget != null )
-				{
-					def.Widget.Enabled = parentActive;
-
-					if ( !parentActive )
-					{
-						if ( def.GroupType == ToolBarOptionGroupType.ConditionalClearState )
-						{
-							// HARD CONDITIONAL — reset state
-							def.Active = false;
-							def.Widget.Checked = false;
-							def.Widget.Icon = def.Icon;
-						}
-					}
-				}
-			}
-
-			// EXTERNALLY CONTROLLED
-			if ( def.GroupType == ToolBarOptionGroupType.ExternallyControlled )
-			{
-				def.Widget.Enabled = def.ExternalEnabled;
-
-				if ( !def.ExternalEnabled )
-				{
-					def.Active = false;
-
-					if ( def.Checkable )
-						def.Widget.Checked = false;
-
-					def.Widget.Icon = def.Icon;
-				}
-			}
-
-			// MUTUAL EXCLUSIVITY (unchanged)
-			if ( def.GroupType == ToolBarOptionGroupType.SingleExclusive )
-			{
-				foreach ( var other in defs )
-				{
-					if ( other == def ) continue;
-					if ( other.Group == def.Group && other.Widget != null )
-					{
-						other.Widget.Checked = other.Active;
-						other.Widget.Icon = other.Active ? other.ToggledIcon ?? other.Icon : other.Icon;
-					}
-				}
-			}
+			if ( s_groupHandlers.TryGetValue( def.GroupType, out var handler ) )
+				handler( def, context );
 		}
 	}
 
@@ -349,21 +315,21 @@ public static partial class EditorToolBars
 		// External override takes priority
 		if ( !string.IsNullOrEmpty( def.OverrideIcon ) )
 		{
-			def.Widget.Icon = def.OverrideIcon;
+			SetIconIfChanged( def.Widget, def.OverrideIcon );
 			return;
 		}
 
 		// If IconCycle is set, use current index
 		if ( def.IconCycle != null && def.IconCycle.Count > 0 )
 		{
-			def.Widget.Icon = def.IconCycle[def.CurrentIconIndex];
+			SetIconIfChanged( def.Widget, def.IconCycle[def.CurrentIconIndex] );
 			return;
 		}
 
 		// Group / Active logic fallback
-		def.Widget.Icon = def.Active
+		SetIconIfChanged( def.Widget, def.Active
 			? def.ToggledIcon ?? def.Icon
-			: def.Icon;
+			: def.Icon );
 	}
 
 	/// <summary>
@@ -412,32 +378,68 @@ public static partial class EditorToolBars
 
 	private static void ExecuteToolAction( ToolOptionDef def )
 	{
-		switch ( def.ActionType )
-		{
-			// This was stupid I think, we'll just listen to shortcuts instead
-			// case ToolActionType.Shortcut:
-			// 	if (!string.IsNullOrEmpty(def.ShortcutAction))
-			// 		Shortcut.Execute(def.ShortcutAction);
-			// 	break;
-
-			case ToolActionType.MethodCall:
-				def.Method?.Invoke();
-				break;
-
-			case ToolActionType.PropertyToggle:
-				bool v = !def.Getter();
-				def.Setter( v );
-				break;
-
-			case ToolActionType.PropertySet:
-				def.SetterAction?.Invoke();
-				break;
-		}
+		if ( s_actionExecutors.TryGetValue( def.ActionType, out var executor ) )
+			executor( def );
 	}
 
-	private static void RefreshToolbarStates()
+	private static bool ShouldRunRefresh( bool force )
+	{
+		if ( force || s_needsFullRefresh )
+			return true;
+
+		var modeName = EditorToolManager.CurrentModeName;
+		var subModeName = EditorToolManager.CurrentSubModeName;
+		var playing = Game.IsPlaying;
+		var paused = Game.IsPaused;
+		var globalSpace = EditorScene.GizmoSettings.GlobalSpace;
+		var gizmosEnabled = EditorScene.GizmoSettings.GizmosEnabled;
+		var viewMode = SceneViewWidget.Current?.CurrentView;
+
+		return modeName != s_lastModeName
+			|| subModeName != s_lastSubModeName
+			|| playing != s_lastGamePlaying
+			|| paused != s_lastGamePaused
+			|| globalSpace != s_lastGlobalSpace
+			|| gizmosEnabled != s_lastGizmosEnabled
+			|| viewMode != s_lastViewMode;
+	}
+
+	private static void CaptureRefreshSnapshot()
+	{
+		s_lastModeName = EditorToolManager.CurrentModeName;
+		s_lastSubModeName = EditorToolManager.CurrentSubModeName;
+		s_lastGamePlaying = Game.IsPlaying;
+		s_lastGamePaused = Game.IsPaused;
+		s_lastGlobalSpace = EditorScene.GizmoSettings.GlobalSpace;
+		s_lastGizmosEnabled = EditorScene.GizmoSettings.GizmosEnabled;
+		s_lastViewMode = SceneViewWidget.Current?.CurrentView;
+		s_needsFullRefresh = false;
+	}
+
+	private static void SetCheckedIfChanged( Option widget, bool value )
+	{
+		if ( widget.Checked != value )
+			widget.Checked = value;
+	}
+
+	private static void SetEnabledIfChanged( Option widget, bool value )
+	{
+		if ( widget.Enabled != value )
+			widget.Enabled = value;
+	}
+
+	private static void SetIconIfChanged( Option widget, string value )
+	{
+		if ( widget.Icon != value )
+			widget.Icon = value;
+	}
+
+	private static void RefreshToolbarStates( bool force = false )
 	{
 		if ( _allToolbars == null || _allToolbars.Count == 0 )
+			return;
+
+		if ( !ShouldRunRefresh( force ) )
 			return;
 
 		foreach ( var barCtx in _allToolbars )
@@ -452,29 +454,9 @@ public static partial class EditorToolBars
 				if ( def?.Widget == null || def.Separator )
 					continue;
 
-				if ( !def.ActionAvailable )
+				if ( ShouldForceDisabled( def ) )
 				{
-					def.Active = false;
-					if ( def.Checkable )
-					{
-						def.Widget.Checked = false;
-					}
-
-					def.Widget.Enabled = false;
-					def.Widget.Icon = def.Icon;
-					continue;
-				}
-
-				if ( s_inPlayMode && def.DisableDuringPlay )
-				{
-					def.Active = false;
-					if ( def.Checkable )
-					{
-						def.Widget.Checked = false;
-					}
-
-					def.Widget.Enabled = false;
-					def.Widget.Icon = def.Icon;
+					ApplyDisabledState( def );
 					continue;
 				}
 
@@ -492,14 +474,14 @@ public static partial class EditorToolBars
 
 				if ( def.Checkable )
 				{
-					def.Widget.Checked = def.Active;
+					SetCheckedIfChanged( def.Widget, def.Active );
 				}
 
 				if ( def.EnabledResolver != null )
 				{
 					try
 					{
-						def.Widget.Enabled = def.EnabledResolver();
+						SetEnabledIfChanged( def.Widget, def.EnabledResolver() );
 					}
 					catch
 					{
@@ -512,6 +494,118 @@ public static partial class EditorToolBars
 
 			HandleSpecialLogic( defs, null );
 		}
+
+		CaptureRefreshSnapshot();
+	}
+
+	private static ToolBarEvalContext BuildEvalContext( List<ToolOptionDef> defs )
+	{
+		var byName = new Dictionary<string, ToolOptionDef>( defs.Count, StringComparer.Ordinal );
+		foreach ( var d in defs )
+		{
+			if ( d?.Name is not null )
+				byName[d.Name] = d;
+		}
+
+		return new ToolBarEvalContext
+		{
+			Definitions = defs,
+			DefinitionsByName = byName
+		};
+	}
+
+	private static bool ValidateShortcutAction( ToolOptionDef def )
+		=> !string.IsNullOrWhiteSpace( def.ShortcutAction )
+		&& s_shortcutCache?.ContainsKey( def.ShortcutAction ) == true;
+
+	private static bool ValidateMethodCallAction( ToolOptionDef def )
+		=> def.Method != null;
+
+	private static bool ValidatePropertyToggleAction( ToolOptionDef def )
+		=> def.Getter != null && def.Setter != null;
+
+	private static bool ValidatePropertySetAction( ToolOptionDef def )
+		=> def.SetterAction != null;
+
+	private static void ExecuteMethodCallAction( ToolOptionDef def )
+		=> def.Method?.Invoke();
+
+	private static void ExecutePropertyToggleAction( ToolOptionDef def )
+	{
+		bool v = !def.Getter();
+		def.Setter( v );
+	}
+
+	private static void ExecutePropertySetAction( ToolOptionDef def )
+		=> def.SetterAction?.Invoke();
+
+	private static void ApplyConditionalState( ToolOptionDef def, ToolBarEvalContext context )
+	{
+		if ( string.IsNullOrEmpty( def.ConditionalOn ) )
+			return;
+
+		context.DefinitionsByName.TryGetValue( def.ConditionalOn, out var parent );
+		bool parentActive = parent?.Active ?? false;
+
+		if ( def.Widget == null )
+			return;
+
+		SetEnabledIfChanged( def.Widget, parentActive );
+
+		if ( parentActive || def.GroupType != ToolBarOptionGroupType.ConditionalClearState )
+			return;
+
+		def.Active = false;
+		SetCheckedIfChanged( def.Widget, false );
+		SetIconIfChanged( def.Widget, def.Icon );
+	}
+
+	private static void ApplyExternallyControlledState( ToolOptionDef def, ToolBarEvalContext context )
+	{
+		if ( def.Widget == null )
+			return;
+
+		SetEnabledIfChanged( def.Widget, def.ExternalEnabled );
+
+		if ( def.ExternalEnabled )
+			return;
+
+		def.Active = false;
+		if ( def.Checkable )
+			SetCheckedIfChanged( def.Widget, false );
+
+		SetIconIfChanged( def.Widget, def.Icon );
+	}
+
+	private static void ApplySingleExclusiveState( ToolOptionDef def, ToolBarEvalContext context )
+	{
+		foreach ( var other in context.Definitions )
+		{
+			if ( other == def )
+				continue;
+
+			if ( other.Group != def.Group || other.Widget == null )
+				continue;
+
+			SetCheckedIfChanged( other.Widget, other.Active );
+			SetIconIfChanged( other.Widget, other.Active ? other.ToggledIcon ?? other.Icon : other.Icon );
+		}
+	}
+
+	private static bool ShouldForceDisabled( ToolOptionDef def )
+		=> !def.ActionAvailable || (s_inPlayMode && def.DisableDuringPlay);
+
+	private static void ApplyDisabledState( ToolOptionDef def )
+	{
+		if ( def?.Widget == null )
+			return;
+
+		def.Active = false;
+		if ( def.Checkable )
+			SetCheckedIfChanged( def.Widget, false );
+
+		SetEnabledIfChanged( def.Widget, false );
+		SetIconIfChanged( def.Widget, def.Icon );
 	}
 
 	private static void SetPlayMode( bool playing )
@@ -559,7 +653,8 @@ public static partial class EditorToolBars
 		if ( !playing )
 			s_prePlayState.Clear(); // clean up
 
-		RefreshToolbarStates();
+		s_needsFullRefresh = true;
+		RefreshToolbarStates( force: true );
 	}
 
 	public static void SelectTransformMode( string mode, bool userClicked = true )
@@ -665,6 +760,38 @@ public static class EditorToolBarsActions
 
 	public static void SelectTerraintool()
 		=> Activate( nameof( TerrainEditorTool ) );
+
+	public static void SelectClippingTool()
+		=> OpenMeshSubTool( () => new ClipTool() );
+	
+	public static void SelectMirrorTool()
+		=> OpenMeshSubTool( () => new MirrorTool() );
+
+	public static void SelectBlendTool()
+		=> Activate( nameof( MeshTool ), nameof( VertexPaintTool ) );
+
+	private static void OpenMeshSubTool( Func<EditorTool> toolFactory )
+	{
+		var tools = SceneViewWidget.Current?.Tools;
+		if ( tools == null )
+			return;
+
+		if ( tools.CurrentTool is not MeshTool )
+		{
+			EditorToolManager.SetTool( nameof( MeshTool ) );
+			tools.UpdateTool( EditorToolManager.CurrentModeName );
+		}
+
+		if ( tools.CurrentTool is not MeshTool meshTool )
+			return;
+
+		var tool = toolFactory?.Invoke();
+		if ( tool == null )
+			return;
+
+		tool.Manager = meshTool.Manager;
+		meshTool.CurrentTool = tool;
+	}
 
 	//
 	// Core static activator

@@ -103,7 +103,7 @@ partial class MeshSelection
 			_tool.Tool.CurrentTool = tool;
 		}
 
-		[Shortcut( "mesh.open-clipping-tool", "C", typeof( SceneViewWidget ) )]
+		[Shortcut( "mesh.open-clipping-tool", "Shift+X", typeof( SceneViewWidget ) )]
 		void OpenClippingTool()
 		{
 			var tool = new ClipTool();

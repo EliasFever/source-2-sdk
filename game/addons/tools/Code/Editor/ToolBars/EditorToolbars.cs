@@ -42,7 +42,7 @@ public static partial class EditorToolBars
 		BuildShortcutCache();
 		BuildAllToolbars();
 		RegisterEditorEventSubscriptions();
-		RefreshToolbarStates();
+		RefreshToolbarStates( force: true );
 	}
 
 	/// <summary>
@@ -94,6 +94,7 @@ public static partial class EditorToolBars
 		}
 
 		_allToolbars.Clear();
+		s_needsFullRefresh = true;
 	}
 
 	[Event( "tools.gamedata.refresh" )]
@@ -101,7 +102,7 @@ public static partial class EditorToolBars
 	{
 		BuildShortcutCache();
 		ValidateAllToolActionAvailability();
-		RefreshToolbarStates();
+		RefreshToolbarStates( force: true );
 	}
 
 	private static void RegisterEditorEventSubscriptions()
@@ -144,7 +145,7 @@ public static partial class EditorToolBars
 			_pendingSubtool = null;
 		}
 
-		RefreshToolbarStates();
+		RefreshToolbarStates( force: true );
 	}
 
 	[Event( "scene.play", Priority = 100 )]
@@ -163,28 +164,21 @@ public static partial class EditorToolBars
 		EditorToolBars.SetPlayMode( false );
 	}
 
-	// Important TODO: Registering toolbars as dockables is vital, however it creates a problem
-	// that if you were to try and access them in the view dropdown you'll get a window, not a toolbar!
-	// We'll fix this eventually, just need to do other stuff first.
-
 	// MAIN TOOLS
 	private static void BuildMainTools( DockWindow window )
 	{
-		var dock = window.DockManager;
 		MainTools = new ToolBar( window, "Main Tools" );
 		MainTools.SetIconSize( new Vector2( 32, 32 ) );
 
 		AddDefs( MainTools, CreateMainToolDefs(), singleSelect: true );
 
-		dock.RegisterDockType( "Editor - Main Tools", "hammer/appicon.ico", () => MainTools );
 		window.AddToolBar( MainTools, ToolbarPosition.Left );
-		RegisterToolBar( "ViewSettings", ViewSettings, window );
+		RegisterToolBar( "MainTools", MainTools, window );
 	}
 
 	// SELECTION MODES
 	private static void BuildSelectionModes( DockWindow window )
 	{
-		var dock = window.DockManager;
 		SelectionModes = new ToolBar( window, "Selection Modes" );
 		SelectionModes.SetIconSize( 24 );
 		SelectionModes.ButtonStyle = ToolButtonStyle.TextBesideIcon;
@@ -198,7 +192,6 @@ public static partial class EditorToolBars
 
 		AddDefs( SelectionModes, CreateSelectionModeDefs(), singleSelect: true );
 
-		dock.RegisterDockType( "Editor - Selection Modes", "hammer/appicon.ico", () => SelectionModes );
 		window.AddToolBar( SelectionModes, ToolbarPosition.Top );
 		RegisterToolBar( "SelectionModes", SelectionModes, window );
 	}
@@ -206,7 +199,6 @@ public static partial class EditorToolBars
 	// EDITING SETTINGS
 	private static void BuildEditingSettings( DockWindow window )
 	{
-		var dock = window.DockManager;
 		EditingSettings = new ToolBar( window, "Editing Settings" );
 		SelectionModes.SetIconSize( 22 );
 
@@ -219,7 +211,6 @@ public static partial class EditorToolBars
 
 		AddDefs( EditingSettings, CreateEditingSettingDefs() );
 
-		dock.RegisterDockType( "Editor - Editing Settings", "hammer/appicon.ico", () => EditingSettings );
 		window.AddToolBar( EditingSettings, ToolbarPosition.Top );
 		RegisterToolBar( "EditingSettings", EditingSettings, window );
 	}
@@ -227,7 +218,6 @@ public static partial class EditorToolBars
 	// VIEW SETTINGS
 	private static void BuildViewSettings( DockWindow window )
 	{
-		var dock = window.DockManager;
 		ViewSettings = new ToolBar( window, "View Settings" );
 		SelectionModes.SetIconSize( 22 );
 
@@ -240,9 +230,32 @@ public static partial class EditorToolBars
 
 		AddDefs( ViewSettings, CreateViewSettingDefs() );
 
-		dock.RegisterDockType( "Editor - View Settings", "hammer/appicon.ico", () => ViewSettings );
 		window.AddToolBar( ViewSettings, ToolbarPosition.Top );
 		RegisterToolBar( "ViewSettings", ViewSettings, window );
+	}
+
+	[Event( "tools.editorwindow.postcreateview" )]
+	private static void AddToolbarTogglesToViewMenu( Menu menu )
+	{
+		if ( MainWindow == null )
+			return;
+
+		menu.AddSeparator();
+		AddToolbarToggleOption( menu, "Editor - Main Tools", MainTools );
+		AddToolbarToggleOption( menu, "Editor - Selection Modes", SelectionModes );
+		AddToolbarToggleOption( menu, "Editor - Editing Settings", EditingSettings );
+		AddToolbarToggleOption( menu, "Editor - View Settings", ViewSettings );
+	}
+
+	private static void AddToolbarToggleOption( Menu menu, string title, ToolBar toolbar )
+	{
+		if ( toolbar == null )
+			return;
+
+		var option = menu.AddOption( title, "hammer/appicon.ico" );
+		option.Checkable = true;
+		option.Checked = toolbar.Visible;
+		option.Toggled += ( visible ) => toolbar.Visible = visible;
 	}
 }
 
