@@ -8,9 +8,9 @@ public class EditorToolManager
 	/// point to change, or read the current tool.
 	/// The tool won't change until the next frame update.
 	/// </summary>
-	public static string CurrentModeName { get; set; } = "ObjectEditorTool";
+	public static string CurrentModeName { get; set; } = "MeshTool";
 	public static string LastModeName { get; set; } = CurrentModeName;
-	public static string CurrentSubModeName { get; set; }
+	public static string CurrentSubModeName { get; set; } = "ObjectSelection";
 
 	public EditorTool CurrentTool { get; private set; }
 

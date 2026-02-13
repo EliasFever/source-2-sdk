@@ -40,9 +40,7 @@ partial class FaceTool
 			AddTitle( "Face Mode", "change_history" );
 
 			_meshTool = tool;
-			_faces = so.Targets
-				.OfType<MeshFace>()
-				.ToArray();
+			_faces = [.. so.Targets.OfType<MeshFace>()];
 
 			_faceGroups = _faces.GroupBy( x => x.Component ).ToList();
 			_components = _faceGroups.Select( x => x.Key ).ToList();

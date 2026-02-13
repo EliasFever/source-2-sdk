@@ -14,27 +14,26 @@ public static partial class EditorToolBars
 	{
 		return
 		[
-			// new() { Name="Select",
-			// 	Icon="hammer/select_tool_icon.png",
-			// 	ToggledIcon="hammer/select_tool_icon_activated.png",
-			// 	Hotkey="Shift+S",
-			// 	Group = "MainTools",
-			// 	GroupType = ToolBarOptionGroupType.SingleExclusive,
-			// 	Checkable=true,
-			// 	Description="Select. Select groups, objects or mesh components",
-			// 	Active = true,
-			// 	ActiveResolver = () =>
-			// 	{
-			// 		var mode = EditorToolManager.CurrentModeName;
-			// 		var subMode = EditorToolManager.CurrentSubModeName;
-			// 		return (mode == nameof( ObjectEditorTool ) || mode == "object")
-			// 			&& subMode != nameof( PositionEditorTool )
-			// 			&& subMode != nameof( RotationEditorTool )
-			// 			&& subMode != nameof( ScaleEditorTool );
-			// 	} },
+			new() { Name="Select",
+				Icon="hammer/select_tool_icon.png",
+				ToggledIcon="hammer/select_tool_icon_activated.png",
+				Hotkey="Shift+S",
+				Group = "MainTools",
+				GroupType = ToolBarOptionGroupType.SingleExclusive,
+				Checkable=true,
+				Description="Select. Select groups, objects or mesh components",
+				Active = true,
+				ActiveResolver = () =>
+				{
+					if ( EditorToolManager.CurrentModeName != nameof( MeshTool ) )
+						return false;
+
+					return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
+						&& meshTool.MoveMode?.GetType() == typeof( ResizeMode );
+				} },
 
 			new() { Name="Move",
-				ShortcutAction = "tools.position-tool",
+				ShortcutAction = "mesh.position.mode",
 				Icon="hammer/move_tool_icon.png",
 				ToggledIcon="hammer/move_tool_icon_activated.png",
 				Hotkey="",
@@ -54,7 +53,7 @@ public static partial class EditorToolBars
 				} },
 
 			new() { Name="Rotate",
-				ShortcutAction = "tools.rotate-tool",
+				ShortcutAction = "mesh.rotate.mode",
 				Icon="hammer/rotate_tool_icon.png",
 				ToggledIcon="hammer/rotate_tool_icon_activated.png",
 				Hotkey="",
@@ -74,7 +73,7 @@ public static partial class EditorToolBars
 				} },
 
 			new() { Name="Scale",
-				ShortcutAction = "tools.scale-tool",
+				ShortcutAction = "mesh.scale.mode",
 				Icon="hammer/scale_tool_icon.png",
 				ToggledIcon="hammer/scale_tool_icon_activated.png",
 				Hotkey="",
@@ -279,8 +278,9 @@ public static partial class EditorToolBars
 		[
 			new() { Name="Vertices",
 				Icon="hammer/selection_mode_vertices.png",
+				ShortcutAction="tools.vertex-tool",
 				ToggledIcon="hammer/selection_mode_vertices_activated.png",
-				Hotkey="Vertex",
+				Hotkey="1",
 				Checkable=true,
 				Group="SelectionMode",
 				ActionType = ToolActionType.MethodCall,
@@ -292,7 +292,7 @@ public static partial class EditorToolBars
 			new() { Name="Edges",
 				Icon="hammer/selection_mode_edges.png",
 				ToggledIcon="hammer/selection_mode_edges_activated.png",
-				Hotkey="Edge",
+				Hotkey="2",
 				Checkable=true,
 				Group="SelectionMode",
 				GroupType=ToolBarOptionGroupType.SingleExclusive,
@@ -306,7 +306,7 @@ public static partial class EditorToolBars
 				ShortcutAction = "mesh.face",
 				Icon="hammer/selection_mode_faces.png",
 				ToggledIcon="hammer/selection_mode_faces_activated.png",
-				Hotkey="Face",
+				Hotkey="3",
 				Checkable=true,
 				Group="SelectionMode",
 				GroupType=ToolBarOptionGroupType.SingleExclusive,
@@ -320,7 +320,7 @@ public static partial class EditorToolBars
 				ShortcutAction = "mesh.mesh",
 				Icon="hammer/selection_mode_solids.png",
 				ToggledIcon="hammer/selection_mode_solids_activated.png",
-				Hotkey="Mesh",
+				Hotkey="4",
 				Checkable=true,
 				Group="SelectionMode",
 				GroupType=ToolBarOptionGroupType.SingleExclusive,
@@ -334,7 +334,7 @@ public static partial class EditorToolBars
 				ShortcutAction = "mesh.objects",
 				Icon="hammer/selection_mode_objects.png",
 				ToggledIcon="hammer/selection_mode_objects_activated.png",
-				Hotkey="Object",
+				Hotkey="5",
 				Checkable=true,
 				Group="SelectionMode",
 				GroupType=ToolBarOptionGroupType.SingleExclusive,

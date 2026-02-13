@@ -45,7 +45,7 @@ partial class MeshSelection
 					var grid = Layout.Row();
 					grid.Spacing = 4;
 
-					CreateButton( "Flip Faces", "flip", "mesh.flip-all-mesh-faces", FlipMesh, _meshes.Length > 0, grid );
+					CreateButton( "Flip All Faces", "flip", "mesh.flip-all-faces", FlipMesh, _meshes.Length > 0, grid );
 					CreateButton( "Bake Scale", "straighten", null, BakeScale, _meshes.Length > 0, grid );
 					CreateButton( "Save To Model", "save", null, SaveToModel, _meshes.Length > 0, grid );
 

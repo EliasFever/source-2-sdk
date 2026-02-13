@@ -17,27 +17,6 @@ class MoveModeToolBar : Widget
 			Layout.Add( new MoveModeButton( t, tool, this ), 1 );
 		}
 	}
-
-	void SetMode( string id )
-	{
-		_tool.MoveMode = EditorTypeLibrary.Create<MoveMode>( id );
-		Update();
-	}
-
-	[Shortcut( "tools.position-tool", "t", typeof( SceneViewWidget ) )]
-	public void ActivatePositionMode() => SetMode( "mesh.position.mode" );
-
-	[Shortcut( "tools.rotate-tool", "r", typeof( SceneViewWidget ) )]
-	public void ActivateRotateMode() => SetMode( "mesh.rotate.mode" );
-
-	[Shortcut( "tools.scale-tool", "e", typeof( SceneViewWidget ) )]
-	public void ActivateScaleMode() => SetMode( "mesh.scale.mode" );
-
-	[Shortcut( "tools.pivot-tool", "ins", typeof( SceneViewWidget ) )]
-	public void ActivatePivotMode() => SetMode( "mesh.pivot.mode" );
-
-	[Shortcut( "tools.resize-tool", "y", typeof( SceneViewWidget ) )]
-	public void ActivateResizeMode() => SetMode( "mesh.resize.mode" );
 }
 
 file class MoveModeButton : Widget
