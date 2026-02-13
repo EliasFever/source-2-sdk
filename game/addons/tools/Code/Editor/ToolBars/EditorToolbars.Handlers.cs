@@ -708,7 +708,7 @@ public static class EditorToolBarsActions
 	// Transform selection modes
 	//
 	public static void ActivateMove()
-		=> EditorToolBars.SelectTransformMode( "move", true );
+		=> EditorToolBars.SelectTransformMode( "position", true );
 	public static void ActivateRotate()
 		=> EditorToolBars.SelectTransformMode( "rotate", true );
 	public static void ActivateScale()
