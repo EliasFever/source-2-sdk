@@ -20,4 +20,11 @@ internal class NavMeshTool : EditorTool
 	{
 		SceneOverlay.Parent.Cursor = CursorShape.Arrow;
 	}
+
+	[Shortcut( "tools.navmesh-tool", "7", typeof( SceneViewWidget ) )]
+	public static void ActivateTool()
+	{
+		EditorToolManager.SetTool( nameof( NavMeshTool ) );
+	}
+
 }

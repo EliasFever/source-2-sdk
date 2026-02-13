@@ -14,7 +14,7 @@ public static partial class EditorToolBars
 
 	private static DockWindow MainWindow;
 	private static ViewportTools ViewportTools;
-	private static bool _toolChangeHooked;
+	private static EditorToolManager _subscribedToolManager;
 
 	/// <summary>
 	/// On the first creation of the editor - initializes all the necessary toolbars,
@@ -42,6 +42,7 @@ public static partial class EditorToolBars
 		BuildShortcutCache();
 		BuildAllToolbars();
 		RegisterEditorEventSubscriptions();
+		RefreshToolbarStates();
 	}
 
 	/// <summary>
@@ -85,12 +86,22 @@ public static partial class EditorToolBars
 		SelectionModes = null;
 		EditingSettings = null;
 		ViewSettings = null;
+
+		if ( _subscribedToolManager != null )
+		{
+			_subscribedToolManager.ToolChanged -= OnSceneToolChanged;
+			_subscribedToolManager = null;
+		}
+
+		_allToolbars.Clear();
 	}
 
 	[Event( "tools.gamedata.refresh" )]
 	private static void InitializeShortcutCache()
 	{
 		BuildShortcutCache();
+		ValidateAllToolActionAvailability();
+		RefreshToolbarStates();
 	}
 
 	private static void RegisterEditorEventSubscriptions()
@@ -101,25 +112,39 @@ public static partial class EditorToolBars
 	[EditorEvent.Frame]
 	private static void TryRegisterSceneViewToolEvents()
 	{
-		if ( _toolChangeHooked )
-			return;
-
 		var sceneView = SceneViewWidget.Current;
 		var tools = sceneView?.Tools;
 		if ( tools == null )
-			return;
-
-		tools.ToolChanged += tool =>
 		{
-			if ( _pendingSubtool != null && tool?.GetType().Name == nameof( MeshTool ) )
-			{
-				Log.Info( $"Applying delayed subtool: '{_pendingSubtool}'" );
-				EditorToolManager.SetSubTool( _pendingSubtool );
-				_pendingSubtool = null;
-			}
-		};
+			RefreshToolbarStates();
+			return;
+		}
 
-		_toolChangeHooked = true;
+		if ( _subscribedToolManager != tools )
+		{
+			if ( _subscribedToolManager != null )
+			{
+				_subscribedToolManager.ToolChanged -= OnSceneToolChanged;
+			}
+
+			tools.ToolChanged -= OnSceneToolChanged;
+			tools.ToolChanged += OnSceneToolChanged;
+			_subscribedToolManager = tools;
+		}
+
+		RefreshToolbarStates();
+	}
+
+	private static void OnSceneToolChanged( EditorTool tool )
+	{
+		if ( _pendingSubtool != null && tool?.GetType().Name == nameof( MeshTool ) )
+		{
+			Log.Info( $"Applying delayed subtool: '{_pendingSubtool}'" );
+			EditorToolManager.SetSubTool( _pendingSubtool );
+			_pendingSubtool = null;
+		}
+
+		RefreshToolbarStates();
 	}
 
 	[Event( "scene.play", Priority = 100 )]

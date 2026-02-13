@@ -71,6 +71,15 @@ public static partial class EditorToolBars
 		/// If ActionType is PropertySet
 		public Action SetterAction;
 
+		/// Optional runtime resolver used to synchronize visual toggle state with editor state (hotkeys, mode changes).
+		public Func<bool> ActiveResolver;
+
+		/// Optional runtime resolver used to synchronize enabled state.
+		public Func<bool> EnabledResolver;
+
+		/// True when this definition has a valid executable action.
+		public bool ActionAvailable = true;
+
 		public ToolBarOptionGroupType GroupType = ToolBarOptionGroupType.None;
 	}
 
@@ -113,6 +122,9 @@ public static partial class EditorToolBars
 
 			void callback()
 			{
+				if ( !def.ActionAvailable )
+					return;
+
 				// GROUP LOGIC
 				if ( def.GroupType == ToolBarOptionGroupType.SingleExclusive && !string.IsNullOrEmpty( def.Group ) )
 				{
@@ -192,7 +204,57 @@ public static partial class EditorToolBars
 
 			def.Widget = option;
 
+			ValidateAndApplyActionAvailability( def );
+
 			UpdateOptionIcon( def );
+		}
+	}
+
+	private static bool HasValidAction( ToolOptionDef def )
+	{
+		return def.ActionType switch
+		{
+			ToolActionType.Shortcut => !string.IsNullOrWhiteSpace( def.ShortcutAction )
+				&& s_shortcutCache?.ContainsKey( def.ShortcutAction ) == true,
+			ToolActionType.MethodCall => def.Method != null,
+			ToolActionType.PropertyToggle => def.Getter != null && def.Setter != null,
+			ToolActionType.PropertySet => def.SetterAction != null,
+			_ => false
+		};
+	}
+
+	private static void ValidateAndApplyActionAvailability( ToolOptionDef def )
+	{
+		def.ActionAvailable = HasValidAction( def );
+
+		if ( def.Widget == null || def.ActionAvailable )
+			return;
+
+		def.Active = false;
+		if ( def.Checkable )
+			def.Widget.Checked = false;
+
+		def.Widget.Enabled = false;
+		def.Widget.Icon = def.Icon;
+	}
+
+	private static void ValidateAllToolActionAvailability()
+	{
+		if ( _allToolbars == null || _allToolbars.Count == 0 )
+			return;
+
+		foreach ( var barCtx in _allToolbars )
+		{
+			if ( barCtx?.Definitions == null )
+				continue;
+
+			foreach ( var def in barCtx.Definitions )
+			{
+				if ( def == null || def.Separator )
+					continue;
+
+				ValidateAndApplyActionAvailability( def );
+			}
 		}
 	}
 
@@ -203,6 +265,21 @@ public static partial class EditorToolBars
 	{
 		foreach ( var def in defs )
 		{
+			if ( !def.ActionAvailable )
+			{
+				if ( def.Widget != null )
+				{
+					def.Active = false;
+					if ( def.Checkable )
+						def.Widget.Checked = false;
+
+					def.Widget.Enabled = false;
+					def.Widget.Icon = def.Icon;
+				}
+
+				continue;
+			}
+
 			// CONDITIONAL LOGIC (Preserve or Reset)
 			if ( (def.GroupType == ToolBarOptionGroupType.ConditionalPreserveState ||
 				  def.GroupType == ToolBarOptionGroupType.ConditionalClearState)
@@ -358,6 +435,85 @@ public static partial class EditorToolBars
 		}
 	}
 
+	private static void RefreshToolbarStates()
+	{
+		if ( _allToolbars == null || _allToolbars.Count == 0 )
+			return;
+
+		foreach ( var barCtx in _allToolbars )
+		{
+			if ( barCtx?.Definitions == null )
+				continue;
+
+			var defs = barCtx.Definitions;
+
+			foreach ( var def in defs )
+			{
+				if ( def?.Widget == null || def.Separator )
+					continue;
+
+				if ( !def.ActionAvailable )
+				{
+					def.Active = false;
+					if ( def.Checkable )
+					{
+						def.Widget.Checked = false;
+					}
+
+					def.Widget.Enabled = false;
+					def.Widget.Icon = def.Icon;
+					continue;
+				}
+
+				if ( s_inPlayMode && def.DisableDuringPlay )
+				{
+					def.Active = false;
+					if ( def.Checkable )
+					{
+						def.Widget.Checked = false;
+					}
+
+					def.Widget.Enabled = false;
+					def.Widget.Icon = def.Icon;
+					continue;
+				}
+
+				if ( def.ActiveResolver != null )
+				{
+					try
+					{
+						def.Active = def.ActiveResolver();
+					}
+					catch
+					{
+						// Keep previous state if resolver fails.
+					}
+				}
+
+				if ( def.Checkable )
+				{
+					def.Widget.Checked = def.Active;
+				}
+
+				if ( def.EnabledResolver != null )
+				{
+					try
+					{
+						def.Widget.Enabled = def.EnabledResolver();
+					}
+					catch
+					{
+						// Preserve existing enabled state.
+					}
+				}
+
+				UpdateOptionIcon( def );
+			}
+
+			HandleSpecialLogic( defs, null );
+		}
+	}
+
 	private static void SetPlayMode( bool playing )
 	{
 		s_inPlayMode = playing;
@@ -402,6 +558,8 @@ public static partial class EditorToolBars
 
 		if ( !playing )
 			s_prePlayState.Clear(); // clean up
+
+		RefreshToolbarStates();
 	}
 
 	public static void SelectTransformMode( string mode, bool userClicked = true )

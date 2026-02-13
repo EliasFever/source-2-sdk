@@ -22,7 +22,16 @@ public static partial class EditorToolBars
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
 				Description="Select. Select groups, objects or mesh components",
-				Active = true },
+				Active = true,
+				ActiveResolver = () =>
+				{
+					var mode = EditorToolManager.CurrentModeName;
+					var subMode = EditorToolManager.CurrentSubModeName;
+					return (mode == nameof( ObjectEditorTool ) || mode == "object")
+						&& subMode != nameof( PositionEditorTool )
+						&& subMode != nameof( RotationEditorTool )
+						&& subMode != nameof( ScaleEditorTool );
+				} },
 
 			new() { Name="Move",
 				ShortcutAction = "tools.position-tool",
@@ -34,7 +43,19 @@ public static partial class EditorToolBars
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.ActivateMove,
-				Description="Translate. Move the selected objects" },
+				Description="Translate. Move the selected objects",
+				ActiveResolver = () =>
+				{
+					var mode = EditorToolManager.CurrentModeName;
+					if ( mode == nameof( MeshTool ) )
+					{
+						return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
+							&& meshTool.MoveMode?.GetType() == typeof( Editor.MeshEditor.PositionMode );
+					}
+
+					return (mode == nameof( ObjectEditorTool ) || mode == "object")
+						&& EditorToolManager.CurrentSubModeName == nameof( PositionEditorTool );
+				} },
 
 			new() { Name="Rotate",
 				ShortcutAction = "tools.rotate-tool",
@@ -46,7 +67,19 @@ public static partial class EditorToolBars
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.ActivateRotate,
-				Description="Rotate. Rotate the selected objects" },
+				Description="Rotate. Rotate the selected objects",
+				ActiveResolver = () =>
+				{
+					var mode = EditorToolManager.CurrentModeName;
+					if ( mode == nameof( MeshTool ) )
+					{
+						return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
+							&& meshTool.MoveMode?.GetType() == typeof( RotateMode );
+					}
+
+					return (mode == nameof( ObjectEditorTool ) || mode == "object")
+						&& EditorToolManager.CurrentSubModeName == nameof( RotationEditorTool );
+				} },
 
 			new() { Name="Scale",
 				ShortcutAction = "tools.scale-tool",
@@ -58,7 +91,19 @@ public static partial class EditorToolBars
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.ActivateScale,
-				Description="Scale. Scale the selected objects" },
+				Description="Scale. Scale the selected objects",
+				ActiveResolver = () =>
+				{
+					var mode = EditorToolManager.CurrentModeName;
+					if ( mode == nameof( MeshTool ) )
+					{
+						return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
+							&& meshTool.MoveMode?.GetType() == typeof( ScaleMode );
+					}
+
+					return (mode == nameof( ObjectEditorTool ) || mode == "object")
+						&& EditorToolManager.CurrentSubModeName == nameof( ScaleEditorTool );
+				} },
 
 			new() { Name="Pivot",
 				Icon="hammer/pivot_tool_icon.png",
@@ -69,7 +114,15 @@ public static partial class EditorToolBars
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.ActivatePivot,
-				Description="Pivot Manipulation. Set the location of the gizmo for the current selection" },
+				Description="Pivot Manipulation. Set the location of the gizmo for the current selection",
+				ActiveResolver = () =>
+				{
+					if ( EditorToolManager.CurrentModeName != nameof( MeshTool ) )
+						return false;
+
+					return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
+						&& meshTool.MoveMode?.GetType() == typeof( PivotMode );
+				} },
 
 			new() { Separator=true },
 			new() { Separator=true },
@@ -94,7 +147,15 @@ public static partial class EditorToolBars
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectBlockTool,
-				Description="Create new shapes by dragging out a box" },
+				Description="Create new shapes by dragging out a box",
+				ActiveResolver = () =>
+				{
+					if ( EditorToolManager.CurrentModeName != nameof( MeshTool ) )
+						return false;
+
+					var subMode = EditorToolManager.CurrentSubModeName;
+					return subMode == nameof( PrimitiveTool ) || subMode == nameof( MeshTool );
+				} },
 
 			new() { Name="Path Tool",
 				Icon="hammer/path_tool_icon.png",
@@ -220,7 +281,9 @@ public static partial class EditorToolBars
 				Group="SelectionMode",
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectVertices,
-				Description="Selection Mode: Vertices" },
+				Description="Selection Mode: Vertices",
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( MeshTool )
+					&& EditorToolManager.CurrentSubModeName == nameof( VertexTool ) },
 
 			new() { Name="Edges",
 				Icon="hammer/selection_mode_edges.png",
@@ -231,7 +294,9 @@ public static partial class EditorToolBars
 				GroupType=ToolBarOptionGroupType.SingleExclusive,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectEdges,
-				Description="Selection Mode: Edges" },
+				Description="Selection Mode: Edges",
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( MeshTool )
+					&& EditorToolManager.CurrentSubModeName == nameof( EdgeTool ) },
 
 			new() { Name="Faces",
 				ShortcutAction = "mesh.face",
@@ -243,7 +308,9 @@ public static partial class EditorToolBars
 				GroupType=ToolBarOptionGroupType.SingleExclusive,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectFaces,
-				Description="Selection Mode: Faces" },
+				Description="Selection Mode: Faces",
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( MeshTool )
+					&& EditorToolManager.CurrentSubModeName == nameof( FaceTool ) },
 
 			new() { Name="Meshes",
 				ShortcutAction = "mesh.mesh",
@@ -255,7 +322,9 @@ public static partial class EditorToolBars
 				GroupType=ToolBarOptionGroupType.SingleExclusive,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectMeshes,
-				Description="Selection Mode: Meshes" },
+				Description="Selection Mode: Meshes",
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( MeshTool )
+					&& EditorToolManager.CurrentSubModeName == nameof( MeshSelection ) },
 
 			new() { Name="Objects",
 				ShortcutAction = "mesh.objects",
@@ -268,7 +337,12 @@ public static partial class EditorToolBars
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectObjects,
 				Description="Selection Mode: Objects",
-				Active = true },
+				Active = true,
+				ActiveResolver = () =>
+				{
+					var mode = EditorToolManager.CurrentModeName;
+					return mode == nameof( ObjectEditorTool ) || mode == "object";
+				} },
 
 			new () { Name="Groups",
 				Icon="hammer/selection_mode_groups.png",
@@ -289,7 +363,8 @@ public static partial class EditorToolBars
 				GroupType=ToolBarOptionGroupType.SingleExclusive,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectNavigation,
-				Description="Selection Mode: Navigation" },
+				Description="Selection Mode: Navigation",
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( NavMeshTool ) },
 		];
 	}
 
@@ -308,7 +383,8 @@ public static partial class EditorToolBars
 			GroupType = ToolBarOptionGroupType.SingleExclusive,
 			ActionType = ToolActionType.PropertySet,
 			SetterAction = () => EditorScene.GizmoSettings.GlobalSpace = true,
-			Active = true },
+			Active = true,
+			ActiveResolver = () => EditorScene.GizmoSettings.GlobalSpace },
 
 		new() { Name = "Local Space",
 			ShortcutAction = "scene.toggle-local-space",
@@ -319,7 +395,8 @@ public static partial class EditorToolBars
 			Group = "3DTypeSpace",
 			ActionType = ToolActionType.PropertySet,
 			SetterAction = () => EditorScene.GizmoSettings.GlobalSpace = false,
-			GroupType = ToolBarOptionGroupType.SingleExclusive },
+			GroupType = ToolBarOptionGroupType.SingleExclusive,
+			ActiveResolver = () => !EditorScene.GizmoSettings.GlobalSpace },
 
 		new() { Name = "Pick Workplane",
 			Icon = "hammer/workplane_tool_icon.png",
@@ -414,7 +491,8 @@ public static partial class EditorToolBars
 				}
 			},
 			DisableDuringPlay = false,
-			Checkable = true 
+			Checkable = true,
+			ActiveResolver = () => Game.IsPlaying
 		},
 
 		new() { Name = "Pause Game",
@@ -428,7 +506,8 @@ public static partial class EditorToolBars
 			ActionType = ToolActionType.PropertySet,
 			SetterAction = () => Game.IsPaused = !Game.IsPaused,
 			DisableDuringPlay = false,
-			ConditionalOn = "Run Game"
+			ConditionalOn = "Run Game",
+			ActiveResolver = () => Game.IsPaused
 		},
 
 		new() { Name = "Eject",
@@ -442,7 +521,8 @@ public static partial class EditorToolBars
 			ActionType = ToolActionType.MethodCall,
 			Method = () => SceneViewWidget.Current.ToggleEject(),
 			DisableDuringPlay = false,
-			ConditionalOn = "Run Game"
+			ConditionalOn = "Run Game",
+			ActiveResolver = () => SceneViewWidget.Current?.CurrentView == SceneViewWidget.ViewMode.GameEjected
 		},
 
 		new() { Separator=true },		

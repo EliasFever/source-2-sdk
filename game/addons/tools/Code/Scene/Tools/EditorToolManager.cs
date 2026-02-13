@@ -94,7 +94,27 @@ public class EditorToolManager
 
 		CurrentTool = bestType.Type.Create<EditorTool>();
 		CurrentTool.InitializeInternal( this );
-		ToolChanged?.Invoke( CurrentTool );
+		InvokeToolChangedSafe( CurrentTool );
+	}
+
+	private void InvokeToolChangedSafe( EditorTool tool )
+	{
+		var handlers = ToolChanged;
+		if ( handlers == null )
+			return;
+
+		foreach ( var del in handlers.GetInvocationList().OfType<Action<EditorTool>>() )
+		{
+			try
+			{
+				del( tool );
+			}
+			catch ( NotImplementedException ex ) when ( ex.Message?.Contains( "matching substitution for a lambda method", StringComparison.OrdinalIgnoreCase ) == true )
+			{
+				ToolChanged -= del;
+				Log.Warning( $"[EditorToolManager] Removed stale hotload ToolChanged delegate: {del.Method?.DeclaringType?.FullName}.{del.Method?.Name}" );
+			}
+		}
 	}
 
 	public void UpdateSubTool( string editMode )
