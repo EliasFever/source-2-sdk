@@ -9,7 +9,7 @@ namespace Sandbox.Audio;
 /// This means one frame is about 11.6ms
 /// So as long as mixing takes less than 10ms we're okay
 /// </summary>
-internal static partial class AudioEngine
+public static partial class AudioEngine
 {
 	public static bool IsValid => g_pAudioDevice.IsValid();
 
@@ -63,6 +63,8 @@ internal static partial class AudioEngine
 
 	[ConVar( "snd_mute_losefocus", ConVarFlags.Saved )]
 	public static bool MuteLoseFocus { get; set; }
+
+	public static bool IsFocused => InputSystem.IsAppActive();
 
 	/// <summary>
 	/// Called every frame. 
