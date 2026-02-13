@@ -12,7 +12,7 @@ public static class DimensionDisplay
 	/// </summary>
 	public static void DrawBounds( BBox box )
 	{
-		var textSize = 22 * Gizmo.Settings.GizmoScale * Application.DpiScale;
+		var textSize = 14 * Gizmo.Settings.GizmoScale * Application.DpiScale;
 
 		Gizmo.Draw.IgnoreDepth = true;
 		Gizmo.Draw.LineThickness = 1;
@@ -36,8 +36,8 @@ public static class DimensionDisplay
 			var lineEnd = new Vector3( box.Maxs.x, yPos, zPos );
 			var midPoint = new Vector3( box.Center.x, yPos, zPos );
 
-			DrawDimensionLabel( midPoint, $"W:{box.Size.x:0.#}", Gizmo.Colors.Forward, textSize );
-			Gizmo.Draw.Color = Gizmo.Colors.Forward;
+			DrawDimensionLabel( midPoint, $"{box.Size.x:0.#}", Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Forward : Gizmo.Colors.Local.Forward, textSize );
+			Gizmo.Draw.Color = Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Forward : Gizmo.Colors.Local.Forward;
 			Gizmo.Draw.Line( lineStart, lineEnd );
 		}
 
@@ -53,8 +53,8 @@ public static class DimensionDisplay
 			var lineEnd = new Vector3( xPos, box.Maxs.y, zPos );
 			var midPoint = new Vector3( xPos, box.Center.y, zPos );
 
-			DrawDimensionLabel( midPoint, $"L:{box.Size.y:0.#}", Gizmo.Colors.Left, textSize );
-			Gizmo.Draw.Color = Gizmo.Colors.Left;
+			DrawDimensionLabel( midPoint, $"{box.Size.y:0.#}", Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Left : Gizmo.Colors.Local.Left, textSize );
+			Gizmo.Draw.Color = Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Left : Gizmo.Colors.Local.Left;
 			Gizmo.Draw.Line( lineStart, lineEnd );
 		}
 
@@ -70,8 +70,8 @@ public static class DimensionDisplay
 			var lineEnd = new Vector3( xPos, yPos, box.Maxs.z );
 			var midPoint = new Vector3( xPos, yPos, box.Center.z );
 
-			DrawDimensionLabel( midPoint, $"H:{box.Size.z:0.#}", Gizmo.Colors.Up, textSize );
-			Gizmo.Draw.Color = Gizmo.Colors.Up;
+			DrawDimensionLabel( midPoint, $"{box.Size.z:0.#}", Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Up : Gizmo.Colors.Local.Up, textSize );
+			Gizmo.Draw.Color = Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Up : Gizmo.Colors.Local.Up;
 			Gizmo.Draw.Line( lineStart, lineEnd );
 		}
 	}
@@ -90,9 +90,11 @@ public static class DimensionDisplay
 			Text = text,
 			TextColor = color,
 			FontSize = textSize,
-			FontName = "Roboto Mono",
 			FontWeight = 400,
 			LineHeight = 1,
+			FilterMode = Sandbox.Rendering.FilterMode.Point,
+			FontSmooth = Sandbox.UI.FontSmooth.Never,
+			FontName = "Courier New",
 			Outline = new TextRendering.Outline() { Color = Color.Black, Enabled = true, Size = 3 }
 		};
 

@@ -193,7 +193,7 @@ public sealed class PositionMode : MoveMode
 			Gizmo.Draw.Sprite( end, 8, null, false );
 
 			var midPoint = (start + end) * 0.5f;
-			var textSize = 22 * Gizmo.Settings.GizmoScale * Application.DpiScale;
+			var textSize = 14 * Gizmo.Settings.GizmoScale * Application.DpiScale;
 
 			var cameraDistance = Gizmo.Camera.Position.Distance( midPoint );
 			var scaledTextSize = textSize * (cameraDistance / 50.0f).Clamp( 0.5f, 1.0f );
@@ -216,7 +216,9 @@ public sealed class PositionMode : MoveMode
 				Text = distanceText,
 				TextColor = Color.White,
 				FontSize = scaledTextSize,
-				FontName = "Roboto Mono",
+				FilterMode = Sandbox.Rendering.FilterMode.Point,
+				FontSmooth = Sandbox.UI.FontSmooth.Never,
+				FontName = "Courier New",
 				FontWeight = 600,
 				LineHeight = 1,
 				Outline = new TextRendering.Outline() { Color = Color.Black, Enabled = true, Size = 3 }

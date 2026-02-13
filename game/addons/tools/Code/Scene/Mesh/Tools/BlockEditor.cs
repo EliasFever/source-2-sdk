@@ -16,7 +16,7 @@ public sealed class BlockEditor( PrimitiveTool tool ) : PrimitiveEditor( tool )
 	bool _dragStarted;
 	Model _previewModel;
 
-	static float TextSize => 22 * Gizmo.Settings.GizmoScale * Application.DpiScale;
+	static float TextSize => 14 * Gizmo.Settings.GizmoScale * Application.DpiScale;
 
 	private static float s_lastHeight = 128;
 
@@ -146,18 +146,18 @@ public sealed class BlockEditor( PrimitiveTool tool ) : PrimitiveEditor( tool )
 				Text = null,
 				TextColor = Color.White,
 				FontSize = TextSize,
-				FontName = "Roboto Mono",
+				FontName = "Courier New",
 				FontWeight = 400,
 				LineHeight = 1,
 				Outline = new TextRendering.Outline() { Color = Color.Black, Enabled = true, Size = 3 }
 			};
 
-			textScope.Text = $"L: {box.Size.y:0.#}";
-			textScope.TextColor = Gizmo.Colors.Left;
+			textScope.Text = $"{box.Size.y:0.#}";
+			textScope.TextColor = Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Left : Gizmo.Colors.Local.Left;
 			Gizmo.Draw.ScreenText( textScope, box.Mins.WithY( box.Center.y ), Vector2.Up * 32 );
 
-			textScope.Text = $"W: {box.Size.x:0.#}";
-			textScope.TextColor = Gizmo.Colors.Forward;
+			textScope.Text = $"{box.Size.x:0.#}";
+			textScope.TextColor = Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Forward : Gizmo.Colors.Local.Forward;
 			Gizmo.Draw.ScreenText( textScope, box.Mins.WithX( box.Center.x ), Vector2.Up * 32 );
 		}
 	}
@@ -339,23 +339,23 @@ public sealed class BlockEditor( PrimitiveTool tool ) : PrimitiveEditor( tool )
 			var group = w.AddGroup( $"{title} Properties" );
 			var so = _primitive.GetSerialized();
 			so.OnPropertyChanged += ( e ) => _onEdited?.Invoke();
-			
+
 			{
 				var row = new Widget { Layout = Layout.Row() };
 				row.Layout.Spacing = 24;
 				row.Layout.Alignment = TextFlag.LeftCenter;
-				
-				var label = new Label(text: "Sides:");
+
+				var label = new Label( text: "Sides:" );
 
 				var range = ControlWidget.Create( so.GetProperty( nameof( BlockPrimitive.Sides ) ) );
-					
+
 				range.HorizontalSizeMode = SizeMode.CanShrink;
 				range.FixedHeight = Theme.ControlHeight;
 				range.MinimumWidth = 100;
 
 				row.Layout.Add( label );
 				row.Layout.Add( range );
-					
+
 				group.Add( row );
 			}
 
@@ -364,7 +364,7 @@ public sealed class BlockEditor( PrimitiveTool tool ) : PrimitiveEditor( tool )
 				row.Layout.Spacing = 14;
 				row.Layout.Alignment = TextFlag.LeftCenter;
 
-				var label = new Label(text: "Hollow:");
+				var label = new Label( text: "Hollow:" );
 
 				var boolean = ControlWidget.Create( so.GetProperty( nameof( BlockPrimitive.Hollow ) ) );
 

@@ -149,7 +149,7 @@ partial class EdgeCutTool
 		{
 			var textPos = screenPos + new Vector2( 8, -24 );
 			var text = $"({distanceA:F0} : {distanceB:F0})";
-			var textSize = 22 * Gizmo.Settings.GizmoScale * Application.DpiScale;
+			var textSize = 14 * Gizmo.Settings.GizmoScale * Application.DpiScale;
 
 			using ( Gizmo.Scope( "LengthText" ) )
 			{
@@ -171,7 +171,7 @@ partial class EdgeCutTool
 		{
 			var textPos = screenPos + new Vector2( 8, -24 );
 			var text = $"{distance:F0}";
-			var textSize = 22 * Gizmo.Settings.GizmoScale * Application.DpiScale;
+			var textSize = 14 * Gizmo.Settings.GizmoScale * Application.DpiScale;
 
 			using ( Gizmo.Scope( "LengthText" ) )
 			{
@@ -188,7 +188,9 @@ partial class EdgeCutTool
 			Text = text,
 			TextColor = Color.White,
 			FontSize = textSize,
-			FontName = "Roboto Mono",
+			FilterMode = Sandbox.Rendering.FilterMode.Point,
+			FontSmooth = Sandbox.UI.FontSmooth.Never,
+			FontName = "Courier New",
 			FontWeight = 400,
 			LineHeight = 1,
 			Outline = new TextRendering.Outline() { Color = Color.Black, Enabled = true, Size = 3 }

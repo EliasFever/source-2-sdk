@@ -191,11 +191,11 @@ class NavMeshLinkToolWindow : WidgetWindow
 				// Draw text above start
 				Gizmo.Draw.Color = Color.White;
 				var startTextTransform = Gizmo.CameraTransform.WithPosition( targetComponent.WorldStartPosition + Vector3.Up * cursorRadius * 2 );
-				Gizmo.Draw.Text( "Start", startTextTransform, "Roboto", 16f );
+				Gizmo.Draw.Text( "Start", startTextTransform, "Courier New", 12f );
 
 				// Draw text above end
 				var endTextTransform = Gizmo.CameraTransform.WithPosition( targetComponent.WorldEndPosition + Vector3.Up * cursorRadius * 2 );
-				Gizmo.Draw.Text( "End", endTextTransform, "Roboto", 16f );
+				Gizmo.Draw.Text( "End", endTextTransform, "Courier New", 12f );
 			}
 		}
 
@@ -216,7 +216,7 @@ class NavMeshLinkToolWindow : WidgetWindow
 				var textTransform = Gizmo.CameraTransform.WithPosition( navmeshHitLocation.Value + Vector3.Up * cursorRadius * 2 );
 
 				Gizmo.Draw.Color = Color.Yellow;
-				Gizmo.Draw.Text( cursorText, textTransform, "Roboto", 16f );
+				Gizmo.Draw.Text( cursorText, textTransform, "Courier New", 12f );
 				Gizmo.Draw.SolidSphere( navmeshHitLocation.Value, cursorRadius, 16, 16 );
 
 				if ( isPickingStartOrEnd )

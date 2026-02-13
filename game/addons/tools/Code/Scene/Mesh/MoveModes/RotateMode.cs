@@ -55,7 +55,7 @@ public sealed class RotateMode : MoveMode
 		{
 			Gizmo.Draw.IgnoreDepth = true;
 
-			var textSize = 22 * Gizmo.Settings.GizmoScale * Application.DpiScale;
+			var textSize = 14 * Gizmo.Settings.GizmoScale * Application.DpiScale;
 			var cameraDistance = Gizmo.Camera.Position.Distance( origin );
 			var scaledTextSize = textSize * (cameraDistance / 50.0f).Clamp( 0.5f, 1.0f );
 
@@ -78,7 +78,7 @@ public sealed class RotateMode : MoveMode
 				Text = angleText,
 				TextColor = Color.White,
 				FontSize = scaledTextSize,
-				FontName = "Roboto Mono",
+				FontName = "Courier New",
 				FontWeight = 400,
 				LineHeight = 1,
 				Outline = new TextRendering.Outline() { Color = Color.Black, Enabled = true, Size = 3 }
