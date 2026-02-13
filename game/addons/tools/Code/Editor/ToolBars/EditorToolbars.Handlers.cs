@@ -741,7 +741,7 @@ public static class EditorToolBarsActions
 	// General tools modes
 	//
 	public static void SelectBlockTool()
-		=> Activate( nameof( MeshTool ), nameof( MeshTool ) );
+		=> Activate( nameof( MeshTool ), nameof( PrimitiveTool ) );
 
 	public static void SelectPathTool()
 		=> ActiveProjectTool( "PathTool" );
