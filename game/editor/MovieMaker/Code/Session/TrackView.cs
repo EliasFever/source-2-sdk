@@ -2,6 +2,7 @@
 using Sandbox.MovieMaker;
 using System.Linq;
 using Sandbox.MovieMaker.Properties;
+using Editor.MeshEditor;
 
 namespace Editor.MovieMaker;
 
@@ -117,7 +118,7 @@ public sealed partial class TrackView : IComparable<TrackView>
 	/// Is this track representing the transform of a bone accessed through a <see cref="SkinnedModelRenderer"/>?
 	/// </summary>
 	public bool IsBoneTransform => Track is IPropertyTrack<Transform> && Parent is
-		{ Track.Name: "Bones", Parent.Track: IReferenceTrack<SkinnedModelRenderer> };
+	{ Track.Name: "Bones", Parent.Track: IReferenceTrack<SkinnedModelRenderer> };
 
 	/// <summary>
 	/// Is this track representing a (procedural) bone object?
@@ -266,10 +267,10 @@ public sealed partial class TrackView : IComparable<TrackView>
 	{
 		// Keep Component tracks ordered the same as in the inspector
 
-		if ( Track.TargetType != typeof(GameObject) ) return 0;
+		if ( Track.TargetType != typeof( GameObject ) ) return 0;
 		if ( Target is not { IsBound: true, Value: GameObject go } ) return 0;
 		if ( track is not IProjectReferenceTrack refTrack ) return 0;
-		if ( !refTrack.TargetType.IsAssignableTo( typeof(Component) ) ) return 0;
+		if ( !refTrack.TargetType.IsAssignableTo( typeof( Component ) ) ) return 0;
 
 		var index = 0;
 
@@ -404,20 +405,20 @@ public sealed partial class TrackView : IComparable<TrackView>
 			return;
 		}
 
-		EditorToolManager.SetTool( nameof(ObjectEditorTool) );
+		EditorToolManager.SetTool( nameof( SelectionTool ) );
 
 		switch ( property.Name )
 		{
 			case nameof( GameObject.LocalPosition ):
-				EditorToolManager.SetSubTool( nameof( PositionEditorTool ) );
+				EditorToolManager.SetSubTool( nameof( PositionMode ) );
 				break;
 
 			case nameof( GameObject.LocalRotation ):
-				EditorToolManager.SetSubTool( nameof( RotationEditorTool ) );
+				EditorToolManager.SetSubTool( nameof( RotateMode ) );
 				break;
 
 			case nameof( GameObject.LocalScale ):
-				EditorToolManager.SetSubTool( nameof( ScaleEditorTool ) );
+				EditorToolManager.SetSubTool( nameof( ScaleMode ) );
 				break;
 		}
 	}
@@ -522,10 +523,10 @@ public sealed partial class TrackView : IComparable<TrackView>
 		}
 
 		return new TransformTrack( this,
-			Find( nameof(GameObject.Enabled) ),
-			Find( nameof(GameObject.LocalPosition) ),
-			Find( nameof(GameObject.LocalRotation) ),
-			Find( nameof(GameObject.LocalScale) ) );
+			Find( nameof( GameObject.Enabled ) ),
+			Find( nameof( GameObject.LocalPosition ) ),
+			Find( nameof( GameObject.LocalRotation ) ),
+			Find( nameof( GameObject.LocalScale ) ) );
 	}
 }
 

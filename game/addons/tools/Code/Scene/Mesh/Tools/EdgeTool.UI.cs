@@ -25,13 +25,6 @@ partial class EdgeTool
 		{
 			AddTitle( "Edge Mode", "show_chart" );
 
-			{
-				var group = AddGroup( "Move Mode" );
-				var row = group.AddRow();
-				row.Spacing = 8;
-				tool.CreateMoveModeButtons( row );
-			}
-
 			_tool = tool;
 
 			_edges = selection.Targets

@@ -14,24 +14,24 @@ public static partial class EditorToolBars
 	{
 		return
 		[
-			new() { Name="Select",
-				Icon="hammer/select_tool_icon.png",
-				ToggledIcon="hammer/select_tool_icon_activated.png",
-				Hotkey="Shift+S",
-				Group = "MainTools",
-				GroupType = ToolBarOptionGroupType.SingleExclusive,
-				Checkable=true,
-				Description="Select. Select groups, objects or mesh components",
-				Active = true,
-				ActiveResolver = () =>
-				{
-					var mode = EditorToolManager.CurrentModeName;
-					var subMode = EditorToolManager.CurrentSubModeName;
-					return (mode == nameof( ObjectEditorTool ) || mode == "object")
-						&& subMode != nameof( PositionEditorTool )
-						&& subMode != nameof( RotationEditorTool )
-						&& subMode != nameof( ScaleEditorTool );
-				} },
+			// new() { Name="Select",
+			// 	Icon="hammer/select_tool_icon.png",
+			// 	ToggledIcon="hammer/select_tool_icon_activated.png",
+			// 	Hotkey="Shift+S",
+			// 	Group = "MainTools",
+			// 	GroupType = ToolBarOptionGroupType.SingleExclusive,
+			// 	Checkable=true,
+			// 	Description="Select. Select groups, objects or mesh components",
+			// 	Active = true,
+			// 	ActiveResolver = () =>
+			// 	{
+			// 		var mode = EditorToolManager.CurrentModeName;
+			// 		var subMode = EditorToolManager.CurrentSubModeName;
+			// 		return (mode == nameof( ObjectEditorTool ) || mode == "object")
+			// 			&& subMode != nameof( PositionEditorTool )
+			// 			&& subMode != nameof( RotationEditorTool )
+			// 			&& subMode != nameof( ScaleEditorTool );
+			// 	} },
 
 			new() { Name="Move",
 				ShortcutAction = "tools.position-tool",
@@ -46,15 +46,11 @@ public static partial class EditorToolBars
 				Description="Translate. Move the selected objects",
 				ActiveResolver = () =>
 				{
-					var mode = EditorToolManager.CurrentModeName;
-					if ( mode == nameof( MeshTool ) )
-					{
-						return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
-							&& meshTool.MoveMode?.GetType() == typeof( Editor.MeshEditor.PositionMode );
-					}
+					if ( EditorToolManager.CurrentModeName != nameof( MeshTool ) )
+						return false;
 
-					return (mode == nameof( ObjectEditorTool ) || mode == "object")
-						&& EditorToolManager.CurrentSubModeName == nameof( PositionEditorTool );
+					return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
+						&& meshTool.MoveMode?.GetType() == typeof( MeshEditor.PositionMode );
 				} },
 
 			new() { Name="Rotate",
@@ -70,15 +66,11 @@ public static partial class EditorToolBars
 				Description="Rotate. Rotate the selected objects",
 				ActiveResolver = () =>
 				{
-					var mode = EditorToolManager.CurrentModeName;
-					if ( mode == nameof( MeshTool ) )
-					{
-						return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
-							&& meshTool.MoveMode?.GetType() == typeof( RotateMode );
-					}
+					if ( EditorToolManager.CurrentModeName != nameof( MeshTool ) )
+						return false;
 
-					return (mode == nameof( ObjectEditorTool ) || mode == "object")
-						&& EditorToolManager.CurrentSubModeName == nameof( RotationEditorTool );
+					return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
+						&& meshTool.MoveMode?.GetType() == typeof( RotateMode );
 				} },
 
 			new() { Name="Scale",
@@ -94,15 +86,11 @@ public static partial class EditorToolBars
 				Description="Scale. Scale the selected objects",
 				ActiveResolver = () =>
 				{
-					var mode = EditorToolManager.CurrentModeName;
-					if ( mode == nameof( MeshTool ) )
-					{
-						return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
-							&& meshTool.MoveMode?.GetType() == typeof( ScaleMode );
-					}
+					if ( EditorToolManager.CurrentModeName != nameof( MeshTool ) )
+						return false;
 
-					return (mode == nameof( ObjectEditorTool ) || mode == "object")
-						&& EditorToolManager.CurrentSubModeName == nameof( ScaleEditorTool );
+					return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
+						&& meshTool.MoveMode?.GetType() == typeof( ScaleMode );
 				} },
 
 			new() { Name="Pivot",
@@ -354,11 +342,8 @@ public static partial class EditorToolBars
 				Method = EditorToolBarsActions.SelectObjects,
 				Description="Selection Mode: Objects",
 				Active = true,
-				ActiveResolver = () =>
-				{
-					var mode = EditorToolManager.CurrentModeName;
-					return mode == nameof( ObjectEditorTool ) || mode == "object";
-				} },
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( MeshTool )
+					&& EditorToolManager.CurrentSubModeName == nameof( ObjectSelection ) },
 
 			new () { Name="Groups",
 				Icon="hammer/selection_mode_groups.png",
@@ -473,7 +458,7 @@ public static partial class EditorToolBars
 		new() { Separator=true },
 		new() { Separator=true },
 		new() { Separator=true },
-		
+
 		new() { Name = "Toggle Fullscreen",
 			ShortcutAction = "editor.eject",
 			Icon = "hammer/fullscreen_activated.png",
@@ -486,7 +471,7 @@ public static partial class EditorToolBars
 			ConditionalOn = "Run Game"
 		},
 
-		new() { Separator=true },		
+		new() { Separator=true },
 
 		new() { Name = "Run Game",
 			ShortcutAction = "editor.toggle-play",
@@ -541,8 +526,8 @@ public static partial class EditorToolBars
 			ActiveResolver = () => SceneViewWidget.Current?.CurrentView == SceneViewWidget.ViewMode.GameEjected
 		},
 
-		new() { Separator=true },		
-		new() { Separator=true },		
+		new() { Separator=true },
+		new() { Separator=true },
 
 		new() { Name = "Network Settings",
 			ShortcutAction = "editor.eject",

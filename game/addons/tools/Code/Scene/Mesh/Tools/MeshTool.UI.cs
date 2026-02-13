@@ -38,6 +38,8 @@ file class MeshToolShortcutsWidget : Widget
 
 	[Shortcut( "tools.mesh-selection", "4", typeof( SceneViewWidget ) )]
 	public void ActivateMeshSelection() => EditorToolManager.SetSubTool( nameof( MeshSelection ) );
+	[Shortcut( "tools.object-selection", "5", typeof( SceneViewWidget ) )]
+	public void ActivateObjectSelection() => EditorToolManager.SetSubTool( nameof( ObjectSelection ) );
 
 	[Shortcut( "tools.vertex-paint-tool", "Shift+V", typeof( SceneViewWidget ) )]
 	public void ActivateVertexPaintTool() => EditorToolManager.SetSubTool( nameof( VertexPaintTool ) );

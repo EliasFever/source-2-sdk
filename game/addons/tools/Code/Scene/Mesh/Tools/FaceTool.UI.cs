@@ -67,13 +67,6 @@ partial class FaceTool
 			};
 
 			{
-				var group = AddGroup( "Move Mode" );
-				var row = group.AddRow();
-				row.Spacing = 8;
-				tool.CreateMoveModeButtons( row );
-			}
-
-			{
 				var group = AddGroup( "Operations" );
 
 				{

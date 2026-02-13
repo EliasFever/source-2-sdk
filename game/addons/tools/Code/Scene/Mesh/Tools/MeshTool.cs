@@ -35,6 +35,7 @@ public partial class MeshTool : EditorTool
 	{
 		yield return new PrimitiveTool( this );
 		yield return new MeshSelection( this );
+		yield return new ObjectSelection( this );
 		yield return new VertexTool( this );
 		yield return new EdgeTool( this );
 		yield return new FaceTool( this );

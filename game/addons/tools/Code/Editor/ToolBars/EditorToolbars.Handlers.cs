@@ -692,15 +692,6 @@ public static partial class EditorToolBars
 				if ( type != null )
 					meshTool.SetMoveMode( type );
 				break;
-
-			case ObjectEditorTool:
-				switch ( mode )
-				{
-					case "move": PositionEditorTool.ActivateSubTool(); break;
-					case "rotate": RotationEditorTool.ActivateSubTool(); break;
-					case "scale": ScaleEditorTool.ActivateSubTool(); break;
-				}
-				break;
 		}
 	}
 }
@@ -741,7 +732,7 @@ public static class EditorToolBarsActions
 		=> Activate( nameof( MeshTool ), nameof( MeshSelection ) );
 
 	public static void SelectObjects()
-		=> Activate( nameof( ObjectEditorTool ) );
+		=> Activate( nameof( MeshTool ), nameof( ObjectSelection ) );
 
 	public static void SelectNavigation()
 		=> Activate( nameof( NavMeshTool ) );
@@ -763,7 +754,7 @@ public static class EditorToolBarsActions
 
 	public static void SelectClippingTool()
 		=> OpenMeshSubTool( () => new ClipTool() );
-	
+
 	public static void SelectMirrorTool()
 		=> OpenMeshSubTool( () => new MirrorTool() );
 

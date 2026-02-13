@@ -1,28 +1,30 @@
 ﻿
 namespace Editor.MeshEditor;
 
-partial class MeshSelection
+partial class ObjectSelection
 {
 	public override Widget CreateToolSidebar()
 	{
-		return new MeshSelectionWidget( GetSerializedSelection(), this );
+		return new ObjectSelectionWidget( GetSerializedSelection(), this );
 	}
 
-	public class MeshSelectionWidget : ToolSidebarWidget
+	public class ObjectSelectionWidget : ToolSidebarWidget
 	{
 		readonly MeshComponent[] _meshes;
-		readonly MeshSelection _tool;
+		readonly GameObject[] _gameObjects;
+		readonly ObjectSelection _tool;
 
-		public MeshSelectionWidget( SerializedObject so, MeshSelection tool ) : base()
+		public ObjectSelectionWidget( SerializedObject so, ObjectSelection tool ) : base()
 		{
 			_tool = tool;
 
-			AddTitle( "Mesh Mode", "layers" );
+			AddTitle( "Object Mode", "layers" );
 
-			_meshes = so.Targets.OfType<GameObject>()
-				.Select( x => x.GetComponent<MeshComponent>() )
-				.Where( x => x.IsValid() )
-				.ToArray();
+			_gameObjects = [.. so.Targets.OfType<GameObject>()
+				.Where( x => x.IsValid() )];
+
+			_meshes = [.. _gameObjects.Select( x => x.GetComponent<MeshComponent>() )
+				.Where( x => x.IsValid() )];
 
 			{
 				var group = AddGroup( "Operations" );
@@ -31,10 +33,8 @@ partial class MeshSelection
 					var grid = Layout.Row();
 					grid.Spacing = 4;
 
-					CreateButton( "Set Origin To Pivot", "gps_fixed", "mesh.set-origin-to-pivot", SetOriginToPivot, _meshes.Length > 0, grid );
-					CreateButton( "Center Origin", "center_focus_strong", "mesh.center-origin", CenterOrigin, _meshes.Length > 0, grid );
-					CreateButton( "Merge Meshes", "join_full", "mesh.merge-meshes", MergeMeshes, _meshes.Length > 1, grid );
-					CreateButton( "Merge Meshes By Edge", "link", null, MergeMeshesByEdge, _meshes.Length > 1, grid );
+					CreateButton( "Set Origin To Pivot", "gps_fixed", "mesh.set-origin-to-pivot", SetOriginToPivot, _gameObjects.Length > 0, grid );
+					CreateButton( "Center Origin", "center_focus_strong", "mesh.center-origin", CenterOrigin, _gameObjects.Length > 0, grid );
 
 					grid.AddStretchCell();
 
@@ -61,10 +61,10 @@ partial class MeshSelection
 				var grid = Layout.Row();
 				grid.Spacing = 4;
 
-				CreateButton( "Previous", "chevron_left", "mesh.previous-pivot", PreviousPivot, _meshes.Length > 0, grid );
-				CreateButton( "Next", "chevron_right", "mesh.next-pivot", NextPivot, _meshes.Length > 0, grid );
-				CreateButton( "Clear", "restart_alt", "mesh.clear-pivot", ClearPivot, _meshes.Length > 0, grid );
-				CreateButton( "World Origin", "language", "mesh.zero-pivot", ZeroPivot, _meshes.Length > 0, grid );
+				CreateButton( "Previous", "chevron_left", "mesh.previous-pivot", PreviousPivot, _gameObjects.Length > 0, grid );
+				CreateButton( "Next", "chevron_right", "mesh.next-pivot", NextPivot, _gameObjects.Length > 0, grid );
+				CreateButton( "Clear", "restart_alt", "mesh.clear-pivot", ClearPivot, _gameObjects.Length > 0, grid );
+				CreateButton( "World Origin", "language", "mesh.zero-pivot", ZeroPivot, _gameObjects.Length > 0, grid );
 
 				grid.AddStretchCell();
 
@@ -78,7 +78,7 @@ partial class MeshSelection
 				grid.Spacing = 4;
 
 				CreateButton( "Clipping Tool", "content_cut", "mesh.open-clipping-tool", OpenClippingTool, _meshes.Length > 0, grid );
-				CreateButton( "Mirror Tool", "flip", "mesh.mirror-tool", OpenMirrorTool, _meshes.Length > 0, grid );
+				CreateButton( "Mirror Tool", "flip", "mesh.mirror-tool", OpenMirrorTool, _gameObjects.Length > 0, grid );
 
 				grid.AddStretchCell();
 
@@ -96,7 +96,7 @@ partial class MeshSelection
 			_tool.Tool.CurrentTool = tool;
 		}
 
-		[Shortcut( "mesh.open-clipping-tool", "Shift+X", typeof( SceneViewWidget ) )]
+		[Shortcut( "mesh.open-clipping-tool", "C", typeof( SceneViewWidget ) )]
 		void OpenClippingTool()
 		{
 			var tool = new ClipTool();
@@ -139,8 +139,7 @@ partial class MeshSelection
 			using var scope = SceneEditorSession.Scope();
 
 			using ( SceneEditorSession.Active.UndoScope( "Center Origin" )
-				.WithGameObjectChanges( _meshes.Select( x => x.GameObject ), GameObjectUndoFlags.Properties )
-				.WithComponentChanges( _meshes )
+				.WithGameObjectChanges( _gameObjects, GameObjectUndoFlags.Properties )
 				.Push() )
 			{
 				foreach ( var mesh in _meshes )
