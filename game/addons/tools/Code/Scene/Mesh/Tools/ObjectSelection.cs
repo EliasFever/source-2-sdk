@@ -6,7 +6,7 @@ namespace Editor.MeshEditor;
 /// </summary>
 [Title( "Object Selection" )]
 [Icon( "layers" )]
-[Alias( "tools.mesh-selection" )]
+[Alias( "tools.object-selection" )]
 [Group( "5" )]
 public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 {
@@ -252,7 +252,13 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 		var tr = MeshTrace.Run();
 
 		if ( !tr.Hit ) return;
-		if ( tr.GameObject is null ) return;
+		if ( tr.GameObject is not GameObject gameObject ) return;
+
+		if ( gameObject.IsValid() && !Selection.Contains( tr.GameObject ) )
+		{
+			Gizmo.Draw.Color = Gizmo.Colors.Active.WithAlpha( MathF.Sin( RealTime.Now * 20.0f ).Remap( -1, 1, 0.3f, 0.8f ) );
+			Gizmo.Draw.LineBBox( tr.GameObject.GetBounds() );
+		}
 
 		using ( Gizmo.ObjectScope( tr.GameObject, tr.GameObject.WorldTransform ) )
 		{
@@ -260,12 +266,6 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 			Gizmo.Hitbox.TrySetHovered( tr.Distance );
 
 			if ( !Gizmo.IsHovered ) return;
-
-			if ( Selection.Contains( tr.GameObject ) )
-			{
-				Gizmo.Draw.Color = Gizmo.Colors.Active.WithAlpha( MathF.Sin( RealTime.Now * 20.0f ).Remap( -1, 1, 0.3f, 0.8f ) );
-				Gizmo.Draw.LineBBox( tr.GameObject.GetBounds() );
-			}
 		}
 
 		if ( Gizmo.WasLeftMousePressed )
