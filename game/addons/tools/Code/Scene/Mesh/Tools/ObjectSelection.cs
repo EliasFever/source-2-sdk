@@ -251,7 +251,7 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 	{
 		if ( IsBoxSelecting ) return;
 
-		var tr = Trace.UsePhysicsWorld( false ).Run();
+		var tr = MeshTrace.Run();
 
 		if ( !tr.Hit ) return;
 		if ( tr.GameObject is not GameObject gameObject ) return;
