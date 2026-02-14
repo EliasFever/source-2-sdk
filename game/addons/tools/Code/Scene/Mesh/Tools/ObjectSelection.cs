@@ -256,6 +256,12 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 		if ( !tr.Hit ) return;
 		if ( tr.GameObject is not GameObject gameObject ) return;
 
+		if ( gameObject.IsValid() && !Selection.Contains( tr.GameObject ) )
+		{
+			Gizmo.Draw.Color = Gizmo.Colors.Active.WithAlpha( MathF.Sin( RealTime.Now * 20.0f ).Remap( -1, 1, 0.3f, 0.8f ) );
+			Gizmo.Draw.LineBBox( tr.GameObject.GetBounds() );
+		}
+
 		using ( Gizmo.ObjectScope( tr.GameObject, tr.GameObject.WorldTransform ) )
 		{
 			Gizmo.Hitbox.DepthBias = 1;
