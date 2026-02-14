@@ -374,6 +374,8 @@ public sealed partial class EdgeTool( MeshTool tool ) : SelectionTool<MeshEdge>(
 					Gizmo.Draw.Color = Color.Green;
 					Gizmo.Draw.LineThickness = edge.IsOpen ? 2 : 4;
 
+					var textOffset = (Vector2.Up * 32) + (Vector2.Right * 16);
+
 					var line = edge.Line;
 					Gizmo.Draw.Line( line );
 
@@ -393,7 +395,7 @@ public sealed partial class EdgeTool( MeshTool tool ) : SelectionTool<MeshEdge>(
 						Outline = new TextRendering.Outline() { Color = Color.Black, Enabled = true, Size = 3 }
 					};
 
-					Gizmo.Draw.ScreenText( textScope, edge.Transform.PointToWorld( line.Center ), 0 );
+					Gizmo.Draw.ScreenText( textScope, edge.Transform.PointToWorld( line.Center ), textOffset );
 				}
 			}
 		}
