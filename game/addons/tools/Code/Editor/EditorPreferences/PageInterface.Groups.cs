@@ -2,9 +2,14 @@ namespace Editor.Preferences;
 
 internal partial class PageInterface
 {
+	private const string SBoxIcon = "toolimages:logo_rounded.png";
+	private const string S2Icon = "toolimages:logo_s2.png";
+
+
 	// Populate this!
 	static void RegisterGroups() 
 	{ 
+		RegisterGroup( ViewGroup );
 		RegisterGroup( ToolbarsGroup ); 
 	}
 
@@ -15,14 +20,70 @@ internal partial class PageInterface
 		toolbarsGroup.Container.Layout.Spacing = 0;
 		layout.Add( toolbarsGroup );
 
-		AddControlSheetBoolRow( toolbarsGroup.Container.Layout, "Enable S&Box Viewport Toolbars",
-			() => CustomEditorPreferences.ShowLegacyViewportToolbar,
-			v => CustomEditorPreferences.ShowLegacyViewportToolbar = v );
+		var toolbarOptions = new List<string>
+		{
+			"QT Toolbars",
+			"Legacy (Viewport)"
+		};
+		var toolbarOptionIcons = new List<string>
+		{
+			S2Icon,
+			SBoxIcon
+		};
+		var selectedToolbarIndex = CustomEditorPreferences.ToolbarMode == CustomEditorPreferences.ViewportToolbarMode.LegacySbox ? 1 : 0;
 
-		AddControlSheetBoolRow( toolbarsGroup.Container.Layout, "Build S2 Toolbars On Editor Startup",
-			() => CustomEditorPreferences.BuildToolbarsOnStartup,
-			v => CustomEditorPreferences.BuildToolbarsOnStartup = v );
+		AddSegmentedRow(
+			toolbarsGroup.Container.Layout,
+			"Toolbars",
+			toolbarOptions,
+			selectedToolbarIndex,
+			index =>
+			{
+				var newMode = index == 1
+					? CustomEditorPreferences.ViewportToolbarMode.LegacySbox
+					: CustomEditorPreferences.ViewportToolbarMode.Source2Styled;
+				var changed = CustomEditorPreferences.ToolbarMode != newMode;
+
+				CustomEditorPreferences.ToolbarMode = newMode;
+				CustomEditorPreferences.BuildToolbarsOnStartup = true;
+
+				if ( changed )
+				{
+					EditorToolBars.ApplyCurrentToolbarMode();
+				}
+			},
+			toolbarOptionIcons );
 
 		AddActionRow( toolbarsGroup.Container.Layout, "Force Rebuild S2 Toolbars", "autorenew", () => EditorToolBars.RebuildToolbars() );
+	}
+
+	private static void ViewGroup( Layout layout )
+	{
+		var viewGroup = new CollapsibleCategory( null, "View" );
+		viewGroup.Container.Layout.Spacing = 0;
+		layout.Add( viewGroup );
+
+		var options = new List<string>
+		{
+			"Fly/Static RMB",
+			"Legacy"
+		};
+		var optionIcons = new List<string>
+		{
+			S2Icon,
+			SBoxIcon
+		};
+
+		var selectedIndex = CustomEditorPreferences.FlyModeStyle == CustomEditorPreferences.ViewFlyMode.LegacyHoldFlyEyeCursor ? 1 : 0;
+
+		AddSegmentedRow(
+			viewGroup.Container.Layout,
+			"Fly Navigation",
+			options,
+			selectedIndex,
+			index => CustomEditorPreferences.FlyModeStyle = index == 1
+				? CustomEditorPreferences.ViewFlyMode.LegacyHoldFlyEyeCursor
+				: CustomEditorPreferences.ViewFlyMode.Source2HybridFly,
+			optionIcons );
 	}
 }

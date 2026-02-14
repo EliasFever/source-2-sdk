@@ -100,6 +100,69 @@ internal partial class PageInterface : Widget
 		layout.Add( row );
 	}
 
+	internal static void AddSegmentedRow(
+		Layout layout,
+		string label,
+		IReadOnlyList<string> options,
+		int selectedIndex,
+		Action<int> onSelected,
+		IReadOnlyList<string> icons = null )
+	{
+		var row = new PreferenceRow
+		{
+			ContentMargins = new Sandbox.UI.Margin( 6, 0, 6, 0 )
+		};
+
+		var grid = Layout.Grid();
+		grid.HorizontalSpacing = 8;
+		row.Layout = grid;
+
+		var text = new Label( label )
+		{
+			MinimumWidth = 100f,
+			HorizontalSizeMode = SizeMode.Flexible,
+			VerticalSizeMode = SizeMode.CanShrink,
+			Color = Theme.TextControl.WithAlpha( 0.7f )
+		};
+
+		var segmented = new SegmentedControl
+		{
+			HorizontalSizeMode = SizeMode.Flexible,
+			MinimumWidth = 280f
+		};
+		for ( var i = 0; i < options.Count; i++ )
+		{
+			var icon = icons is not null && i < icons.Count ? icons[i] : null;
+			segmented.AddOption( options[i], icon );
+		}
+
+		selectedIndex = selectedIndex.Clamp( 0, Math.Max( options.Count - 1, 0 ) );
+		if ( options.Count > 0 )
+		{
+			segmented.Selected = options[selectedIndex];
+		}
+
+		segmented.OnSelectedChanged += value =>
+		{
+			for ( var i = 0; i < options.Count; i++ )
+			{
+				if ( options[i] == value )
+				{
+					onSelected?.Invoke( i );
+					break;
+				}
+			}
+		};
+
+		grid.AddCell( 0, 0, text, alignment: TextFlag.LeftCenter );
+		grid.AddCell( 1, 0, segmented, alignment: TextFlag.RightCenter );
+		grid.SetColumnStretch( 0, 0 );
+		grid.SetColumnStretch( 1, 1 );
+		grid.SetMinimumColumnWidth( 0, 100 );
+
+		layout.Add( row );
+	}
+
 	internal static void AddActionRow( Layout layout, string label, string icon, Action onClick )
 	{
 		var row = new PreferenceRow
