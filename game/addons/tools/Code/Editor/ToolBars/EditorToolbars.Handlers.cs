@@ -84,6 +84,7 @@ public static partial class EditorToolBars
 	}
 
 	private static Dictionary<string, MethodInfo> s_shortcutCache;
+	private static bool s_shortcutCacheDirty = true;
 	private static Dictionary<ToolOptionDef, (bool Active, bool Checked)> s_prePlayState = new();
 
 	private static bool s_inPlayMode = false;
@@ -339,8 +340,11 @@ public static partial class EditorToolBars
 	/// </summary>
 	/// <remarks>This method scans all assemblies currently loaded in the application domain and collects static
 	/// methods marked with the ShortcutAttribute. Assemblies that cannot be reflected are skipped.</remarks>
-	private static void BuildShortcutCache()
+	private static void BuildShortcutCache( bool force = false )
 	{
+		if ( !force && !s_shortcutCacheDirty && s_shortcutCache?.Count > 0 )
+			return;
+
 		s_shortcutCache = [];
 
 		foreach ( var asm in AppDomain.CurrentDomain.GetAssemblies() )
@@ -370,6 +374,7 @@ public static partial class EditorToolBars
 		}
 
 		Log.Info( $"[Toolbar] Cached {s_shortcutCache.Count} shortcuts." );
+		s_shortcutCacheDirty = false;
 
 		//foreach ( var key in s_shortcutCache.Keys )
 		//{

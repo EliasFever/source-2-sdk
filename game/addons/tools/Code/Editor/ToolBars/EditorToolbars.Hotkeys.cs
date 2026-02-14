@@ -48,10 +48,10 @@ public static partial class EditorToolBars
 	public static void ActivateScaleMode() => SetMoveMode( "mesh.scale.mode" );
 
 	[Shortcut( "tools.pivot-tool", "ins", typeof( SceneViewWidget ) )]
-	static public void ActivatePivotMode() => SetMoveMode( "mesh.pivot.mode" );
+	public static void ActivatePivotMode() => SetMoveMode( "mesh.pivot.mode" );
 
 	[Shortcut( "tools.resize-tool", "q", typeof( SceneViewWidget ) )]
-	static public void ActivateResizeMode() => SetMoveMode( "mesh.resize.mode" );
+	public static void ActivateResizeMode() => SetMoveMode( "mesh.resize.mode" );
 	
 	//
 	// Selection modes

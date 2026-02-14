@@ -6,13 +6,47 @@ namespace Editor.Preferences;
 /// </summary>
 public static partial class CustomEditorPreferences
 {
+	public enum ViewportToolbarMode
+	{
+		Source2Styled = 0,
+		LegacySbox = 1
+	}
+
+	public enum ViewFlyMode
+	{
+		Source2HybridFly = 0,
+		Source2HybridFlyAlt = 1,
+		LegacyHoldFlyEyeCursor = 2
+	}
+
 	private const string Prefix = "custom_editor_prefs.";
+
+	[Title( "Viewport Toolbar Mode" )]
+	public static ViewportToolbarMode ToolbarMode
+	{
+		get
+		{
+			var raw = Get( "toolbars.viewport_mode", -1 );
+			if ( raw >= 0 )
+			{
+				return (ViewportToolbarMode)raw;
+			}
+
+			var legacy = Get( "toolbars.show_legacy_viewport", true );
+			return legacy ? ViewportToolbarMode.LegacySbox : ViewportToolbarMode.Source2Styled;
+		}
+		set
+		{
+			Set( "toolbars.viewport_mode", (int)value );
+			Set( "toolbars.show_legacy_viewport", value == ViewportToolbarMode.LegacySbox );
+		}
+	}
 
 	[Title( "Show Legacy Viewport Toolbar" )]
 	public static bool ShowLegacyViewportToolbar
 	{
-		get => Get( "toolbars.show_legacy_viewport", true );
-		set => Set( "toolbars.show_legacy_viewport", value );
+		get => ToolbarMode == ViewportToolbarMode.LegacySbox;
+		set => ToolbarMode = value ? ViewportToolbarMode.LegacySbox : ViewportToolbarMode.Source2Styled;
 	}
 
 	[Title( "Build Toolbars On Startup" )]
@@ -20,6 +54,13 @@ public static partial class CustomEditorPreferences
 	{
 		get => Get( "toolbars.build_on_startup", false );
 		set => Set( "toolbars.build_on_startup", value );
+	}
+
+	[Title( "Fly Mode Style" )]
+	public static ViewFlyMode FlyModeStyle
+	{
+		get => (ViewFlyMode)Get( "view.fly_mode_style", (int)ViewFlyMode.LegacyHoldFlyEyeCursor );
+		set => Set( "view.fly_mode_style", (int)value );
 	}
 
 	public static T Get<T>( string key, T defaultValue = default )

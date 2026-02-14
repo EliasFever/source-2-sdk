@@ -31,7 +31,7 @@ public static partial class EditorToolBars
 						return false;
 
 					return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
-						&& meshTool.MoveMode?.GetType() == typeof( MeshEditor.ResizeMode );
+						&& meshTool.MoveMode?.GetType() == typeof( ResizeMode );
 				} },
 
 			new() { Name="Move",

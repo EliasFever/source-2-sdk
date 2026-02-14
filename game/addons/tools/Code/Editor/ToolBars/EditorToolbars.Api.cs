@@ -8,8 +8,11 @@ public static partial class EditorToolBars
 {
 	public static bool ShowLegacyToolbar
 	{
-		get => Preferences.CustomEditorPreferences.ShowLegacyViewportToolbar;
-		set => Preferences.CustomEditorPreferences.ShowLegacyViewportToolbar = value;
+		get => Preferences.CustomEditorPreferences.ToolbarMode
+			== Preferences.CustomEditorPreferences.ViewportToolbarMode.LegacySbox;
+		set => Preferences.CustomEditorPreferences.ToolbarMode = value
+			? Preferences.CustomEditorPreferences.ViewportToolbarMode.LegacySbox
+			: Preferences.CustomEditorPreferences.ViewportToolbarMode.Source2Styled;
 	}
 
 	/// <summary>
@@ -116,5 +119,7 @@ public static partial class EditorToolBars
 	static void ToggleToolbars() => ShowLegacyToolbar ^= true;
 
 	public static void RebuildToolbars() => BuildToolbars();
+
+	public static void ApplyCurrentToolbarMode( bool forceRebuild = false ) => ApplyToolbarMode( forceRebuild );
 	
 }

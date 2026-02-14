@@ -15,6 +15,7 @@ public static partial class EditorToolBars
 	private static DockWindow MainWindow;
 	private static ViewportTools ViewportTools;
 	private static EditorToolManager _subscribedToolManager;
+	private static Preferences.CustomEditorPreferences.ViewportToolbarMode? _lastAppliedToolbarMode;
 
 	/// <summary>
 	/// On the first creation of the editor - initializes all the necessary toolbars,
@@ -32,15 +33,79 @@ public static partial class EditorToolBars
 
 		if ( Preferences.CustomEditorPreferences.BuildToolbarsOnStartup )
 		{
+			ApplyToolbarMode( forceRebuild: false );
+		}
+	}
+
+	internal static bool IsUsingLegacyToolbars()
+	{
+		return Preferences.CustomEditorPreferences.ToolbarMode
+			== Preferences.CustomEditorPreferences.ViewportToolbarMode.LegacySbox;
+	}
+
+	internal static bool AreCustomToolbarsBuilt()
+	{
+		return MainTools != null || SelectionModes != null || EditingSettings != null || ViewSettings != null;
+	}
+
+	internal static void SetCustomToolbarsVisible( bool visible )
+	{
+		if ( MainTools != null ) MainTools.Visible = visible;
+		if ( SelectionModes != null ) SelectionModes.Visible = visible;
+		if ( EditingSettings != null ) EditingSettings.Visible = visible;
+		if ( ViewSettings != null ) ViewSettings.Visible = visible;
+	}
+
+	internal static void ApplyToolbarMode( bool forceRebuild )
+	{
+		var mode = Preferences.CustomEditorPreferences.ToolbarMode;
+		var modeChanged = _lastAppliedToolbarMode != mode;
+
+		if ( !modeChanged && !forceRebuild )
+		{
+			if ( mode == Preferences.CustomEditorPreferences.ViewportToolbarMode.Source2Styled && AreCustomToolbarsBuilt() )
+			{
+				RefreshToolbarStates( force: true );
+			}
+			return;
+		}
+
+		if ( mode == Preferences.CustomEditorPreferences.ViewportToolbarMode.LegacySbox )
+		{
+			if ( AreCustomToolbarsBuilt() )
+			{
+				SetCustomToolbarsVisible( false );
+			}
+
+			_lastAppliedToolbarMode = mode;
+			return;
+		}
+
+		if ( forceRebuild || !AreCustomToolbarsBuilt() )
+		{
 			BuildToolbars();
 		}
+		else
+		{
+			SetCustomToolbarsVisible( true );
+			RefreshToolbarStates( force: true );
+		}
+
+		_lastAppliedToolbarMode = mode;
 	}
 
 	static void BuildToolbars()
 	{
+		if ( IsUsingLegacyToolbars() )
+		{
+			SetCustomToolbarsVisible( false );
+			return;
+		}
+
 		TryClearToolbars();
 		BuildShortcutCache();
 		BuildAllToolbars();
+		SetCustomToolbarsVisible( true );
 		RegisterEditorEventSubscriptions();
 		RefreshToolbarStates( force: true );
 	}
@@ -100,7 +165,7 @@ public static partial class EditorToolBars
 	[Event( "tools.gamedata.refresh" )]
 	private static void InitializeShortcutCache()
 	{
-		BuildShortcutCache();
+		BuildShortcutCache( force: true );
 		ValidateAllToolActionAvailability();
 		RefreshToolbarStates( force: true );
 	}
