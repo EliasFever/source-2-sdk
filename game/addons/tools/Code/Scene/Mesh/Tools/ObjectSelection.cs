@@ -1,4 +1,6 @@
 ﻿
+using Sandbox;
+
 namespace Editor.MeshEditor;
 
 /// <summary>
@@ -6,7 +8,7 @@ namespace Editor.MeshEditor;
 /// </summary>
 [Title( "Object Selection" )]
 [Icon( "layers" )]
-[Alias( "tools.mesh-selection" )]
+[Alias( "tools.object-selection" )]
 [Group( "5" )]
 public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 {
@@ -155,7 +157,7 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 
 	public override void OnEnabled()
 	{
-		AllowGameObjectSelection = true;
+		AllowGameObjectSelection = false;
 
 		var objects = Selection.OfType<GameObject>()
 			.Where( x => x.IsValid() )
@@ -220,7 +222,7 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 
 	public override BBox CalculateSelectionBounds()
 	{
-		return BBox.FromBoxes(_gameObjects.Select( x => x.GetBounds() ));
+		return BBox.FromBoxes( _gameObjects.Select( x => x.GetBounds() ) );
 	}
 
 	public override void OnSelectionChanged()
@@ -252,7 +254,13 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 		var tr = MeshTrace.Run();
 
 		if ( !tr.Hit ) return;
-		if ( tr.GameObject is null ) return;
+		if ( tr.GameObject is not GameObject gameObject ) return;
+
+		if ( gameObject.IsValid() && !Selection.Contains( tr.GameObject ) )
+		{
+			Gizmo.Draw.Color = Gizmo.Colors.Active.WithAlpha( MathF.Sin( RealTime.Now * 20.0f ).Remap( -1, 1, 0.3f, 0.8f ) );
+			Gizmo.Draw.LineBBox( tr.GameObject.GetBounds() );
+		}
 
 		using ( Gizmo.ObjectScope( tr.GameObject, tr.GameObject.WorldTransform ) )
 		{
@@ -260,12 +268,6 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 			Gizmo.Hitbox.TrySetHovered( tr.Distance );
 
 			if ( !Gizmo.IsHovered ) return;
-
-			if ( Selection.Contains( tr.GameObject ) )
-			{
-				Gizmo.Draw.Color = Gizmo.Colors.Active.WithAlpha( MathF.Sin( RealTime.Now * 20.0f ).Remap( -1, 1, 0.3f, 0.8f ) );
-				Gizmo.Draw.LineBBox( tr.GameObject.GetBounds() );
-			}
 		}
 
 		if ( Gizmo.WasLeftMousePressed )
@@ -310,7 +312,7 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 		foreach ( var go in Scene.GetAllObjects( true ) )
 		{
 			if ( selection.Contains( go ) ) continue;
-			if ( !go.HasGizmoHandle ) continue;
+
 			if ( !frustum.IsInside( go.WorldPosition ) )
 			{
 				previous.Add( go );
