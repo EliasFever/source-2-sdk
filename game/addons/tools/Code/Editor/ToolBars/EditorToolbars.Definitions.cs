@@ -21,6 +21,8 @@ public static partial class EditorToolBars
 				Group = "MainTools",
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.ActivateSelect,
 				Description="Select. Select groups, objects or mesh components",
 				Active = true,
 				ActiveResolver = () =>
@@ -29,7 +31,7 @@ public static partial class EditorToolBars
 						return false;
 
 					return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
-						&& meshTool.MoveMode?.GetType() == typeof( ResizeMode );
+						&& meshTool.MoveMode?.GetType() == typeof( MeshEditor.ResizeMode );
 				} },
 
 			new() { Name="Move",
@@ -153,7 +155,8 @@ public static partial class EditorToolBars
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectPathTool,
-				Description="Create path entities or primitives" },
+				Description="Create path entities or primitives",
+				ActiveResolver = () => EditorToolManager.CurrentModeName == "PathTool" },
 
 			// John: Exists within Block Tool context, seems fine enough to merge I think.
 
@@ -175,7 +178,9 @@ public static partial class EditorToolBars
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectClippingTool,
-				Description="Slice the selection by a plane" },
+				Description="Slice the selection by a plane",
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( MeshTool )
+					&& EditorToolManager.CurrentSubModeName == nameof( ClipTool ) },
 
 			new() { Name="Mirror Tool",
 				ShortcutAction = "tools.mirror-tool",
@@ -187,7 +192,9 @@ public static partial class EditorToolBars
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectMirrorTool,
-				Description="Mirror the selection" },
+				Description="Mirror the selection",
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( MeshTool )
+					&& EditorToolManager.CurrentSubModeName == nameof( MirrorTool ) },
 				
 			// John: very niche specific tooling, we don't have it anyways
 
@@ -209,7 +216,9 @@ public static partial class EditorToolBars
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectBlendTool,
-				Description="Paint vertex blends, weights and colors" },
+				Description="Paint vertex blends, weights and colors",
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( MeshTool )
+					&& EditorToolManager.CurrentSubModeName == nameof( VertexPaintTool ) },
 
 			new() { Name="Displacement Tool",
 				Icon="hammer/displacement_tool_icon.png",
@@ -227,7 +236,8 @@ public static partial class EditorToolBars
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectPhysicsTool,
-				Description="Manipulate objects using physics simulation" },
+				Description="Manipulate objects using physics simulation",
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( PhysicsEditorTool ) },
 
 			new() { Name="Terrain Tool",
 				Icon="hammer/tool_terrain_icon.png",
@@ -237,7 +247,8 @@ public static partial class EditorToolBars
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectTerraintool,
-				Description="Create and modify terrain" },
+				Description="Create and modify terrain",
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( TerrainEditorTool ) },
 
 			new() { Name="Asset Spray Tool",
 				Icon="hammer/asset_spray_tool_icon.png",

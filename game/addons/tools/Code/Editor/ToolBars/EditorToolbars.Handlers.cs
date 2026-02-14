@@ -95,6 +95,7 @@ public static partial class EditorToolBars
 	private static bool s_lastGlobalSpace;
 	private static bool s_lastGizmosEnabled;
 	private static SceneViewWidget.ViewMode? s_lastViewMode;
+	private static string s_lastMoveModeName;
 
 	private static string _pendingSubtool = null;
 	private static string s_lastTransformMode;
@@ -394,6 +395,7 @@ public static partial class EditorToolBars
 		var globalSpace = EditorScene.GizmoSettings.GlobalSpace;
 		var gizmosEnabled = EditorScene.GizmoSettings.GizmosEnabled;
 		var viewMode = SceneViewWidget.Current?.CurrentView;
+		var moveModeName = GetCurrentMoveModeName();
 
 		return modeName != s_lastModeName
 			|| subModeName != s_lastSubModeName
@@ -401,7 +403,8 @@ public static partial class EditorToolBars
 			|| paused != s_lastGamePaused
 			|| globalSpace != s_lastGlobalSpace
 			|| gizmosEnabled != s_lastGizmosEnabled
-			|| viewMode != s_lastViewMode;
+			|| viewMode != s_lastViewMode
+			|| moveModeName != s_lastMoveModeName;
 	}
 
 	private static void CaptureRefreshSnapshot()
@@ -413,7 +416,13 @@ public static partial class EditorToolBars
 		s_lastGlobalSpace = EditorScene.GizmoSettings.GlobalSpace;
 		s_lastGizmosEnabled = EditorScene.GizmoSettings.GizmosEnabled;
 		s_lastViewMode = SceneViewWidget.Current?.CurrentView;
+		s_lastMoveModeName = GetCurrentMoveModeName();
 		s_needsFullRefresh = false;
+	}
+
+	private static string GetCurrentMoveModeName()
+	{
+		return (SceneViewWidget.Current?.Tools?.CurrentTool as MeshTool)?.MoveMode?.GetType().Name;
 	}
 
 	private static void SetCheckedIfChanged( Option widget, bool value )
@@ -679,8 +688,6 @@ public static partial class EditorToolBars
 		if ( userClicked )
 			s_lastTransformMode = mode;
 
-		//	Log.Info( $"Currently Selected: {mode} for {tool}" );
-
 		switch ( tool )
 		{
 			case MeshTool meshTool:
@@ -707,14 +714,16 @@ public static class EditorToolBarsActions
 	//
 	// Transform selection modes
 	//
+	public static void ActivateSelect()
+		=> SelectTransformMode( "resize", true );
 	public static void ActivateMove()
-		=> EditorToolBars.SelectTransformMode( "position", true );
+		=> SelectTransformMode( "position", true );
 	public static void ActivateRotate()
-		=> EditorToolBars.SelectTransformMode( "rotate", true );
+		=> SelectTransformMode( "rotate", true );
 	public static void ActivateScale()
-		=> EditorToolBars.SelectTransformMode( "scale", true );
+		=> SelectTransformMode( "scale", true );
 	public static void ActivatePivot()
-		=> EditorToolBars.SelectTransformMode( "pivot", true );
+		=> SelectTransformMode( "pivot", true );
 
 	//
 	// Mesh selection modes
@@ -815,18 +824,57 @@ public static class EditorToolBarsActions
 
 	public static void ActiveProjectTool( string tool )
 	{
-		string toolName = nameof( tool );
+		if ( string.IsNullOrWhiteSpace( tool ) )
+			return;
 
-		// Try to get the type by name, including assembly-qualified name if needed
+		string toolName = tool.Trim();
+
+		// Resolve by full name or simple type name across loaded assemblies.
 		Type toolType = AppDomain.CurrentDomain.GetAssemblies()
+			.SelectMany( a =>
+			{
+				try
+				{
+					return a.GetTypes();
+				}
+				catch
+				{
+					return Array.Empty<Type>();
+				}
+			} )
+			.FirstOrDefault( t => string.Equals( t.FullName, toolName, StringComparison.Ordinal )
+				|| string.Equals( t.Name, toolName, StringComparison.Ordinal ) );
+
+		if ( toolType == null )
+		{
+			Log.Warning( $"Tool '{toolName}' not found. Skipping activation." );
+			return;
+		}
+
+		var editorToolAttr = toolType.GetCustomAttribute<EditorToolAttribute>();
+		if ( editorToolAttr != null )
+		{
+			Activate( toolType.Name );
+			return;
+		}
+
+		var ownerToolType = EditorTypeLibrary.GetTypesWithAttribute<EditorToolAttribute>()
+			.Select( x => x.Type )
+			.FirstOrDefault( t => t.TargetType == toolType || t.TargetType.IsAssignableFrom( toolType ) );
+
+		if ( ownerToolType?.TargetType != null )
+		{
+			Activate( ownerToolType.Name, toolType.Name );
+			return;
+		}
+
+		toolType = AppDomain.CurrentDomain.GetAssemblies()
 			.Select( a => a.GetType( toolName ) )
 			.FirstOrDefault( t => t != null );
 
 		if ( toolType != null )
-		{
-			// Found the type, activate it
-			Activate( toolType.Name ); // or use any activation logic
-		}
-		else Log.Warning( $"Tool '{toolName}' not found. Skipping activation." );
+			Activate( toolType.Name );
+		else
+			Log.Warning( $"Tool '{toolName}' not found. Skipping activation." );
 	}
 }
