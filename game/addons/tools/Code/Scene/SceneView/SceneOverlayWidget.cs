@@ -65,7 +65,9 @@ public class SceneOverlayWidget : Widget
 	[EditorEvent.Frame]
 	public void Frame()
 	{
-		if ( timeSinceNeededRedraw > 0.1f )
+		if ( timeSinceNeededRedraw > 0.1f
+			|| SceneOverlayNotifications.ShouldAnimate
+			|| SceneEditorExtensions.ShouldDrawCenteredFlyCursor )
 		{
 			Update();
 			timeSinceNeededRedraw = 0.0f;
@@ -83,5 +85,26 @@ public class SceneOverlayWidget : Widget
 				EditorEvent.Run( "sceneview.paintoverlay" );
 			}
 		}
+
+		SceneOverlayNotifications.Draw( this );
+
+		if ( SceneEditorExtensions.ShouldDrawCenteredFlyCursor )
+		{
+			DrawCenteredCursor();
+		}
+	}
+
+	private void DrawCenteredCursor()
+	{
+		var center = new Vector2( Size.x * 0.5f, Size.y * 0.5f );
+		var line = 7.0f;
+		var gap = 3.0f;
+		var thickness = 1.5f;
+
+		Paint.SetPen( Color.White.WithAlpha( 0.9f ), thickness );
+		Paint.DrawLine( center + new Vector2( -line, 0 ), center + new Vector2( -gap, 0 ) );
+		Paint.DrawLine( center + new Vector2( gap, 0 ), center + new Vector2( line, 0 ) );
+		Paint.DrawLine( center + new Vector2( 0, -line ), center + new Vector2( 0, -gap ) );
+		Paint.DrawLine( center + new Vector2( 0, gap ), center + new Vector2( 0, line ) );
 	}
 }

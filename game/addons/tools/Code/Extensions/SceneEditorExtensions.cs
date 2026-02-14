@@ -1,8 +1,17 @@
 ﻿namespace Editor;
 
+using Editor.Preferences;
+
 public static class SceneEditorExtensions
 {
 	private static readonly Pixmap EyeCursor = Pixmap.FromFile( "toolimages:scene_view/cursor_eye.png" );
+	private const string FlyModeToggleIcon = "toolimages:common/bindable_camera_fly_toggle.png";
+	private static bool s_zWasPressed;
+	private static bool s_zFlyModeEnabled;
+	private static bool s_zFlyHasRestorePosition;
+	private static Vector2 s_zFlyRestorePosition;
+
+	public static bool ShouldDrawCenteredFlyCursor { get; private set; }
 
 	/// <summary>
 	/// Helper to easily set up all of the inputs for this camera and widget. This is assuming
@@ -77,10 +86,83 @@ public static class SceneEditorExtensions
 
 		var cameraTarget = self.GetValue<Vector3?>( "CameraTarget" );
 		var cameraVelocity = self.GetValue<Vector3>( "CameraVelocity" );
+		var flyModeStyle = CustomEditorPreferences.FlyModeStyle;
+		var isSource2FlyStyle = flyModeStyle != CustomEditorPreferences.ViewFlyMode.LegacyHoldFlyEyeCursor;
+
+		if ( !isSource2FlyStyle )
+		{
+			if ( s_zFlyHasRestorePosition )
+			{
+				Application.UnscaledCursorPosition = s_zFlyRestorePosition;
+				s_zFlyHasRestorePosition = false;
+			}
+
+			s_zFlyModeEnabled = false;
+			s_zWasPressed = false;
+			SceneOverlayNotifications.SetPersistent( "fly_mode_toggle", null, enabled: false );
+		}
+		else
+		{
+			var zPressed = Application.IsKeyDown( KeyCode.Z ) && Application.KeyboardModifiers == KeyboardModifiers.None;
+			if ( zPressed && !s_zWasPressed )
+			{
+				s_zFlyModeEnabled = !s_zFlyModeEnabled;
+
+				if ( s_zFlyModeEnabled )
+				{
+					s_zFlyRestorePosition = Application.UnscaledCursorPosition;
+					s_zFlyHasRestorePosition = true;
+				}
+				else if ( s_zFlyHasRestorePosition )
+				{
+					Application.UnscaledCursorPosition = s_zFlyRestorePosition;
+					s_zFlyHasRestorePosition = false;
+				}
+			}
+
+			s_zWasPressed = zPressed;
+			SceneOverlayNotifications.SetPersistent(
+				"fly_mode_toggle",
+				s_zFlyModeEnabled ? "Fly [Toggle Z]" : null,
+				FlyModeToggleIcon,
+				s_zFlyModeEnabled );
+		}
 
 		bool moved = false;
-		var rightMouse = Application.MouseButtons.HasFlag( MouseButtons.Right );
+		ShouldDrawCenteredFlyCursor = false;
+		var rightMouseHeld = Application.MouseButtons.HasFlag( MouseButtons.Right );
+		var zToggleActive = isSource2FlyStyle && s_zFlyModeEnabled;
+		var rightMouse = isSource2FlyStyle
+			? (rightMouseHeld || zToggleActive)
+			: rightMouseHeld;
 		var middleMouse = Application.MouseButtons.HasFlag( MouseButtons.Middle );
+		var forceHiddenCursor = isSource2FlyStyle && rightMouse && !camera.Orthographic;
+		var centeredFlyActive = rightMouse && !camera.Orthographic && isSource2FlyStyle && self.Input.IsHovered;
+
+		// In Source2 fly style, treat fly control as a captured mouse mode even when toggled via Z.
+		// This keeps the cursor hidden, locked to viewport bounds, and prevents hover-loss.
+		if ( forceHiddenCursor )
+		{
+			canvas.Focus();
+			canvas.Cursor = CursorShape.Blank;
+			self.Input.IsHovered = true;
+
+			if ( LockCursorToCanvas( canvas ) )
+			{
+				self.StompCursorPosition( Application.CursorPosition );
+			}
+		}
+
+		if ( centeredFlyActive && !self.GetValue<bool>( "fly.centered.cursor.captured" ) )
+		{
+			self.SetValue( "fly.centered.cursor.captured", true );
+			self.SetValue( "fly.centered.cursor.restore", Application.UnscaledCursorPosition );
+		}
+		else if ( !centeredFlyActive && self.GetValue<bool>( "fly.centered.cursor.captured" ) )
+		{
+			self.SetValue( "fly.centered.cursor.captured", false );
+			Application.UnscaledCursorPosition = self.GetValue<Vector2>( "fly.centered.cursor.restore" );
+		}
 
 		if ( ((rightMouse && !camera.Orthographic) || middleMouse) && self.Input.IsHovered )
 		{
@@ -89,7 +171,8 @@ public static class SceneEditorExtensions
 
 			var delta = Application.CursorDelta * 0.1f;
 
-			if ( lockCursor && LockCursorToCanvas( canvas ) )
+			var shouldLockCursor = lockCursor || (isSource2FlyStyle && rightMouse && !camera.Orthographic);
+			if ( shouldLockCursor && LockCursorToCanvas( canvas ) )
 				delta = Vector2.Zero;
 
 			if ( self.ControlMode != "firstperson" )
@@ -135,7 +218,12 @@ public static class SceneEditorExtensions
 				if ( !delta.IsNearZeroLength )
 					camera.WorldRotation = angles;
 
-				if ( EditorPreferences.HideRotateCursor )
+				if ( isSource2FlyStyle )
+				{
+					canvas.Cursor = CursorShape.Blank;
+					ShouldDrawCenteredFlyCursor = true;
+				}
+				else if ( EditorPreferences.HideRotateCursor )
 					canvas.Cursor = CursorShape.Blank;
 				else
 					canvas.PixmapCursor = EyeCursor;
@@ -158,7 +246,7 @@ public static class SceneEditorExtensions
 
 				camera.WorldPosition += positionChange;
 
-				if ( EditorPreferences.HidePanCursor )
+				if ( forceHiddenCursor || EditorPreferences.HidePanCursor )
 					canvas.Cursor = CursorShape.Blank;
 				else
 					canvas.Cursor = CursorShape.ClosedHand;
@@ -232,6 +320,13 @@ public static class SceneEditorExtensions
 				cameraTarget = default;
 				cameraVelocity = default;
 			}
+		}
+
+		// Source2 fly should never briefly reveal an OS or pixmap cursor.
+		if ( forceHiddenCursor )
+		{
+			canvas.Cursor = CursorShape.Blank;
+			ShouldDrawCenteredFlyCursor = true;
 		}
 
 		self.SetValue( "CameraTarget", cameraTarget );

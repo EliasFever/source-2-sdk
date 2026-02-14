@@ -576,6 +576,13 @@ public partial class SceneViewportWidget : Widget
 		DrawSelection();
 		UpdateDragDrops();
 
+		// Ensure Source2 fly capture keeps OS cursor hidden even if other widgets/tools
+		// temporarily change cursor during this frame.
+		if ( SceneEditorExtensions.ShouldDrawCenteredFlyCursor )
+		{
+			Renderer.Cursor = CursorShape.Blank;
+		}
+
 		DrawCameraSpeedOverlay();
 	}
 
