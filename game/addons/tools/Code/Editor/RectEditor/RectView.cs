@@ -479,10 +479,12 @@ public class RectView : Widget
 			World = world
 		};
 
+		var multiplier = material.ShaderName.StartsWith( "shaders/hl2k_" ) ? 3.1415926f : 0.8f;
+
 		var light = new SceneLight( world )
 		{
 			Radius = 4000,
-			LightColor = Color.White * 0.8f,
+			LightColor = Color.White * multiplier,
 			Position = new Vector3( 0, 0, 100 ),
 			ShadowsEnabled = true
 		};
@@ -498,12 +500,14 @@ public class RectView : Widget
 		};
 
 		var model = Model.Load( "models/dev/plane_blend.vmdl" );
-		var obj = new SceneObject( world, model );
-		obj.Transform = new Transform
+		var obj = new SceneObject( world, model )
 		{
-			Position = Vector3.Zero,
-			Rotation = Rotation.From( 0, 180, 0 ),
-			Scale = new Vector3( 1, size.x / size.y, 1 )
+			Transform = new Transform
+			{
+				Position = Vector3.Zero,
+				Rotation = Rotation.From( 0, 180, 0 ),
+				Scale = new Vector3( 1, size.x / size.y, 1 )
+			}
 		};
 
 		obj.SetMaterialOverride( material );
