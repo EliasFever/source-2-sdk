@@ -85,5 +85,25 @@ internal partial class PageInterface
 				? CustomEditorPreferences.ViewFlyMode.LegacyHoldFlyEyeCursor
 				: CustomEditorPreferences.ViewFlyMode.Source2HybridFly,
 			optionIcons );
+
+		var overlayOptions = new List<string>
+		{
+			"Focus/Eject Overlay",
+			"Disabled (Legacy)"
+		};
+		var overlayOptionIcons = new List<string>
+		{
+			S2Icon,
+			SBoxIcon
+		};
+		var overlaySelectedIndex = CustomEditorPreferences.ShowViewportStateOverlay ? 0 : 1;
+
+		AddSegmentedRow(
+			viewGroup.Container.Layout,
+			"Viewport State Overlay",
+			overlayOptions,
+			overlaySelectedIndex,
+			index => CustomEditorPreferences.ShowViewportStateOverlay = index == 0,
+			overlayOptionIcons );
 	}
 }

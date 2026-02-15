@@ -63,6 +63,13 @@ public static partial class CustomEditorPreferences
 		set => Set( "view.fly_mode_style", (int)value );
 	}
 
+	[Title( "Show Viewport Focus/Ejected Overlay" )]
+	public static bool ShowViewportStateOverlay
+	{
+		get => Get( "view.show_viewport_state_overlay", true );
+		set => Set( "view.show_viewport_state_overlay", value );
+	}
+
 	public static T Get<T>( string key, T defaultValue = default )
 	{
 		return EditorCookie.Get( Prefix + key, defaultValue );
