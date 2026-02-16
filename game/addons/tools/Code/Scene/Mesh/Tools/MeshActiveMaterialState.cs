@@ -33,12 +33,6 @@ public sealed class MeshActiveMaterialState
 		}
 	}
 
-	private MeshActiveMaterialState()
-	{
-		// Intentionally empty: loading materials here can be too early in editor startup
-		// and may cache an error/checker material globally.
-	}
-
 	private void Save()
 	{
 		ProjectCookie.Set( ActiveMaterialCookieKey, _savedPath ?? string.Empty );
