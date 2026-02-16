@@ -312,6 +312,7 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 		foreach ( var go in Scene.GetAllObjects( true ) )
 		{
 			if ( selection.Contains( go ) ) continue;
+			if ( !go.HasGizmoHandle ) continue;
 
 			if ( !frustum.IsInside( go.WorldPosition ) )
 			{
