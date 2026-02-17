@@ -11,7 +11,7 @@ partial class ObjectSelection
 	public class ObjectSelectionWidget : ToolSidebarWidget
 	{
 		readonly MeshComponent[] _meshes;
-		readonly GameObject[] _gameObjects;
+		readonly GameObject[] _gos;
 		readonly ObjectSelection _tool;
 
 		public ObjectSelectionWidget( SerializedObject so, ObjectSelection tool ) : base()
@@ -20,11 +20,13 @@ partial class ObjectSelection
 
 			AddTitle( "Object Mode", "layers" );
 
-			_gameObjects = [.. so.Targets.OfType<GameObject>()
-				.Where( x => x.IsValid() )];
+			_meshes = so.Targets.OfType<GameObject>()
+				.Select( x => x.GetComponent<MeshComponent>() )
+				.Where( x => x.IsValid() )
+				.ToArray();
 
-			_meshes = [.. _gameObjects.Select( x => x.GetComponent<MeshComponent>() )
-				.Where( x => x.IsValid() )];
+			_gos = so.Targets.OfType<GameObject>()
+				.ToArray();
 
 			{
 				var group = AddGroup( "Operations" );
@@ -33,8 +35,10 @@ partial class ObjectSelection
 					var grid = Layout.Row();
 					grid.Spacing = 4;
 
-					CreateButton( "Set Origin To Pivot", "gps_fixed", "mesh.set-origin-to-pivot", SetOriginToPivot, _gameObjects.Length > 0, grid );
-					CreateButton( "Center Origin", "center_focus_strong", "mesh.center-origin", CenterOrigin, _gameObjects.Length > 0, grid );
+					CreateButton( "Set Origin To Pivot", "gps_fixed", "mesh.set-origin-to-pivot", SetOriginToPivot, _meshes.Length > 0, grid );
+					CreateButton( "Center Origin", "center_focus_strong", "mesh.center-origin", CenterOrigin, _meshes.Length > 0, grid );
+					CreateButton( "Merge Meshes", "join_full", "mesh.merge-meshes", MergeMeshes, _meshes.Length > 1, grid );
+					CreateButton( "Merge Meshes By Edge", "link", null, MergeMeshesByEdge, _meshes.Length > 1, grid );
 
 					grid.AddStretchCell();
 
@@ -45,7 +49,7 @@ partial class ObjectSelection
 					var grid = Layout.Row();
 					grid.Spacing = 4;
 
-					CreateButton( "Flip All Faces", "flip", "mesh.flip-all-mesh-faces", FlipMesh, _meshes.Length > 0, grid );
+					CreateButton( "Flip All Faces", "flip", "mesh.flip-all-faces", FlipMesh, _meshes.Length > 0, grid );
 					CreateButton( "Bake Scale", "straighten", null, BakeScale, _meshes.Length > 0, grid );
 					CreateButton( "Save To Model", "save", null, SaveToModel, _meshes.Length > 0, grid );
 
@@ -61,10 +65,10 @@ partial class ObjectSelection
 				var grid = Layout.Row();
 				grid.Spacing = 4;
 
-				CreateButton( "Previous", "chevron_left", "mesh.previous-pivot", PreviousPivot, _gameObjects.Length > 0, grid );
-				CreateButton( "Next", "chevron_right", "mesh.next-pivot", NextPivot, _gameObjects.Length > 0, grid );
-				CreateButton( "Clear", "restart_alt", "mesh.clear-pivot", ClearPivot, _gameObjects.Length > 0, grid );
-				CreateButton( "World Origin", "language", "mesh.zero-pivot", ZeroPivot, _gameObjects.Length > 0, grid );
+				CreateButton( "Previous", "chevron_left", "mesh.previous-pivot", PreviousPivot, _gos.Length > 0, grid );
+				CreateButton( "Next", "chevron_right", "mesh.next-pivot", NextPivot, _gos.Length > 0, grid );
+				CreateButton( "Clear", "restart_alt", "mesh.clear-pivot", ClearPivot, _gos.Length > 0, grid );
+				CreateButton( "World Origin", "language", "mesh.zero-pivot", ZeroPivot, _gos.Length > 0, grid );
 
 				grid.AddStretchCell();
 
@@ -78,7 +82,7 @@ partial class ObjectSelection
 				grid.Spacing = 4;
 
 				CreateButton( "Clipping Tool", "content_cut", "mesh.open-clipping-tool", OpenClippingTool, _meshes.Length > 0, grid );
-				CreateButton( "Mirror Tool", "flip", "mesh.mirror-tool", OpenMirrorTool, _gameObjects.Length > 0, grid );
+				CreateButton( "Mirror Tool", "flip", "mesh.mirror-tool", OpenMirrorTool, _meshes.Length > 0, grid );
 
 				grid.AddStretchCell();
 
@@ -96,7 +100,7 @@ partial class ObjectSelection
 			_tool.Tool.CurrentTool = tool;
 		}
 
-		[Shortcut( "mesh.open-clipping-tool", "C", typeof( SceneViewWidget ) )]
+		[Shortcut( "mesh.open-clipping-tool", "Shift+X", typeof( SceneViewWidget ) )]
 		void OpenClippingTool()
 		{
 			var tool = new ClipTool();
@@ -139,7 +143,8 @@ partial class ObjectSelection
 			using var scope = SceneEditorSession.Scope();
 
 			using ( SceneEditorSession.Active.UndoScope( "Center Origin" )
-				.WithGameObjectChanges( _gameObjects, GameObjectUndoFlags.Properties )
+				.WithGameObjectChanges( _meshes.Select( x => x.GameObject ), GameObjectUndoFlags.Properties )
+				.WithComponentChanges( _meshes )
 				.Push() )
 			{
 				foreach ( var mesh in _meshes )

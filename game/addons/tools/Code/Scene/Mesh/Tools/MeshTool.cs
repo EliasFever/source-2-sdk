@@ -56,6 +56,11 @@ public partial class MeshTool : EditorTool
 		LoadToolbarCookies();
 	}
 
+	public override void OnUpdate()
+	{
+		AllowGameObjectSelection = CurrentTool?.GetType() == typeof( ObjectSelection );
+	}
+
 	public override void OnSelectionChanged()
 	{
 		CurrentTool?.OnSelectionChanged();

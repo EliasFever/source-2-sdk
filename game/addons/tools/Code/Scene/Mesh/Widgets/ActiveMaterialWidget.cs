@@ -165,7 +165,7 @@ class ActiveMaterialWidget : ControlWidget
 			selection.Add( obj );
 		}
 
-		EditorToolManager.SetSubTool( nameof( MeshSelection ) );
+		EditorToolManager.SetSubTool( nameof( ObjectSelection ) );
 	}
 
 	private void UpdateFromAsset( Asset asset )

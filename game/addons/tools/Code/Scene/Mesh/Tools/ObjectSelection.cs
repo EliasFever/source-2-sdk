@@ -1,10 +1,8 @@
 ﻿
-using Sandbox;
-
 namespace Editor.MeshEditor;
 
 /// <summary>
-/// Select and edit mesh objects ONLY.
+/// Select and edit objects.
 /// </summary>
 [Title( "Object Selection" )]
 [Icon( "layers" )]
@@ -15,21 +13,21 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 	public MeshTool Tool { get; private init; } = tool;
 
 	readonly Dictionary<GameObject, Transform> _startPoints = [];
+	readonly Dictionary<MeshVertex, Vector3> _transformVertices = [];
 	IDisposable _undoScope;
 
-	GameObject[] _gameObjects = [];
+	MeshComponent[] _meshes = [];
+	GameObject[] _objects = [];
 
 	protected override void OnStartDrag()
 	{
 		if ( _startPoints.Count > 0 ) return;
-		if ( _gameObjects.Length == 0 ) return;
-		if ( _gameObjects.Any( x => !x.IsValid() ) ) return;
 
 		if ( Gizmo.IsShiftPressed )
 		{
 			_undoScope ??= SceneEditorSession.Active.UndoScope( "Duplicate Object(s)" )
 				.WithGameObjectCreations()
-				.WithGameObjectChanges( _gameObjects, GameObjectUndoFlags.Properties )
+				.WithComponentChanges( _meshes )
 				.Push();
 
 			DuplicateSelection();
@@ -38,13 +36,23 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 		else
 		{
 			_undoScope ??= SceneEditorSession.Active.UndoScope( "Transform Object(s)" )
-				.WithGameObjectChanges( _gameObjects, GameObjectUndoFlags.Properties )
+				.WithGameObjectChanges( _objects, GameObjectUndoFlags.Properties )
+				.WithComponentChanges( _meshes )
 				.Push();
 		}
 
-		foreach ( var obj in _gameObjects )
+		foreach ( var go in _objects )
 		{
-			_startPoints[obj] = obj.WorldTransform;
+			_startPoints[go] = go.WorldTransform;
+		}
+
+		foreach ( var mesh in _meshes )
+		{
+			foreach ( var vertex in mesh.Mesh.VertexHandles )
+			{
+				var v = new MeshVertex( mesh, vertex );
+				_transformVertices[v] = mesh.WorldTransform.PointToWorld( mesh.Mesh.GetVertexPosition( vertex ) );
+			}
 		}
 	}
 
@@ -102,20 +110,43 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 	{
 		foreach ( var startPoint in _startPoints )
 		{
+			var mc = startPoint.Key.GetComponent<MeshComponent>();
+			if ( mc.IsValid() == false ) continue;
+
 			var position = (startPoint.Value.Position - origin) * basis.Inverse;
 			position *= scale;
 			position *= basis;
 			position += origin;
 
-			var component = startPoint.Key;
-			var transform = component.WorldTransform.WithPosition( position );
-			component.WorldTransform = transform;
+			var transform = mc.WorldTransform.WithPosition( position );
+			mc.Mesh.SetTransform( transform );
+		}
+
+		foreach ( var entry in _transformVertices )
+		{
+			var position = (entry.Value - origin) * basis.Inverse;
+			position *= scale;
+			position *= basis;
+			position += origin;
+
+			var transform = entry.Key.Component.Mesh.Transform;
+			entry.Key.Component.Mesh.SetVertexPosition( entry.Key.Handle, transform.PointToLocal( position ) );
+		}
+
+		foreach ( var startPoint in _startPoints )
+		{
+			var mc = startPoint.Key.GetComponent<MeshComponent>();
+			if ( mc.IsValid() == false ) continue;
+
+			mc.Mesh.ComputeFaceTextureCoordinatesFromParameters();
+			mc.WorldTransform = mc.Mesh.Transform;
+			mc.RebuildMesh();
 		}
 	}
 
 	public override void Nudge( Vector2 direction )
 	{
-		if ( _gameObjects.Length == 0 ) return;
+		if ( _objects.Length == 0 ) return;
 
 		var viewport = SceneViewWidget.Current?.LastSelectedViewportWidget;
 		if ( !viewport.IsValid() ) return;
@@ -127,8 +158,8 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 		if ( Gizmo.Pressed.Any ) return;
 
 		using var scope = SceneEditorSession.Scope();
-		using var undoScope = SceneEditorSession.Active.UndoScope( "Nudge Object(s)" )
-			.WithGameObjectChanges( _gameObjects, GameObjectUndoFlags.Properties )
+		using var undoScope = SceneEditorSession.Active.UndoScope( "Nudge Mesh(s)" )
+			.WithGameObjectChanges( _objects, GameObjectUndoFlags.Properties )
 			.Push();
 
 		var rotation = CalculateSelectionBasis();
@@ -136,9 +167,9 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 
 		Pivot -= delta;
 
-		foreach ( var mesh in _gameObjects )
+		foreach ( var go in _objects )
 		{
-			mesh.WorldPosition -= delta;
+			go.WorldPosition -= delta;
 		}
 	}
 
@@ -151,21 +182,23 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 	{
 		if ( GlobalSpace ) return Rotation.Identity;
 
-		var mesh = _gameObjects.FirstOrDefault();
+		var mesh = _objects.FirstOrDefault();
 		return mesh.IsValid() ? mesh.WorldRotation : Rotation.Identity;
 	}
 
 	public override void OnEnabled()
 	{
-		AllowGameObjectSelection = false;
-
 		var objects = Selection.OfType<GameObject>()
-			.Where( x => x.IsValid() )
+			.ToArray();
+
+		var connectedObjects = Selection.OfType<IMeshElement>()
+			.Select( x => x.Component.GameObject )
 			.ToArray();
 
 		Selection.Clear();
 
 		foreach ( var go in objects ) Selection.Add( go );
+		foreach ( var go in connectedObjects ) Selection.Add( go );
 
 		// Only restore previous selection if we don't have any selected objects ready to go.
 		if ( !Selection.OfType<GameObject>().Any() )
@@ -208,30 +241,44 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 	{
 		if ( Tool is null ) return;
 		if ( Tool.MoveMode is null ) return;
-		if ( _gameObjects?.Length == 0 ) return;
-		if ( _gameObjects.Any( x => !x.IsValid() ) ) return;
+		if ( _objects.Length == 0 ) return;
 
 		Tool.MoveMode.Update( this );
 	}
 
 	public override Vector3 CalculateSelectionOrigin()
 	{
-		var mesh = _gameObjects.FirstOrDefault();
+		var mesh = _objects.FirstOrDefault();
 		return mesh.IsValid() ? mesh.WorldPosition : default;
 	}
 
 	public override BBox CalculateSelectionBounds()
 	{
-		return BBox.FromBoxes( _gameObjects.Select( x => x.GetBounds() ) );
+		return BBox.FromBoxes( _objects
+			.Where( x => x.IsValid() )
+			.Select( x => x.GetBounds() ) );
 	}
 
 	public override void OnSelectionChanged()
 	{
-		_gameObjects = [.. Selection.OfType<GameObject>().Where( x => x.IsValid() )];
+		_objects = Selection.OfType<GameObject>().ToArray();
+		_meshes = Selection.OfType<GameObject>()
+			.Select( x => x.GetComponent<MeshComponent>() )
+			.Where( x => x.IsValid() )
+			.ToArray();
+
+		_transformVertices.Clear();
+
+		foreach ( var mesh in _meshes )
+		{
+			foreach ( var vertex in mesh.Mesh.VertexHandles )
+			{
+				var v = new MeshVertex( mesh, vertex );
+				_transformVertices[v] = mesh.WorldTransform.PointToWorld( mesh.Mesh.GetVertexPosition( vertex ) );
+			}
+		}
 
 		ClearPivot();
-
-		Tool?.MoveMode?.OnBegin( this );
 	}
 
 	void UpdateSelectionMode()
@@ -254,13 +301,7 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 		var tr = MeshTrace.Run();
 
 		if ( !tr.Hit ) return;
-		if ( tr.GameObject is not GameObject gameObject ) return;
-
-		if ( gameObject.IsValid() && !Selection.Contains( tr.GameObject ) )
-		{
-			Gizmo.Draw.Color = Gizmo.Colors.Active.WithAlpha( MathF.Sin( RealTime.Now * 20.0f ).Remap( -1, 1, 0.3f, 0.8f ) );
-			Gizmo.Draw.LineBBox( tr.GameObject.GetBounds() );
-		}
+		if ( tr.Component is not MeshComponent component ) return;
 
 		using ( Gizmo.ObjectScope( tr.GameObject, tr.GameObject.WorldTransform ) )
 		{
@@ -268,6 +309,12 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 			Gizmo.Hitbox.TrySetHovered( tr.Distance );
 
 			if ( !Gizmo.IsHovered ) return;
+
+			if ( component.IsValid() && component.Model.IsValid() && !Selection.Contains( tr.GameObject ) )
+			{
+				Gizmo.Draw.Color = Gizmo.Colors.Active.WithAlpha( MathF.Sin( RealTime.Now * 20.0f ).Remap( -1, 1, 0.3f, 0.8f ) );
+				Gizmo.Draw.LineBBox( component.Model.Bounds );
+			}
 		}
 
 		if ( Gizmo.WasLeftMousePressed )
@@ -307,14 +354,13 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 		var selection = new HashSet<GameObject>();
 		var previous = new HashSet<GameObject>();
 
+		bool fullyInside = true;
 		bool removing = Gizmo.IsCtrlPressed;
 
 		foreach ( var go in Scene.GetAllObjects( true ) )
 		{
-			if ( selection.Contains( go ) ) continue;
-			if ( !go.HasGizmoHandle ) continue;
-
-			if ( !frustum.IsInside( go.WorldPosition ) )
+			var bounds = go.GetBounds();
+			if ( !frustum.IsInside( bounds, !fullyInside ) )
 			{
 				previous.Add( go );
 				continue;
@@ -397,6 +443,8 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 
 		_pivotIndex = (_pivotIndex + direction + pivots.Count) % pivots.Count;
 		Pivot = pivots[_pivotIndex];
+
+		Tool?.MoveMode?.OnBegin( this );
 	}
 
 	public void PreviousPivot() => StepPivot( -1 );
@@ -406,11 +454,15 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 	{
 		Pivot = CalculateSelectionOrigin();
 		_pivotIndex = 0;
+
+		Tool?.MoveMode?.OnBegin( this );
 	}
 
 	public void ZeroPivot()
 	{
 		Pivot = default;
 		_pivotIndex = 0;
+
+		Tool?.MoveMode?.OnBegin( this );
 	}
 }
