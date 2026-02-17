@@ -485,8 +485,8 @@ public static partial class EditorToolBars
 		new() { Separator=true },
 
 		new() { Name = "Popup Game Window",
-			Icon = "hammer/fullscreen_activated.png",
-			ToggledIcon = "hammer/fullscreen_activated.png",
+			Icon = "hammer/popup_game_window.png",
+			ToggledIcon = "hammer/popup_game_window_activated.png",
 			Checkable = true,
 			Description = "Run game in a separate popup window",
 			ActionType = ToolActionType.PropertyToggle,
@@ -556,7 +556,7 @@ public static partial class EditorToolBars
 
 		new() { Name = "Network Settings",
 			ShortcutAction = "editor.eject",
-			Icon = "hammer/eject.png",
+			Icon = "hammer/network_settings.png",
 			Description = "Network Settings",
 			Checkable = false,
 			ActionType = ToolActionType.MethodCall,
