@@ -8,6 +8,13 @@ namespace Editor;
 public static class GameMode
 {
 	static Widget _inPlay;
+	static Widget _focusSource;
+	static nint _registeredHostWindowId;
+	static nint _registeredRenderWindowId;
+	static nint _focusWindowId;
+	static nint _editorMainWindowId;
+	static bool _switchedEditorMainWindow;
+	static bool _ownsHostWindowRegistration;
 
 	/// <summary>
 	/// Given a widget, register it for SDL input, and tell the engine this is the swapchain we have
@@ -15,34 +22,58 @@ public static class GameMode
 	/// <param name="widget"></param>
 	public static void SetPlayWidget( SceneRenderingWidget widget )
 	{
-		if ( _inPlay == widget ) return;
+		var renderWindowId = (nint)widget._widget.winId();
+		var hostWindow = widget.GetWindow() ?? widget;
+		var hostWindowId = (nint)hostWindow._widget.winId();
 
-		widget.Focused += WidgetFocused;
-		widget.Blurred += WidgetBlurred;
+		if ( _inPlay == widget && _registeredHostWindowId == hostWindowId && _registeredRenderWindowId == renderWindowId )
+			return;
 
-		NativeEngine.InputSystem.RegisterWindowWithSDL( widget._widget.winId() );
-		g_pEngineServiceMgr.SetEngineState( widget._widget.winId(), widget.SwapChain );
+		UnregisterCurrent();
 
+		_focusSource = widget;
+		_focusSource.Focused += WidgetFocused;
+		_focusSource.Blurred += WidgetBlurred;
+		_editorMainWindowId = GetEditorMainWindowId();
+
+		// Vanilla behavior: register and focus the actual render widget window.
+		NativeEngine.InputSystem.RegisterWindowWithSDL( renderWindowId );
+		_registeredRenderWindowId = renderWindowId;
+
+		// Popup behavior: if host is not the editor main window, register/own it.
+		_ownsHostWindowRegistration = hostWindowId != 0
+			&& hostWindowId != renderWindowId
+			&& !IsEditorMainWindow( hostWindowId );
+
+		if ( _ownsHostWindowRegistration )
+		{
+			NativeEngine.InputSystem.RegisterWindowWithSDL( hostWindowId );
+			_registeredHostWindowId = hostWindowId;
+
+			if ( _editorMainWindowId != 0 && _editorMainWindowId != hostWindowId )
+			{
+				NativeEngine.InputSystem.SetEditorMainWindow( hostWindowId );
+				_switchedEditorMainWindow = true;
+			}
+		}
+
+		g_pEngineServiceMgr.SetEngineState( renderWindowId, widget.SwapChain );
+
+		_focusWindowId = renderWindowId;
 		_inPlay = widget;
 
-		// Force a full refocus by blurring first
-		widget.Blur();
-		widget.Focus();
+		// For embedded viewport play, keep vanilla behavior and force a refocus.
+		// For popup mode, don't auto-focus/capture; let the user click into the render area.
+		if ( hostWindowId == renderWindowId )
+		{
+			widget.Blur();
+			widget.Focus();
+		}
 	}
 
 	public static void ClearPlayMode()
 	{
-		if ( _inPlay is null )
-			return;
-
-		_inPlay.Blur();
-
-		_inPlay.Focused -= WidgetFocused;
-		_inPlay.Blurred -= WidgetBlurred;
-
-		NativeEngine.InputSystem.UnregisterWindowFromSDL( _inPlay._widget.winId() );
-
-		_inPlay = null;
+		UnregisterCurrent();
 	}
 
 	/// <summary>
@@ -50,7 +81,10 @@ public static class GameMode
 	/// </summary>
 	private static void WidgetFocused( FocusChangeReason reason )
 	{
-		NativeEngine.InputSystem.OnEditorGameFocusChange( _inPlay._widget.winId(), true );
+		if ( _focusWindowId == 0 )
+			return;
+
+		NativeEngine.InputSystem.OnEditorGameFocusChange( _focusWindowId, true );
 	}
 
 	/// <summary>
@@ -58,6 +92,67 @@ public static class GameMode
 	/// </summary>
 	private static void WidgetBlurred( FocusChangeReason reason )
 	{
-		NativeEngine.InputSystem.OnEditorGameFocusChange( _inPlay._widget.winId(), false );
+		if ( _focusWindowId == 0 )
+			return;
+
+		NativeEngine.InputSystem.OnEditorGameFocusChange( _focusWindowId, false );
+	}
+
+	static void UnregisterCurrent()
+	{
+		if ( _inPlay.IsValid() )
+		{
+			_inPlay.Blur();
+		}
+
+		if ( _focusSource.IsValid() )
+		{
+			_focusSource.Focused -= WidgetFocused;
+			_focusSource.Blurred -= WidgetBlurred;
+		}
+
+		if ( _focusWindowId != 0 )
+		{
+			NativeEngine.InputSystem.OnEditorGameFocusChange( _focusWindowId, false );
+		}
+
+		if ( _registeredRenderWindowId != 0 )
+		{
+			NativeEngine.InputSystem.UnregisterWindowFromSDL( _registeredRenderWindowId );
+		}
+
+		if ( _ownsHostWindowRegistration && _registeredHostWindowId != 0 )
+		{
+			NativeEngine.InputSystem.UnregisterWindowFromSDL( _registeredHostWindowId );
+		}
+
+		if ( _switchedEditorMainWindow && _editorMainWindowId != 0 )
+		{
+			NativeEngine.InputSystem.SetEditorMainWindow( _editorMainWindowId );
+		}
+
+		_inPlay = null;
+		_focusSource = null;
+		_registeredHostWindowId = 0;
+		_registeredRenderWindowId = 0;
+		_focusWindowId = 0;
+		_editorMainWindowId = 0;
+		_switchedEditorMainWindow = false;
+		_ownsHostWindowRegistration = false;
+	}
+
+	static bool IsEditorMainWindow( nint windowId )
+	{
+		var editorMainId = GetEditorMainWindowId();
+		return editorMainId != 0 && editorMainId == windowId;
+	}
+
+	static nint GetEditorMainWindowId()
+	{
+		var editorWindow = Sandbox.Internal.GlobalToolsNamespace.EditorWindow;
+		if ( !editorWindow.IsValid() )
+			return 0;
+
+		return (nint)editorWindow._widget.winId();
 	}
 }

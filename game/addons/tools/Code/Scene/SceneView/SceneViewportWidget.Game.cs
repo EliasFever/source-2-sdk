@@ -8,6 +8,11 @@ public partial class SceneViewportWidget
 	public bool IsGameView { get; private set; }
 
 	/// <summary>
+	/// Is the active game render target external to this viewport?
+	/// </summary>
+	public bool IsExternalGameView { get; private set; }
+
+	/// <summary>
 	/// Called when the SceneView's view mode changes.
 	/// </summary>
 	public void OnViewModeChanged( SceneViewWidget.ViewMode viewMode )
@@ -24,23 +29,31 @@ public partial class SceneViewportWidget
 
 		_activeCamera = viewMode switch
 		{
-			SceneViewWidget.ViewMode.Game => null,
+			SceneViewWidget.ViewMode.Game when IsGameView => null,
 			SceneViewWidget.ViewMode.GameEjected => _ejectCamera,
 			_ => _editorCamera,
 		};
 
 		Renderer.Camera = _activeCamera;
 		Renderer.EnableEngineOverlays = IsGameView;
-		ViewportOptions.Visible = !IsGameView;
+		Renderer.Visible = !(viewMode == SceneViewWidget.ViewMode.Game && IsExternalGameView);
+		ViewportOptions.Visible = viewMode != SceneViewWidget.ViewMode.Game;
 	}
 
 	/// <summary>
 	/// Set this viewport as the game view.
 	/// </summary>
-	public void SetGameView()
+	public void SetGameView( SceneRenderingWidget playWidget = null, bool showPlaceholder = false )
 	{
-		GameMode.SetPlayWidget( Renderer );
+		playWidget ??= Renderer;
+
+		GameMode.SetPlayWidget( playWidget );
 		IsGameView = true;
+		IsExternalGameView = !ReferenceEquals( playWidget, Renderer ) && showPlaceholder;
+		if ( !IsExternalGameView )
+		{
+			Renderer.Visible = true;
+		}
 		Tools.DisposeAll();
 	}
 
@@ -51,6 +64,8 @@ public partial class SceneViewportWidget
 	{
 		GameMode.ClearPlayMode();
 		IsGameView = false;
+		IsExternalGameView = false;
+		Renderer.Visible = true;
 
 		SetDefaultSize();
 	}
@@ -62,6 +77,8 @@ public partial class SceneViewportWidget
 	{
 		GameMode.ClearPlayMode();
 		IsGameView = false;
+		IsExternalGameView = false;
+		Renderer.Visible = true;
 
 		SetDefaultSize();
 
@@ -84,6 +101,8 @@ public partial class SceneViewportWidget
 	{
 		GameMode.SetPlayWidget( Renderer );
 		IsGameView = true;
+		IsExternalGameView = false;
+		Renderer.Visible = true;
 		Tools.DisposeAll();
 	}
 }

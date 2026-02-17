@@ -65,6 +65,7 @@ public partial class SceneViewWidget : Widget
 
 	public override void OnDestroyed()
 	{
+		CloseGamePopupWindow( true );
 		SaveState();
 		base.OnDestroyed();
 	}

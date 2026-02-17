@@ -5,12 +5,19 @@ partial class ViewportTools
 	EditorToolButton PlayButton { get; set; }
 	EditorToolButton PauseButton { get; set; }
 	EditorToolButton EjectButton { get; set; }
+	EditorToolButton PopupWindowButton { get; set; }
 
 	private void BuildPlayToolbar( Layout toolbar )
 	{
 		PlayButton = AddButton( toolbar, "Play", "play_arrow", PlayStop );
 		PauseButton = AddButton( toolbar, "Pause", "pause", Pause );
 		EjectButton = AddButton( toolbar, "Eject", "eject", Eject );
+		PopupWindowButton = AddToggleButton(
+			toolbar,
+			"Run game in popup window",
+			() => "open_in_new",
+			() => SceneViewWidget.UsePopupGameWindow,
+			v => SceneViewWidget.UsePopupGameWindow = v );
 
 		UpdateState();
 	}
@@ -26,8 +33,11 @@ partial class ViewportTools
 			PlayButton.Enabled = false;
 			PauseButton.Enabled = false;
 			EjectButton.Enabled = false;
+			PopupWindowButton.Enabled = false;
 			return;
 		}
+
+		PopupWindowButton.Enabled = true;
 
 		if ( Game.IsPlaying )
 		{

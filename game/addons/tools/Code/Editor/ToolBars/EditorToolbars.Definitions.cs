@@ -484,6 +484,20 @@ public static partial class EditorToolBars
 
 		new() { Separator=true },
 
+		new() { Name = "Popup Game Window",
+			Icon = "hammer/fullscreen_activated.png",
+			ToggledIcon = "hammer/fullscreen_activated.png",
+			Checkable = true,
+			Description = "Run game in a separate popup window",
+			ActionType = ToolActionType.PropertyToggle,
+			Getter = () => SceneViewWidget.UsePopupGameWindow,
+			Setter = v => SceneViewWidget.UsePopupGameWindow = v,
+			DisableDuringPlay = false,
+			ActiveResolver = () => SceneViewWidget.UsePopupGameWindow
+		},
+
+		new() { Separator=true },
+
 		new() { Name = "Run Game",
 			ShortcutAction = "editor.toggle-play",
 			Icon = "hammer/run_map.png",

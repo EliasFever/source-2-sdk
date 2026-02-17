@@ -179,6 +179,23 @@ public partial class SceneViewportWidget : Widget
 			Paint.SetBrush( (Color)"#38393c" );
 			Paint.DrawRect( LocalRect );
 		}
+
+		if ( SceneView.CurrentView == SceneViewWidget.ViewMode.Game && IsExternalGameView )
+		{
+			Paint.SetPen( Theme.TextLight.WithAlpha( 0.85f ) );
+			Paint.DrawIcon( LocalRect, "open_in_new", 40, TextFlag.Center );
+
+			var titleRect = LocalRect.Shrink( 0, LocalRect.Height * 0.42f, 0, 0 );
+			Paint.SetDefaultFont( 12, 700 );
+			Paint.DrawText( titleRect, "Game is running in popup window", TextFlag.Center );
+
+			var hintRect = LocalRect.Shrink( 0, LocalRect.Height * 0.52f, 0, 0 );
+			Paint.SetDefaultFont( 9, 500 );
+			Paint.SetPen( Theme.TextLight.WithAlpha( 0.65f ) );
+			Paint.DrawText( hintRect, "Close popup to return game view here", TextFlag.Center );
+
+			Paint.SetDefaultFont();
+		}
 	}
 
 	/// <summary>
@@ -430,6 +447,7 @@ public partial class SceneViewportWidget : Widget
 	{
 		// don't do editor update if we're the play view
 		if ( IsGameView ) return;
+		if ( SceneView.CurrentView == SceneViewWidget.ViewMode.Game && IsExternalGameView ) return;
 
 		UpdateInputState();
 
