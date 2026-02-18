@@ -2,7 +2,7 @@
 
 namespace Sandbox;
 
-internal static partial class DebugOverlay
+public static partial class DebugOverlay
 {
 	static CommandList _overlay = new( "Engine Overlay" );
 
@@ -19,6 +19,9 @@ internal static partial class DebugOverlay
 	{
 		_overlay.ExecuteOnRenderThread();
 	}
+
+	[ConVar( "r_albedo_chart", Help = "Show the albedo reference chart." )]
+	public static bool AlbedoChart { get; set; } = true;
 
 	[ConVar( "overlay_profile", Help = "Draws an overlay showing timings from the main profile categories" )]
 	internal static int overlay_profile { get; set; } = 0;
@@ -48,6 +51,12 @@ internal static partial class DebugOverlay
 	{
 		Vector2 pos = new Vector2( 100, 130 );
 		var activeScene = Application.GetActiveScene();
+
+		// Show current render debug mode on screen when not default
+		if ( ToolsVisualization.mat_toolsvis != SceneCameraDebugMode.Normal )
+		{
+			DebugOverlay.ToolsVisualization.Draw( ref pos );
+		}
 
 		if ( overlay_network_calls == 1 )
 		{

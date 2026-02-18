@@ -324,8 +324,9 @@ public partial class ViewportOptions : Widget
 
 	void ToggleAlbedoChart()
 	{
-		bool current = ConsoleSystem.GetValueInt( "r_albedo_chart", 0 ) == 0 ? false : true;
-		ConsoleSystem.SetValue( "r_albedo_chart", !current );
+		bool current = DebugOverlay.AlbedoChart;
+//		do the thing
+//		ConsoleSystem.SetValue( "r_albedo_chart", !current );
 	}
 
 	private Widget AddGroup()

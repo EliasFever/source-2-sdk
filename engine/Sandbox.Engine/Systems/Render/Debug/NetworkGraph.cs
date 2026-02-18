@@ -1,6 +1,6 @@
 ﻿namespace Sandbox;
 
-internal static partial class DebugOverlay
+public static partial class DebugOverlay
 {
 	public class NetworkGraph
 	{

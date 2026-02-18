@@ -2,7 +2,7 @@ using Sandbox.Diagnostics;
 
 namespace Sandbox;
 
-internal static partial class DebugOverlay
+public static partial class DebugOverlay
 {
 	public partial class GpuProfiler
 	{
