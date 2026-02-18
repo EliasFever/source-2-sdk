@@ -1,30 +1,14 @@
-<div align="center">
-  <img src="https://sbox.game/img/sbox-logo-square.svg" width="80px" alt="s&box logo">
+# Source 2 SDK
 
-  [Website] | [Getting Started] | [Forums] | [Documentation] | [Contributing]
-</div>
+![New Editor](https://media.discordapp.net/attachments/1450076545153765512/1473649233323102354/sbox-dev_AzDk0jdc8f.png?ex=6996fa4c&is=6995a8cc&hm=7884a1742e83e337361cf01a1504b49ca8dbaeebad168202efe3c23ec771beaa&=&format=webp&quality=lossless&width=1645&height=864)
 
-[Website]: https://sbox.game/
-[Getting Started]: https://sbox.game/dev/doc/about/getting-started/first-steps/
-[Forums]: https://sbox.game/f/
-[Documentation]: https://sbox.game/dev/doc/
-[Contributing]: CONTRIBUTING.md
+## What.
 
-# s&box
+Source 2 SDK is a fork of Facepunch's Source 2 engine, available [here](https://github.com/Facepunch/sbox-public). This is not affiliated with Valve in anyway (besides being a fork of a fork of a Half-Life: Alyx engine), and is simply a joke name. 
 
-s&box is a modern game engine, built on Valve's Source 2 and the latest .NET technology, it provides a modern intuitive editor for creating games.
-
-![s&box editor](https://files.facepunch.com/matt/1b2211b1/sbox-dev_FoZ5NNZQTi.jpg)
-
-If your goal is to create games using s&box, please start with the [getting started guide](https://sbox.game/dev/doc/about/getting-started/first-steps/).
-This repository is for building the engine from source for those who want to contribute to the development of the engine.
+This fork is used by QuantumStop (title pending), giving it modifications we require while developing our games.
 
 ## Getting the Engine
-
-### Steam
-
-You can download and install the s&box editor directly from [Steam](https://sbox.game/give-me-that).
-
 ### Compiling from Source
 
 If you want to build from source, this repository includes all the necessary files to compile the engine yourself.
@@ -41,20 +25,9 @@ If you want to build from source, this repository includes all the necessary fil
 # Clone the repo
 git clone https://github.com/Facepunch/sbox-public.git
 ```
-
 Once you've cloned the repo simply run `Bootstrap.bat` which will download dependencies and build the engine.
-
 The game and editor can be run from the binaries in the game folder.
 
-## Contributing
-
-If you would like to contribute to the engine, please see the [contributing guide](CONTRIBUTING.md).
-
-If you want to report bugs or request new features, see [sbox-issues](https://github.com/Facepunch/sbox-public/issues/).
-
-## Documentation
-
-Full documentation, tutorials, and API references are available at [sbox.game/dev/](https://sbox.game/dev/).
 
 ## License
 
