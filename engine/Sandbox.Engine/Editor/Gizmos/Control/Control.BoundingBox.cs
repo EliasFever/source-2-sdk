@@ -76,42 +76,42 @@ public static partial class Gizmo
 				var resizeAxis = Vector3.Zero;
 				var pressed = false;
 
-				if ( ArrowPoint( "Forward", Vector3.Forward, halfSize.x, Colors.Forward, out var forwardDist, ref pressed ) )
+				if ( ArrowPoint( "Forward", Vector3.Forward, halfSize.x, Settings.GlobalSpace ? Gizmo.Colors.Forward : Gizmo.Colors.Local.Forward, out var forwardDist, ref pressed ) )
 				{
 					resized = true;
 					resizeDist = forwardDist;
 					resizeAxis = Vector3.Forward;
 				}
 
-				if ( ArrowPoint( "Backward", Vector3.Backward, halfSize.x, Colors.Forward, out var backwardDist, ref pressed ) )
+				if ( ArrowPoint( "Backward", Vector3.Backward, halfSize.x, Settings.GlobalSpace ? Gizmo.Colors.Forward : Gizmo.Colors.Local.Forward, out var backwardDist, ref pressed ) )
 				{
 					resized = true;
 					resizeDist = backwardDist;
 					resizeAxis = Vector3.Backward;
 				}
 
-				if ( ArrowPoint( "Up", Vector3.Up, halfSize.z, Colors.Up, out var upDist, ref pressed ) )
+				if ( ArrowPoint( "Up", Vector3.Up, halfSize.z, Settings.GlobalSpace ? Gizmo.Colors.Up : Gizmo.Colors.Local.Up, out var upDist, ref pressed ) )
 				{
 					resized = true;
 					resizeDist = upDist;
 					resizeAxis = Vector3.Up;
 				}
 
-				if ( ArrowPoint( "Down", Vector3.Down, halfSize.z, Colors.Up, out var downDist, ref pressed ) )
+				if ( ArrowPoint( "Down", Vector3.Down, halfSize.z, Settings.GlobalSpace ? Gizmo.Colors.Up : Gizmo.Colors.Local.Up, out var downDist, ref pressed ) )
 				{
 					resized = true;
 					resizeDist = downDist;
 					resizeAxis = Vector3.Down;
 				}
 
-				if ( ArrowPoint( "Left", Vector3.Left, halfSize.y, Colors.Left, out var leftDist, ref pressed ) )
+				if ( ArrowPoint( "Left", Vector3.Left, halfSize.y, Settings.GlobalSpace ? Gizmo.Colors.Left : Gizmo.Colors.Local.Left, out var leftDist, ref pressed ) )
 				{
 					resized = true;
 					resizeDist = leftDist;
 					resizeAxis = Vector3.Left;
 				}
 
-				if ( ArrowPoint( "Right", Vector3.Right, halfSize.y, Colors.Left, out var rightDist, ref pressed ) )
+				if ( ArrowPoint( "Right", Vector3.Right, halfSize.y, Settings.GlobalSpace ? Gizmo.Colors.Left : Gizmo.Colors.Local.Left, out var rightDist, ref pressed ) )
 				{
 					resized = true;
 					resizeDist = rightDist;

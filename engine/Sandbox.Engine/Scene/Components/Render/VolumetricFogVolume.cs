@@ -26,6 +26,9 @@ public class VolumetricFogVolume : Component, Component.ExecuteInEditor
 
 		Gizmo.Draw.Color = Color.White.WithAlpha( Gizmo.IsSelected ? 0.9f : 0.4f );
 		Gizmo.Draw.LineBBox( Bounds );
+
+		Gizmo.Draw.Color = Color.Cyan.WithAlpha( 0.1f );
+		Gizmo.Draw.SolidBox( Bounds );
 	}
 
 	protected override void OnEnabled()
