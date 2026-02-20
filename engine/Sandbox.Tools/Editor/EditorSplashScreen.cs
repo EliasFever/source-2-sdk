@@ -1,4 +1,4 @@
-﻿using NativeEngine;
+using NativeEngine;
 using Sandbox.DataModel;
 using System;
 using System.Diagnostics;
@@ -25,7 +25,7 @@ namespace Editor
 
 		public EditorSplashScreen() : base( null, true )
 		{
-			WindowFlags = WindowFlags.Window | WindowFlags.Customized | WindowFlags.WindowTitle 
+			WindowFlags = WindowFlags.Window | WindowFlags.Customized | WindowFlags.WindowTitle
 				| WindowFlags.MSWindowsFixedSizeDialogHint | WindowFlags.FramelessWindowHint;
 
 			Singleton = this;
@@ -37,7 +37,7 @@ namespace Editor
 			if ( !string.IsNullOrEmpty( projectFile ) && File.Exists( projectFile ) )
 			{
 				using var doc = JsonDocument.Parse( File.ReadAllText( projectFile ) );
-				root = doc.RootElement.Clone(); 
+				root = doc.RootElement.Clone();
 			}
 
 			string projectName = ResolveProjectTitle( root );
@@ -63,20 +63,23 @@ namespace Editor
 
 			string geometryCookie = EditorCookie.GetString( "splash.geometry", null );
 
-			RestoreGeometry( geometryCookie );			         // Restore saved geometry first
+			RestoreGeometry( geometryCookie );                     // Restore saved geometry first
 
-			Size *= DpiScale;			                         // Apply DPI scaling
-			Size = ClampSplashSize( Size );			             // Clamp to allowed range
+			Size *= DpiScale;                                    // Apply DPI scaling
+			Size = ClampSplashSize( Size );                        // Clamp to allowed range
 			MinimumSize = new Vector2( 100, 71.5f );
 			MaximumSize = new Vector2( 700, 500 );
 
 			BackgroundImage = BackgroundImage.Resize( Size );    // Resize background image to match final clamped size
 
-			FixedWidth  = Size.x;
+			FixedWidth = Size.x;
 			FixedHeight = Size.y;
-			Position    = ScreenGeometry.Center - (Size / 2);	 // Center the window on the screen
+			Position = ScreenGeometry.Center - (Size / 2);   // Center the window on the screen
 
 			Show();
+
+			WidgetUtil.MakeWindowDraggable( _widget );
+
 			ConstrainToScreen();
 
 			g_pToolFramework2.SetStallMonitorMainThreadWindow( _widget );
@@ -116,6 +119,34 @@ namespace Editor
 			Update();
 		}
 
+		string LatestMessage;
+		float Progress;
+
+		/// <summary>
+		/// Updates the progress bar
+		/// </summary>
+		public static void SetProgress( float progress )
+		{
+			if ( !Singleton.IsValid() ) return;
+
+			Singleton.Progress = progress.Clamp( 0f, 1f );
+			Singleton.Update();
+		}
+
+		/// <summary>
+		/// Set the current displayed message
+		/// </summary>
+		public static void SetMessage( string message )
+		{
+			if ( !Singleton.IsValid() ) return;
+
+			Singleton.LatestMessage = message;
+			Singleton.Update();
+
+			g_pToolFramework2.Spin();
+			NativeEngine.EngineGlobal.ToolsStallMonitor_IndicateActivity();
+		}
+
 		protected override bool OnClose()
 		{
 			return false;
@@ -126,7 +157,7 @@ namespace Editor
 			Paint.Draw( LocalRect, BackgroundImage );
 
 			// TODO: Could be worth exploring I think, for now whatever.
-			
+
 			// float now = RealTime.Now;
 
 			// Only update the displayed message at controlled speed
@@ -134,7 +165,7 @@ namespace Editor
 			// {
 			//		LastDisplayTime = now;
 			// }
-			
+
 			DisplayedMessage = PendingMessage;
 
 			float barHeight = 20;
