@@ -26,6 +26,7 @@ public partial class ProjectRow : ItemRow
 	private HomeWidget Home => Parent as HomeWidget ?? this.FindParent<HomeWidget>();
 
 	public bool IsSelected => Home.SelectedProject == Project;
+	public bool IsLaunching => Home.IsProjectLaunching( Project );
 
 	public ProjectRow( Project project, Widget parent ) : base( parent )
 	{
@@ -136,14 +137,22 @@ public partial class ProjectRow : ItemRow
 
 	protected override void OnPaint()
 	{
+		UpdateButtonVisibilityForState();
+
 		var horizontalInset = 2;
 		var rect = new Rect( LocalRect.Left + horizontalInset, LocalRect.Top, LocalRect.Width - horizontalInset * 2, LocalRect.Height );
+		var pulse = 0.5f + (MathF.Sin( Home.LaunchAnimationPhase ) * 0.5f);
 
 		// Background stripes
 		var bgColor = (StripeIndex % 2 == 0) ? Color.Parse( "#2b2b2c" ).Value : Color.Parse( "#232324" ).Value;
 
 		if ( Project.IsDefault ) bgColor = Color.Parse( "#3d6df0" ).Value.WithAlpha( 0.2f );
 		if ( IsSelected ) bgColor = Color.Parse( "#3d6df0" ).Value.WithAlpha( 0.6f );
+		if ( IsLaunching )
+		{
+			var launchColor = Color.Parse( "#5f8fff" ).Value.WithAlpha( 0.38f + pulse * 0.12f );
+			bgColor = launchColor;
+		}
 
 		Paint.SetBrush( bgColor );
 		Paint.SetPen( bgColor );
@@ -155,6 +164,24 @@ public partial class ProjectRow : ItemRow
 			Paint.SetBrush( Color.White.WithAlpha( 0.05f ) );
 			Paint.SetPen( bgColor );
 			Paint.DrawRect( rect );
+		}
+
+		if ( IsLaunching )
+		{
+			// Heartbeat border pulse.
+			var beatPhase = Home.LaunchAnimationPhase * 0.5f;
+			var beatA = MathF.Max( 0.0f, MathF.Sin( beatPhase ) );
+			var beatB = MathF.Max( 0.0f, MathF.Sin( beatPhase - 1.1f ) ) * 0.75f;
+			var beat = MathF.Max( beatA, beatB );
+
+			var edge = Color.Parse( "#d7e8ff" ).Value.WithAlpha( 0.08f + beat * 0.22f );
+			Paint.Antialiasing = true;
+			Paint.ClearBrush();
+			Paint.SetPen( edge, 1.0f );
+			Paint.DrawRect( rect.Shrink( 0.5f ) );
+
+			Paint.SetPen( edge.WithAlpha( 0.08f + beat * 0.22f * 0.55f ), 1.0f );
+			Paint.DrawRect( rect.Shrink( 1.5f ) );
 		}
 
 		base.OnPaint();
@@ -195,23 +222,36 @@ public partial class ProjectRow : ItemRow
 
 	protected override void OnMouseEnter()
 	{
-		PinButton.Visible = true;
+		UpdateButtonVisibilityForState();
 		PinButton.Update();
-		MoreButton.Visible = true;
 		MoreButton.Update();
-		DefaultButton.Visible = true;
 		DefaultButton.Update();
 		Update();
 	}
 
 	protected override void OnMouseLeave()
 	{
-		PinButton.Visible = Project.Pinned;
+		UpdateButtonVisibilityForState();
 		PinButton.Update();
-		MoreButton.Visible = false;
 		MoreButton.Update();
-		DefaultButton.Visible = Project.IsDefault;
 		DefaultButton.Update();
 		Update();
+	}
+
+	private void UpdateButtonVisibilityForState()
+	{
+		if ( !Buttons.IsValid() )
+			return;
+
+		if ( IsLaunching )
+		{
+			Buttons.Visible = false;
+			return;
+		}
+
+		Buttons.Visible = true;
+		PinButton.Visible = IsUnderMouse || Project.Pinned;
+		MoreButton.Visible = IsUnderMouse;
+		DefaultButton.Visible = IsUnderMouse || Project.IsDefault;
 	}
 }

@@ -52,6 +52,11 @@ public class HomeWidget : Widget
 	private Checkbox CloseOnLaunch;
 
 	private Pixmap BannerImage;
+	private Button LaunchButton;
+	private Project LaunchingProject { get; set; }
+	private bool IsLaunchInProgress { get; set; }
+	internal float LaunchAnimationPhase { get; private set; }
+	private const string DefaultLaunchButtonText = "Launch Project";
 
 	private readonly string BannerFallbackPath = "common/launcher_banner.png";
 	private const int BannerHeight = 115;
@@ -162,11 +167,18 @@ public class HomeWidget : Widget
 		};
 
 		bottomRow.AddStretchCell();
-		bottomRow.Add( new Button.Primary( "Launch Project" )
+
+		LaunchButton = bottomRow.Add( new Button.Primary( "Launch Project" )
 		{
 			FixedHeight = 40,
 			FixedWidth = 200,
-			Clicked = () => { if ( SelectedProject != null ) OpenProject( SelectedProject ); }
+			Tint = Theme.Primary,
+			Pressed = () => LaunchButton.Tint = Theme.Primary.Darken( 0.45f ),
+			Released = () => LaunchButton.Tint = Theme.Primary,
+			Clicked = () =>
+			{
+				_ = LaunchProjectWithAnimation( SelectedProject );
+			}
 		} );
 	}
 
@@ -321,9 +333,84 @@ public class HomeWidget : Widget
 			RefreshLocalProjects();
 
 			if ( project != null )
-				OpenProject( project );
+				_ = LaunchProjectWithAnimation( project );
 		};
 		creatorWindow.Show();
+	}
+
+	internal bool IsProjectLaunching( Project project ) => LaunchingProject == project && IsLaunchInProgress;
+
+	private async Task LaunchProjectWithAnimation( Project project, string args = null )
+	{
+		if ( project == null || IsLaunchInProgress )
+			return;
+
+		IsLaunchInProgress = true;
+		LaunchingProject = project;
+		SelectProject( project );
+
+		if ( LaunchButton.IsValid() )
+		{
+			LaunchButton.Enabled = false;
+			LaunchButton.Text = GetLaunchingButtonText( project );
+		}
+
+		var timer = Stopwatch.StartNew();
+
+		try
+		{
+			OpenProject( project, args );
+
+			const int durationMs = 6000;
+			const int buttonDisableMs = durationMs / 2;
+			const int frameDelayMs = 16;
+			const float cyclesPerSecond = 1.25f;
+
+			while ( timer.ElapsedMilliseconds < durationMs )
+			{
+				if ( LaunchButton.IsValid() && !LaunchButton.Enabled && timer.ElapsedMilliseconds >= buttonDisableMs )
+				{
+					LaunchButton.Enabled = true;
+					LaunchButton.Text = DefaultLaunchButtonText;
+				}
+
+				LaunchAnimationPhase = (float)(timer.Elapsed.TotalSeconds * cyclesPerSecond * MathF.PI * 2.0f);
+				UpdateProjectRows();
+				await Task.Delay( frameDelayMs );
+
+				if ( !this.IsValid() )
+					return;
+			}
+		}
+		finally
+		{
+			if ( this.IsValid() )
+			{
+				LaunchAnimationPhase = 0.0f;
+				LaunchingProject = null;
+				IsLaunchInProgress = false;
+				UpdateProjectRows();
+
+				if ( LaunchButton.IsValid() )
+				{
+					LaunchButton.Enabled = true;
+					LaunchButton.Text = DefaultLaunchButtonText;
+				}
+			}
+		}
+	}
+
+	private static string GetLaunchingButtonText( Project project )
+	{
+		var title = project?.Config?.Title;
+		if ( string.IsNullOrWhiteSpace( title ) )
+			return "Launching";
+
+		const int maxTitleLength = 22;
+		if ( title.Length > maxTitleLength )
+			title = $"{title[..maxTitleLength]}...";
+
+		return $"Launching {title}";
 	}
 
 	public void OpenProject( Project project, string args = null )
@@ -379,12 +466,18 @@ public class HomeWidget : Widget
 			row.Click = () => SelectProject( project );
 			row.OnPinStateChanged = () => { ProjectList.SaveList(); RefreshLocalProjects(); };
 			row.OnProjectRemove = () => { ProjectList.Remove( project ); ProjectList.SaveList(); RefreshLocalProjects(); };
-			row.OnProjectOpen = args => OpenProject( project, args );
+			row.OnProjectOpen = args => _ = LaunchProjectWithAnimation( project, args );
 
 			grid.AddCell( 0, i, row );
 			row.Update();
 			i++;
 		}
+	}
+
+	private void UpdateProjectRows()
+	{
+		foreach ( var row in this.FindAllChildren<ProjectRow>() )
+			row.Update();
 	}
 
 	protected override void OnPaint()

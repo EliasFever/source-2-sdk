@@ -1,18 +1,24 @@
 using NativeEngine;
 using Sandbox.DataModel;
 using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text.Json;
-using static Editor.ProjectPublisher;
 
 namespace Editor
 {
 	internal class EditorSplashScreen : Widget
 	{
 		internal static EditorSplashScreen Singleton;
+
 		Pixmap BackgroundImage;
+
+		const float ProgressAreaHeight = 14;
+		const float LogOverlayHeight = 30;
+		const float BottomAreaHeight = ProgressAreaHeight;
+		const float ProgressInset = 2;
+		Color ProgressTrackColor = new Color( 42f / 255f, 52f / 255f, 79f / 255f, 1f );
+		Color ProgressFillColor = new Color( 52f / 255f, 80f / 255f, 160f / 255f, 1f );
 
 		string PendingMessage = "Starting...";
 		string DisplayedMessage = "Starting...";
@@ -20,18 +26,14 @@ namespace Editor
 		internal const string DefaultSplashScreen = "common/splash_screen.png";
 		internal const string DefaultIcon = "common/logo.png";
 
-		//	private float LastDisplayTime;
-		//	private float MessageCooldown = 0.05f;
-
 		public EditorSplashScreen() : base( null, true )
 		{
-			WindowFlags = WindowFlags.Window | WindowFlags.Customized | WindowFlags.WindowTitle
-				| WindowFlags.MSWindowsFixedSizeDialogHint | WindowFlags.FramelessWindowHint;
+			WindowFlags = WindowFlags.Window | WindowFlags.Customized | WindowFlags.FramelessWindowHint | WindowFlags.MSWindowsFixedSizeDialogHint;
 
 			Singleton = this;
 			DeleteOnClose = true;
 
-			string projectFile = Sandbox.Utility.CommandLine.GetSwitch( "project", null );
+			string projectFile = Sandbox.Utility.CommandLine.GetSwitch( "-project", "" ).TrimQuoted();
 			JsonElement root = default;
 
 			if ( !string.IsNullOrEmpty( projectFile ) && File.Exists( projectFile ) )
@@ -60,23 +62,28 @@ namespace Editor
 				DefaultSplashScreen,
 				Pixmap.FromFile
 			);
+			
+			// We get the colors from the splash, so that the progress bar 
+			// matches the overall tone of the image.
+			UpdateProgressColorsFromSplash();
 
 			string geometryCookie = EditorCookie.GetString( "splash.geometry", null );
+			RestoreGeometry( geometryCookie );
 
-			RestoreGeometry( geometryCookie );                     // Restore saved geometry first
+			var aspect = (float)BackgroundImage.Height / BackgroundImage.Width;
+			Size = new( 580, (580 * aspect).FloorToInt() + BottomAreaHeight );
 
-			Size *= DpiScale;                                    // Apply DPI scaling
-			Size = ClampSplashSize( Size );                        // Clamp to allowed range
-			MinimumSize = new Vector2( 100, 71.5f );
-			MaximumSize = new Vector2( 700, 500 );
-
-			BackgroundImage = BackgroundImage.Resize( Size );    // Resize background image to match final clamped size
-
-			FixedWidth = Size.x;
-			FixedHeight = Size.y;
-			Position = ScreenGeometry.Center - (Size / 2);   // Center the window on the screen
+			if ( geometryCookie is null )
+			{
+				Position = ScreenGeometry.Contain( Size ).Position;
+			}
 
 			Show();
+
+			if ( DpiScale != 1.0f )
+			{
+				BackgroundImage = BackgroundImage.Resize( BackgroundImage.Size * DpiScale );
+			}
 
 			WidgetUtil.MakeWindowDraggable( _widget );
 
@@ -116,6 +123,7 @@ namespace Editor
 		public void OnMessage( string message )
 		{
 			PendingMessage = message;
+			LatestMessage = message;
 			Update();
 		}
 
@@ -154,32 +162,37 @@ namespace Editor
 
 		protected override void OnPaint()
 		{
-			Paint.Draw( LocalRect, BackgroundImage );
-
-			// TODO: Could be worth exploring I think, for now whatever.
-
-			// float now = RealTime.Now;
-
-			// Only update the displayed message at controlled speed
-			// if ( now - LastDisplayTime >= MessageCooldown )
-			// {
-			//		LastDisplayTime = now;
-			// }
+			var imageRect = LocalRect;
+			imageRect.Bottom -= BottomAreaHeight;
+			Paint.Draw( imageRect, BackgroundImage );
 
 			DisplayedMessage = PendingMessage;
 
-			float barHeight = 20;
-			var barRect = new Rect( 0, 0, LocalRect.Width, barHeight );
+			var logRect = new Rect( imageRect.Left, imageRect.Top, imageRect.Width, LogOverlayHeight );
+			var progressAreaRect = new Rect( LocalRect.Left, imageRect.Bottom, LocalRect.Width, ProgressAreaHeight );
 
 			Paint.ClearPen();
-			Paint.SetBrush( new Color( 0, 0, 0, 0.5f ) );
-			Paint.DrawRect( barRect );
+			Paint.SetBrush( Color.Black.WithAlpha( 0.55f ) );
+			Paint.DrawRect( logRect );
 
-			Paint.SetPen( Color.White );
+			var textRect = logRect.Shrink( 8, 4 );
+
+			Paint.SetPen( Color.White.WithAlpha( 0.85f ) );
 			Paint.SetFont( "Century Gothic", 8, 400 );
+			Paint.DrawText( textRect, LatestMessage ?? DisplayedMessage ?? "Bootstrapping..", TextFlag.LeftCenter );
 
-			var textRect = barRect.Shrink( 6, 4 );
-			Paint.DrawText( textRect, DisplayedMessage, TextFlag.LeftCenter );
+			Paint.ClearPen();
+			Paint.SetBrush( ProgressTrackColor );
+			Paint.DrawRect( progressAreaRect );
+
+			if ( Progress > 0f )
+			{
+				var fillRect = progressAreaRect.Shrink( ProgressInset );
+				fillRect.Width *= Progress;
+
+				Paint.SetBrush( ProgressFillColor );
+				Paint.DrawRect( fillRect, 2.0f );
+			}
 		}
 
 		private string ResolveProjectTitle( JsonElement root )
@@ -187,14 +200,60 @@ namespace Editor
 			if ( root.TryGetProperty( "Title", out var titleProp ) )
 				return titleProp.GetString();
 
-			return "S&Box Editor"; // Fallback
+			return "S&Box Editor";
 		}
 
-		private Vector2 ClampSplashSize( Vector2 s )
+		void UpdateProgressColorsFromSplash()
 		{
-			float w = Math.Clamp( s.x, 100, 700 );
-			float h = Math.Clamp( s.y, 71.5f, 500 );
-			return new Vector2( w, h );
+			if ( BackgroundImage is null || BackgroundImage.Width <= 0 || BackgroundImage.Height <= 0 )
+				return;
+
+			int stepX = Math.Max( 1, BackgroundImage.Width / 56 );
+			int stepY = Math.Max( 1, BackgroundImage.Height / 56 );
+
+			double sumR = 0;
+			double sumG = 0;
+			double sumB = 0;
+			double weightSum = 0;
+
+			for ( int y = 0; y < BackgroundImage.Height; y += stepY )
+			{
+				for ( int x = 0; x < BackgroundImage.Width; x += stepX )
+				{
+					var c = BackgroundImage.GetPixel( x, y );
+					if ( c.a <= 0.01f )
+						continue;
+
+					double w = c.a;
+					sumR += c.r * w;
+					sumG += c.g * w;
+					sumB += c.b * w;
+					weightSum += w;
+				}
+			}
+
+			if ( weightSum <= 0.0 )
+				return;
+
+			float avgR = (float)(sumR / weightSum);
+			float avgG = (float)(sumG / weightSum);
+			float avgB = (float)(sumB / weightSum);
+
+			// Keep the splash tone, but nudge it brighter for a clearer progress fill.
+			ProgressFillColor = new Color(
+				Math.Min( 1f, avgR * 0.85f + 0.12f ),
+				Math.Min( 1f, avgG * 0.85f + 0.12f ),
+				Math.Min( 1f, avgB * 0.85f + 0.12f ),
+				1f
+			);
+
+			// Same hue family, much darker for contrast against the fill.
+			ProgressTrackColor = new Color(
+				Math.Max( 0.03f, ProgressFillColor.r * 0.22f ),
+				Math.Max( 0.03f, ProgressFillColor.g * 0.22f ),
+				Math.Max( 0.03f, ProgressFillColor.b * 0.22f ),
+				1f
+			);
 		}
 	}
 }
