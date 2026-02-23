@@ -70,6 +70,7 @@ public partial class MeshTool : EditorTool
 	public static void ActivateTool()
 	{
 		EditorToolManager.SetTool( nameof( MeshTool ) );
+		EditorToolManager.SetSubTool( nameof( ObjectSelection ) );
 	}
 
 }
