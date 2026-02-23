@@ -5,9 +5,9 @@ namespace Sandbox;
 /// <summary>
 /// A decal. Use the Component.
 /// </summary>
-internal sealed class DecalSceneObject : SceneObject
+public class DecalSceneObject : SceneObject
 {
-	NativeEngine.CDecalSceneObject decalNative;
+	CDecalSceneObject decalNative;
 
 	internal DecalSceneObject() { }
 	internal DecalSceneObject( HandleCreationData _ ) { }
@@ -108,7 +108,7 @@ internal sealed class DecalSceneObject : SceneObject
 
 	internal override void OnNativeInit( CSceneObject ptr )
 	{
-		decalNative = (NativeEngine.CDecalSceneObject)ptr;
+		decalNative = (CDecalSceneObject)ptr;
 		base.OnNativeInit( ptr );
 	}
 

@@ -71,7 +71,7 @@ public record struct SamplerState
 	/// <summary>
 	/// Gets or creates a bindless sampler index for this <see cref="SamplerState"/>.
 	/// </summary>
-	internal static int GetBindlessIndex( SamplerState samplerState )
+	public static int GetBindlessIndex( SamplerState samplerState )
 	{
 		if ( _cachedSamplerIndex.TryGetValue( samplerState, out int value ) )
 		{
