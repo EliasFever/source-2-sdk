@@ -1,4 +1,4 @@
-﻿using Sandbox;
+using Sandbox;
 using System.Reflection.PortableExecutable;
 
 namespace Editor;
@@ -15,7 +15,7 @@ namespace Editor;
 public class RotationEditorTool : EditorTool
 {
 	Dictionary<GameObject, Transform> startPoints = new Dictionary<GameObject, Transform>();
-	Angles moveDelta;
+	Rotation moveDelta;
 	Vector3 handlePosition;
 	Rotation handleRotation;
 
@@ -32,7 +32,7 @@ public class RotationEditorTool : EditorTool
 		{
 			startPoints.Clear();
 			moveDelta = Rotation.Identity;
-			handleRotation = nonSceneGos.FirstOrDefault().WorldRotation;
+			handleRotation = nonSceneGos.FirstOrDefault()?.WorldRotation ?? Rotation.Identity;
 			handlePosition = bbox.Center;
 			undoScope?.Dispose();
 			undoScope = null;
@@ -48,17 +48,15 @@ public class RotationEditorTool : EditorTool
 		{
 			Gizmo.Hitbox.DepthBias = 0.01f;
 
-			if ( Gizmo.Control.Rotate( "rotation", out var angleDelta ) )
+			if ( Gizmo.Control.Rotate( "rotation", Rotation.Identity, out Rotation rotationDelta ) )
 			{
 				StartDrag( nonSceneGos );
 
-				moveDelta += angleDelta;
-
-				var snapped = Gizmo.Snap( moveDelta, angleDelta );
+				moveDelta = Gizmo.Snap( rotationDelta );
 
 				foreach ( var entry in startPoints )
 				{
-					var rot = basis * snapped * basis.Inverse;
+					var rot = basis * moveDelta * basis.Inverse;
 					var position = entry.Value.Position - handlePosition;
 					position *= rot;
 					position += handlePosition;
