@@ -9,7 +9,6 @@ public class ExceptionNotification : Panel
 
 	public ExceptionNotification()
 	{
-		Add.Icon( "😥" );
 
 		var column = new Panel( this, "column" );
 		column.AddChild( new Label() { Text = "Code Error" } );
