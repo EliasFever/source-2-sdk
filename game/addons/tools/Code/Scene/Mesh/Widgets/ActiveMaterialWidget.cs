@@ -7,44 +7,188 @@ class ActiveMaterialWidget : ControlWidget
 
 	readonly MaterialWidget _materialWidget = null;
 	readonly MaterialPaletteWidget _paletteStrip;
+	readonly Widget _previewRow;
+	readonly Widget _materialPathLabel;
+	Vector2 _lastContentSize;
+	readonly bool _compactMode;
 
-	public ActiveMaterialWidget( SerializedProperty property ) : base( property )
+	const float LayoutGap = 1f;
+	const float PaletteRows = 6f;
+	const float PaletteCols = 2f;
+	const float PaletteCellSpacing = 2f;
+	const float BaseDisplayHeight = 260f;
+	const float FooterFixedHeight = 220f;
+	const float MaterialAspect = 1.0f;
+	const float MinPaletteCellSize = 20f;
+	const float MaxPaletteCellSize = 56f;
+
+	public string Filename;
+	public Color BaseColor = Theme.TextLight;
+
+	public ActiveMaterialWidget( SerializedProperty property, bool compact = false ) : base( property )
 	{
-		//FixedHeight = 220;
-		Layout = Layout.Row();
-		Layout.Alignment = TextFlag.Center;
+		_compactMode = compact;
+		Layout = Layout.Column();
+		Layout.Alignment = TextFlag.CenterBottom;
+		Layout.Spacing = compact ? 2 : 4;
 		ToolTip = "";
 
-		_materialWidget = Layout.Add( new MaterialWidget( this ) );
+		_previewRow = Layout.Add( new Widget(), 1 );
+		_previewRow.Layout = Layout.Row();
+		_previewRow.Layout.Alignment = TextFlag.Center;
+		_previewRow.HorizontalSizeMode = SizeMode.Flexible;
+		_previewRow.VerticalSizeMode = SizeMode.Flexible;
+
+		_materialWidget = _previewRow.Layout.Add( new MaterialWidget( this ) );
 		_materialWidget.ToolTip = "Active Material";
+		_materialWidget.ShowFilename = false;
 		_materialWidget.HorizontalSizeMode = SizeMode.Flexible;
 		_materialWidget.VerticalSizeMode = SizeMode.Flexible;
-		
-		_materialWidget.MinimumWidth = 200;
-		_materialWidget.MaximumWidth = 312;
-		_materialWidget.MaximumHeight = 512;
+		_materialWidget.MinimumWidth = 0;
 
 		_materialWidget.Cursor = CursorShape.Finger;
 
-		Layout.AddSpacingCell( 1 );
+		_previewRow.Layout.AddSpacingCell( LayoutGap );
 
-		_paletteStrip = Layout.Add( new MaterialPaletteWidget() );
+		_paletteStrip = _previewRow.Layout.Add( new MaterialPaletteWidget() );
 		_paletteStrip.MaterialClicked += OnPaletteMaterialClicked;
 		_paletteStrip.HorizontalSizeMode = SizeMode.Flexible;
 		_paletteStrip.VerticalSizeMode = SizeMode.Flexible;
-
-		_paletteStrip.MinimumWidth = 64;
-		_paletteStrip.MaximumWidth = 74;
-
-		_paletteStrip.MaximumHeight = 512;
+		_paletteStrip.MaximumWidth = 8192;
 		_paletteStrip.GetActiveMaterial = () => _materialWidget.Material;
+
+		_materialPathLabel = Layout.Add( new Widget(), 0 );
+		_materialPathLabel.HorizontalSizeMode = SizeMode.Flexible;
+		_materialPathLabel.FixedHeight = compact ? 16 : 20;
+
+		_materialPathLabel.OnPaintOverride = () =>
+		{
+			var resource = SerializedProperty.GetValue<Resource>( null );
+			var material = resource as Material;
+			var filename = material?.ResourcePath;
+
+			if ( string.IsNullOrEmpty( filename ) )
+				return false;
+
+			DrawFilename( _materialPathLabel.ContentRect, filename, TextFlag.LeftCenter, Theme.TextLight );
+
+			return true;
+		};
+
+		if ( _compactMode )
+		{
+			ApplyFixedFooterSizing();
+		}
 
 		Frame();
 	}
 
 	protected override void OnPaint()
 	{
-		// nothing
+		if ( _compactMode )
+			return;
+
+		UpdateResponsiveSizing();
+	}
+
+	void ApplyFixedFooterSizing()
+	{
+		var footerLabelHeight = _materialPathLabel.FixedHeight;
+		var footerSpacing = Layout.Spacing;
+		var previewHeight = MathF.Max( 1f, FooterFixedHeight - footerLabelHeight - footerSpacing );
+
+		var baseCellSize = (previewHeight - ((PaletteRows - 1f) * PaletteCellSpacing)) / PaletteRows;
+		baseCellSize = MathX.Clamp( baseCellSize, MinPaletteCellSize, MaxPaletteCellSize );
+
+		var paletteWidth = (baseCellSize * PaletteCols) + ((PaletteCols - 1f) * PaletteCellSpacing);
+		var materialWidth = previewHeight * MaterialAspect;
+		var previewWidth = materialWidth + LayoutGap + paletteWidth;
+
+		FixedHeight = FooterFixedHeight;
+		MinimumHeight = FooterFixedHeight;
+		MaximumHeight = FooterFixedHeight;
+		VerticalSizeMode = SizeMode.Default;
+
+		_previewRow.FixedWidth = previewWidth;
+		_previewRow.FixedHeight = previewHeight;
+		_previewRow.HorizontalSizeMode = SizeMode.Default;
+		_previewRow.VerticalSizeMode = SizeMode.Default;
+
+		_materialWidget.FixedWidth = materialWidth;
+		_materialWidget.FixedHeight = previewHeight;
+		_paletteStrip.FixedWidth = paletteWidth;
+		_paletteStrip.FixedHeight = previewHeight;
+	}
+
+	void DrawFilename( Rect rect, string filename, TextFlag flags, Color color )
+	{
+		var dir = System.IO.Path.GetDirectoryName( filename );
+		dir = string.IsNullOrEmpty( dir ) ? "" : dir + "/";
+
+		var file = System.IO.Path.GetFileNameWithoutExtension( filename );
+		var extension = System.IO.Path.GetExtension( filename );
+
+		var size = Paint.MeasureText( rect, filename, flags );
+		var overshoot = size.Width - rect.Width + 5;
+
+		if ( overshoot > 0 )
+		{
+			overshoot += 10;
+			var startIndex = (overshoot / 4).CeilToInt();
+
+			dir = startIndex < dir.Length
+				? string.Concat( "..", dir.AsSpan( startIndex ) )
+				: "";
+		}
+
+		dir = dir.Replace( '\\', '/' );
+
+		Paint.SetPen( color.Darken( 0.3f ) );
+		var r = Paint.DrawText( rect, dir, flags );
+
+		rect.Left += r.Width;
+
+		Paint.SetPen( color );
+		r = Paint.DrawText( rect, file, flags );
+
+		rect.Left += r.Width;
+
+		Paint.SetPen( color.Darken( 0.1f ) );
+		Paint.DrawText( rect, extension, flags );
+	}
+
+	void UpdateResponsiveSizing()
+	{
+		var previewSize = _previewRow.ContentRect.Size;
+		if ( previewSize == _lastContentSize )
+			return;
+
+		_lastContentSize = previewSize;
+
+		var availableWidth = previewSize.x;
+		var availableHeight = previewSize.y;
+
+		var baseCellSize = (BaseDisplayHeight - ((PaletteRows - 1f) * PaletteCellSpacing)) / PaletteRows;
+		baseCellSize = MathX.Clamp( baseCellSize, MinPaletteCellSize, MaxPaletteCellSize );
+		var basePaletteWidth = (baseCellSize * PaletteCols) + ((PaletteCols - 1f) * PaletteCellSpacing);
+		var baseMaterialWidth = BaseDisplayHeight * MaterialAspect;
+		var baseTotalWidth = baseMaterialWidth + LayoutGap + basePaletteWidth;
+
+		if ( baseTotalWidth <= 0f || BaseDisplayHeight <= 0f )
+			return;
+
+		var scaleFromHeight = availableHeight / BaseDisplayHeight;
+		var scaleFromWidth = availableWidth / baseTotalWidth;
+		var scale = MathF.Max( 0.1f, MathF.Min( scaleFromHeight, scaleFromWidth ) );
+
+		var targetHeight = BaseDisplayHeight * scale;
+		var materialWidth = baseMaterialWidth * scale;
+		var paletteWidth = basePaletteWidth * scale;
+
+		_materialWidget.FixedWidth = materialWidth;
+		_materialWidget.FixedHeight = targetHeight;
+		_paletteStrip.FixedWidth = paletteWidth;
+		_paletteStrip.FixedHeight = targetHeight;
 	}
 
 	protected override void OnContextMenu( ContextMenuEvent e )

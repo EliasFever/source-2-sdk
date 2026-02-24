@@ -361,8 +361,18 @@ file class ViewportToolBar : Widget
 
 		// Update footer
 		var footerWidget = subTool?.CreateToolFooter() ?? rootTool?.CreateToolFooter();
+		var hasActiveMaterialFooter = footerWidget is MeshEditor.ActiveMaterialWidget;
+
 		if ( footerWidget.IsValid() )
 		{
+			if ( hasActiveMaterialFooter )
+			{
+				footerWidget.FixedHeight = 220f;
+				footerWidget.MinimumHeight = 220f;
+				footerWidget.MaximumHeight = 220f;
+				footerWidget.VerticalSizeMode = SizeMode.Default;
+			}
+
 			_footer.Add( footerWidget );
 		}
 

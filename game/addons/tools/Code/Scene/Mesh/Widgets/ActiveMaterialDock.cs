@@ -11,8 +11,8 @@ public class ActiveMaterialDock : Widget
 		Layout = Layout.Column();
 		Layout.AddSeparator();
 
-		MinimumWidth = 240f;
-		MinimumHeight = 120f;
+		MinimumWidth = 160f;
+		MinimumHeight = 210f;
 
 		var body = Layout.Add( new Widget(), 1 );
 		body.Layout = Layout.Column();
@@ -38,9 +38,10 @@ public class ActiveMaterialDock : Widget
 
 		var materialProperty = MeshActiveMaterialState.Instance.GetSerialized().GetProperty( nameof( MeshActiveMaterialState.ActiveMaterial ) );
 		var swatch = new ActiveMaterialWidget( materialProperty );
+		swatch.HorizontalSizeMode = SizeMode.Flexible;
+		swatch.VerticalSizeMode = SizeMode.Flexible;
 
-		_content.Add( swatch );
-		_content.AddStretchCell();
+		_content.Add( swatch, 1 );
 		_currentWidget = swatch;
 	}
 }

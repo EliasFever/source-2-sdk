@@ -7,7 +7,7 @@ partial class MeshTool
 	public override Widget CreateToolFooter()
 	{
 		var materialProperty = this.GetSerialized().GetProperty( nameof( ActiveMaterial ) );
-		return new ActiveMaterialWidget( materialProperty );
+		return new ActiveMaterialWidget( materialProperty, compact: true );
 	}
 
 	public override Widget CreateShortcutsWidget() => new MeshToolShortcutsWidget();
