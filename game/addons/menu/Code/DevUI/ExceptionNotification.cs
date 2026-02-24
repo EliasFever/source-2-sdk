@@ -9,8 +9,14 @@ public class ExceptionNotification : Panel
 
 	public ExceptionNotification()
 	{
-
+		var img = Add.Image(null, "icon-small");
+		img.SetTexture( "tools/images/common/generic_hud_warning.png" );
+		img.Style.Width = 64;
+		img.Style.Height = 64;
+		
 		var column = new Panel( this, "column" );
+
+
 		column.AddChild( new Label() { Text = "Code Error" } );
 
 		message = column.Add.Label( "Something went wrong! This is an exception notice!", "message" );
