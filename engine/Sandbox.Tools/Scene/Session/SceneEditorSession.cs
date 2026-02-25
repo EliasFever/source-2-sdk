@@ -289,6 +289,8 @@ public partial class SceneEditorSession : Scene.ISceneEditorSession
 		}
 	}
 
+	public bool IsGameEjected { get; set; }
+
 	BaseFileSystem Scene.ISceneEditorSession.TransientFilesystem => FileSystem.Transient;
 
 	public void Reload()

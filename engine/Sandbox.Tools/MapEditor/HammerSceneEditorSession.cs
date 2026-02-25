@@ -33,6 +33,9 @@ public partial class HammerSceneEditorSession : Scene.ISceneEditorSession
 		}
 	}
 
+	// Hammer doesn't use SceneViewWidget game/eject mode, keep this false.
+	public bool IsGameEjected { get; set; }
+
 	public HammerSceneEditorSession( Scene scene, MapWorld mapWorld )
 	{
 		ArgumentNullException.ThrowIfNull( scene );

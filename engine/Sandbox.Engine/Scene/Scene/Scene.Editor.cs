@@ -21,6 +21,11 @@
 			bool HasUnsavedChanges { get; set; }
 
 			/// <summary>
+			/// True while this scene is in editor game-ejected view mode.
+			/// </summary>
+			bool IsGameEjected { get; set; }
+
+			/// <summary>
 			/// Selection system for this session
 			/// </summary>
 			SelectionSystem Selection { get; }
