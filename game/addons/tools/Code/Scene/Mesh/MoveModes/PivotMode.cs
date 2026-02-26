@@ -132,11 +132,11 @@ public sealed class PivotMode : MoveMode
 			Gizmo.Draw.Line( Vector3.Zero, Vector3.Left * 16 );
 
 			Gizmo.Transform = new Transform( tool.Pivot );
-			Gizmo.Draw.Color = Gizmo.Colors.Up;
+			Gizmo.Draw.Color = Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Up : Gizmo.Colors.Local.Up;
 			Gizmo.Draw.Line( Vector3.Zero, Vector3.Up * 16 );
-			Gizmo.Draw.Color = Gizmo.Colors.Forward;
+			Gizmo.Draw.Color = Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Forward : Gizmo.Colors.Local.Forward;
 			Gizmo.Draw.Line( Vector3.Zero, Vector3.Forward * 16 );
-			Gizmo.Draw.Color = Gizmo.Colors.Left;
+			Gizmo.Draw.Color = Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Left : Gizmo.Colors.Local.Left;
 			Gizmo.Draw.Line( Vector3.Zero, Vector3.Left * 16 );
 
 			Gizmo.Draw.Color = Color.White;

@@ -29,9 +29,9 @@ public sealed class ShearMode : MoveMode
 
 			using var scaler = Gizmo.GizmoControls.PushFixedScale();
 
-			DrawShearAxis( tool, "shear_x", Vector3.Forward, Vector3.Left, Vector3.Up, Gizmo.Colors.Forward );
-			DrawShearAxis( tool, "shear_y", Vector3.Left, Vector3.Forward, Vector3.Up, Gizmo.Colors.Left );
-			DrawShearAxis( tool, "shear_z", Vector3.Up, Vector3.Left, Vector3.Forward, Gizmo.Colors.Up );
+			DrawShearAxis( tool, "shear_x", Vector3.Forward, Vector3.Left, Vector3.Up, Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Forward : Gizmo.Colors.Local.Forward );
+			DrawShearAxis( tool, "shear_y", Vector3.Left, Vector3.Forward, Vector3.Up, Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Left : Gizmo.Colors.Local.Left );
+			DrawShearAxis( tool, "shear_z", Vector3.Up, Vector3.Left, Vector3.Forward, Gizmo.Settings.GlobalSpace ? Gizmo.Colors.Up : Gizmo.Colors.Local.Up );
 		}
 	}
 

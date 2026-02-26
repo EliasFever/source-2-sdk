@@ -21,7 +21,7 @@ public static partial class Gizmo
 
 				using ( Sandbox.Gizmo.Scope( "pitch", 0, Rotation.LookAt( Vector3.Left ) ) )
 				{
-					if ( RotateSingle( "pitch", Sandbox.Gizmo.Colors.Pitch, out var angleDelta ) )
+					if ( RotateSingle( "pitch", Settings.GlobalSpace ? Sandbox.Gizmo.Colors.Pitch : Sandbox.Gizmo.Colors.Local.Pitch, out var angleDelta ) )
 					{
 						delta *= Rotation.FromAxis( Vector3.Left, angleDelta );
 						hasValueChanged = true;
@@ -30,7 +30,7 @@ public static partial class Gizmo
 
 				using ( Sandbox.Gizmo.Scope( "yaw", 0, Rotation.LookAt( Vector3.Up ) ) )
 				{
-					if ( RotateSingle( "yaw", Sandbox.Gizmo.Colors.Yaw, out var angleDelta ) )
+					if ( RotateSingle( "yaw", Settings.GlobalSpace ? Sandbox.Gizmo.Colors.Yaw : Sandbox.Gizmo.Colors.Local.Yaw, out var angleDelta ) )
 					{
 						delta *= Rotation.FromAxis( Vector3.Up, angleDelta );
 						hasValueChanged = true;
@@ -39,7 +39,7 @@ public static partial class Gizmo
 
 				using ( Sandbox.Gizmo.Scope( "roll", 0, Rotation.LookAt( Vector3.Forward ) ) )
 				{
-					if ( RotateSingle( "roll", Sandbox.Gizmo.Colors.Roll, out var angleDelta ) )
+					if ( RotateSingle( "roll", Settings.GlobalSpace ? Sandbox.Gizmo.Colors.Roll : Sandbox.Gizmo.Colors.Local.Roll, out var angleDelta ) )
 					{
 						delta *= Rotation.FromAxis( Vector3.Forward, angleDelta );
 						hasValueChanged = true;
