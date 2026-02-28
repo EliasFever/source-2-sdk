@@ -237,6 +237,8 @@ public partial class ViewportOptions : Widget
 			}
 
 			cs.AddProperty( this, x => x.CameraFieldOfView );
+			cs.AddProperty( viewport.SceneView, x => x.EjectMode );
+		//	cs.AddProperty( viewport.SceneView, x => x.ShowEjectCamera );
 
 			widget.Layout = cs;
 

@@ -82,15 +82,22 @@ public partial class SceneViewportWidget
 
 		SetDefaultSize();
 
-		var gameCamera = Renderer.Scene.Camera;
-		if ( gameCamera.IsValid() )
+		var hasExistingEjectCamera = _ejectCamera.IsValid();
+		var shouldSnapToGameplayCamera = SceneView.EjectMode == SceneViewWidget.EjectCameraMode.ResetFromGameplayCamera
+			|| !hasExistingEjectCamera;
+
+		if ( shouldSnapToGameplayCamera )
 		{
-			// put the scene camera at the game cam's transform
-			State.CameraPosition = gameCamera.WorldPosition;
-			State.CameraRotation = gameCamera.WorldRotation;
+			var gameCamera = Renderer.Scene.Camera;
+			if ( gameCamera.IsValid() )
+			{
+				// Start eject camera from gameplay camera transform.
+				State.CameraPosition = gameCamera.WorldPosition;
+				State.CameraRotation = gameCamera.WorldRotation;
+			}
 		}
 
-		if ( !_ejectCamera.IsValid() )
+		if ( !hasExistingEjectCamera )
 			_ejectCamera = Renderer.CreateSceneEditorCamera();
 	}
 

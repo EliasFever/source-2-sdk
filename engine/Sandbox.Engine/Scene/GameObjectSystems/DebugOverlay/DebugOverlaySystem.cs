@@ -1,8 +1,12 @@
 ﻿namespace Sandbox;
 
+using System.Text;
+
 public sealed partial class DebugOverlaySystem : GameObjectSystem<DebugOverlaySystem>
 {
 	bool inFixedUpdate;
+	public bool IsGameEjected => 
+		Scene?.Editor is Scene.ISceneEditorSession editor && editor.IsGameEjected;
 
 	public DebugOverlaySystem( Scene scene ) : base( scene )
 	{
@@ -60,4 +64,5 @@ public sealed partial class DebugOverlaySystem : GameObjectSystem<DebugOverlaySy
 	{
 		inFixedUpdate = false;
 	}
+
 }

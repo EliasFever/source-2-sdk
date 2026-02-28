@@ -65,6 +65,9 @@ public partial class SceneViewWidget : Widget
 
 	public override void OnDestroyed()
 	{
+		if ( _editorSession != null )
+			_editorSession.IsGameEjected = false;
+
 		CloseGamePopupWindow( true );
 		SaveState();
 		base.OnDestroyed();

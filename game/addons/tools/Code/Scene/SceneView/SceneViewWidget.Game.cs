@@ -1,11 +1,42 @@
-﻿namespace Editor;
+﻿using System.ComponentModel;
+
+namespace Editor;
 
 public partial class SceneViewWidget
 {
 	private const string PopupGameWindowCookie = "SceneView.PopupGameWindow";
+	private const string EjectCameraModeCookie = "SceneView.EjectCameraMode";
+	private const string ShowEjectCameraCookie = "SceneView.ShowEjectCamera";
 
 	private SceneGamePopupWindow _gamePopupWindow;
 	private bool _closingGamePopupProgrammatically;
+	public static bool IsGameEjected
+	{
+		get => Current?.CurrentView == ViewMode.GameEjected;
+	}
+
+	public enum EjectCameraMode
+	{
+		[Title( "Reset Position" ), Description( "When ejected will reset eject camera position every ejection to be inline with where active game camera was at the time of ejection." )]
+		ResetFromGameplayCamera,
+		[Title( "Keep Last Position" ), Description( "When ejected will retain it's position between ejects." )]
+		PreserveLastEjectPosition
+	}
+
+	[Title( "Eject Camera Mode" ), Description("Should the eject camera reset it's position every ejection or retain it?")]
+	public EjectCameraMode EjectMode
+	{
+		get => ProjectCookie.Get( EjectCameraModeCookie, EjectCameraMode.ResetFromGameplayCamera );
+		set => ProjectCookie.Set( EjectCameraModeCookie, value );
+	}
+
+
+	[Title( "Show Eject Camera" )]
+	public bool ShowEjectCamera
+	{
+		get => ProjectCookie.Get( ShowEjectCameraCookie, false );
+		set => ProjectCookie.Set( ShowEjectCameraCookie, value );
+	}
 
 	public enum ViewMode
 	{
@@ -111,6 +142,8 @@ public partial class SceneViewWidget
 	/// </summary>
 	void OnViewModeChanged()
 	{
+		Session.IsGameEjected = CurrentView == ViewMode.GameEjected;
+
 		ViewportTools.Rebuild();
 		UpdateSidebarVisibility();
 
