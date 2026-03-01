@@ -115,3 +115,5 @@ game/sbox-standalone.runtimeconfig.json
 !game/addons/base_override/.sbproj
 !game/addons/tools_override/.sbproj
 !game/addons/tools_override/assets/styles
+
+!game/core/materials/default/default_mask.tga
