@@ -116,12 +116,12 @@ public static partial class Gizmo
 		/// <summary>
 		/// Draw a model
 		/// </summary>
-		public SceneModel Model( string modelName, Transform localTransform )
+		public SceneModel Model( string modelName, Transform localTransform, Material mat = null )
 		{
 			var model = Sandbox.Model.Load( modelName );
 			if ( model == null ) model = Sandbox.Model.Load( "models/dev/error.vmdl" );
 
-			return Model( model, localTransform );
+			return Model( model, localTransform, mat );
 		}
 
 		/// <summary>
@@ -132,12 +132,18 @@ public static partial class Gizmo
 		/// <summary>
 		/// Draw a model
 		/// </summary>
-		public SceneModel Model( Model model, Transform localTransform )
+		public SceneModel Model( string modelName, Material material ) => Model( modelName, Transform.Zero, material );
+
+		/// <summary>
+		/// Draw a model
+		/// </summary>
+		public SceneModel Model( Model model, Transform localTransform, Material mat = null )
 		{
 			var tx = Transform.ToWorld( localTransform );
 			var so = Active.FindOrCreate<SceneModel>( $"{model.Name}", () => new SceneModel( World, model, tx ) );
 			so.Flags.CastShadows = false;
 			so.Model = model;
+			so.SetMaterialOverride( mat );
 			so.ColorTint = Color;
 			so.Transform = tx;
 
@@ -148,6 +154,10 @@ public static partial class Gizmo
 		/// Draw a model
 		/// </summary>
 		public SceneModel Model( Model modelName ) => Model( modelName, Transform.Zero );
+		/// <summary>
+		/// Draw a model with material
+		/// </summary>
+		public SceneModel Model( Model modelName, Material material ) => Model( modelName, Transform.Zero, material );
 
 
 
