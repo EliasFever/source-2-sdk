@@ -117,3 +117,5 @@ game/sbox-standalone.runtimeconfig.json
 !game/addons/tools_override/assets/styles
 
 !game/core/materials/default/default_mask.tga
+game/addons/menu/Transients
+game/core/maps/editor/_bakeresourcecache
