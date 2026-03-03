@@ -113,7 +113,7 @@ public static partial class DebugOverlay
 				y += rowHeight;
 			}
 
-			position.y = y + 4f;
+			position.y = y;
 		}
 	}
 }
