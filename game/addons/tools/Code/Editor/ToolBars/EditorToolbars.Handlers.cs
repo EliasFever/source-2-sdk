@@ -770,7 +770,7 @@ public static class EditorToolBarsActions
 		=> OpenMeshSubTool( () => new ClipTool() );
 
 	public static void SelectMirrorTool()
-		=> OpenMeshSubTool( () => new MirrorTool() );
+		=> OpenMeshSubTool( () => new MirrorTool( nameof( ObjectSelection ) ) ); // should be switched to detecting which tool you have selected if we have mesh select for some reason
 
 	public static void SelectBlendTool()
 		=> Activate( nameof( MeshTool ), nameof( VertexPaintTool ) );

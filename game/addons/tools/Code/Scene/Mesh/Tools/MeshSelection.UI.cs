@@ -91,7 +91,7 @@ partial class MeshSelection
 		[Shortcut( "mesh.mirror-tool", "SHIFT+F", typeof( SceneViewWidget ) )]
 		void OpenMirrorTool()
 		{
-			var tool = new MirrorTool();
+			var tool = new MirrorTool( nameof( ObjectSelection ) ); // should be switched to detecting which tool you have selected if we have mesh select for some reason (still default to object because it supports more objects)
 			tool.Manager = _tool.Tool.Manager;
 			_tool.Tool.CurrentTool = tool;
 		}
