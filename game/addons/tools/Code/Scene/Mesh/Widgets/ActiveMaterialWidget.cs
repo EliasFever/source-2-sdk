@@ -22,7 +22,7 @@ class ActiveMaterialWidget : ControlWidget
 	const float MinPaletteCellSize = 20f;
 	const float MaxPaletteCellSize = 56f;
 
-	public string Filename;
+	public string Filename = "";
 	public Color BaseColor = Theme.TextLight;
 
 	public ActiveMaterialWidget( SerializedProperty property, bool compact = false ) : base( property )
