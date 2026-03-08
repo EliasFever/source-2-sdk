@@ -4,37 +4,39 @@ namespace Sandbox.UI.Dev;
 
 public class ExceptionNotification : Panel
 {
-	Label message;
-	RealTimeSince TimeSinceLastError;
+    Label message;
+    RealTimeSince TimeSinceLastError;
+    Panel inner;
 
-	public ExceptionNotification()
-	{
-		var img = Add.Image(null, "icon-small");
-		img.SetTexture( "tools/images/common/generic_hud_warning.png" );
-		img.Style.Width = 64;
-		img.Style.Height = 64;
-		
-		var column = new Panel( this, "column" );
+    public ExceptionNotification()
+    {
+        inner = new Panel( this, "inner" );
 
+        var img = inner.Add.Image( null, "icon-small" );
+        img.SetTexture( "tools/images/common/generic_hud_warning.png" );
+        img.Style.Width = 64;
+        img.Style.Height = 64;
 
-		column.AddChild( new Label() { Text = "Code Error" } );
+        var column = new Panel( inner, "column" );
 
-		message = column.Add.Label( "Something went wrong! This is an exception notice!", "message" );
-		SetClass( "hidden", true );
-		TimeSinceLastError = 100;
-	}
+        column.AddChild( new Label() { Text = "Code Error" } );
+        message = column.Add.Label( "Something went wrong! This is an exception notice!", "message" );
 
-	public override void Tick()
-	{
-		base.Tick();
+        SetClass( "hidden", true );
+        TimeSinceLastError = 100;
+    }
 
-		SetClass( "hidden", TimeSinceLastError > 8 );
-		SetClass( "fresh", TimeSinceLastError < 0.2f );
-	}
+    public override void Tick()
+    {
+        base.Tick();
 
-	internal void OnException( LogEvent entry )
-	{
-		message.Text = entry.Message?.Split( '\n', System.StringSplitOptions.RemoveEmptyEntries ).FirstOrDefault()?.Trim() ?? "null";
-		TimeSinceLastError = 0;
-	}
+        SetClass( "hidden", TimeSinceLastError > 8 );
+        SetClass( "fresh", TimeSinceLastError < 0.2f );
+    }
+
+    internal void OnException( LogEvent entry )
+    {
+        message.Text = entry.Message?.Split( '\n', System.StringSplitOptions.RemoveEmptyEntries ).FirstOrDefault()?.Trim() ?? "null";
+        TimeSinceLastError = 0;
+    }
 }
