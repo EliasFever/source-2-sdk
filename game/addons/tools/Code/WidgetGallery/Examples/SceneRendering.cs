@@ -114,31 +114,4 @@ internal class SceneRendering : SceneRenderingWidget
 		camera.ZFar = 10000;
 		camera.FieldOfView = 50;
 	}
-
-	/// <summary>
-	/// SceneCamera.RenderScene allows you to make any widget render a SceneWorld. You can render the world like a regular widget in OnPaint
-	/// or you could call it in an Event.Frame update to redraw it every frame. Or whatever you want.
-	/// </summary>
-	[WidgetGallery]
-	[Title( "RenderToWidget" )]
-	[Icon( "portrait" )]
-	internal static Widget WidgetGallery()
-	{
-		var canvas = new Widget( null );
-		canvas.Layout = Layout.Grid();
-		canvas.Layout.Spacing = 4;
-
-		if ( canvas.Layout is GridLayout gridLayout )
-		{
-			gridLayout.AddCell( 0, 0, new SceneRendering( "models/citizen/citizen.vmdl" ), 1 );
-			gridLayout.AddCell( 1, 0, new SceneRendering( "models/citizen/citizen.vmdl" ), 1 );
-			gridLayout.AddCell( 2, 0, new SceneRendering( "models/citizen/citizen.vmdl" ), 1 );
-
-			gridLayout.AddCell( 0, 1, new SceneRendering( "models/citizen/citizen.vmdl" ), 1 );
-			gridLayout.AddCell( 1, 1, new SceneRendering( "models/citizen/citizen.vmdl" ), 1 );
-			gridLayout.AddCell( 2, 1, new SceneRendering( "models/citizen/citizen.vmdl" ), 1 );
-		}
-
-		return canvas;
-	}
 }

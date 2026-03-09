@@ -63,7 +63,6 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, "/base/assets/" );
 				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, "/base/code/" );
 				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Root, "/core/" );
-				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, "/citizen/assets/" );
 			}
 		}
 

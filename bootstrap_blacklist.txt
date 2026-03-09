@@ -1,3 +1,4 @@
+game\addons\citizen\*
 game\core\tools\images\common\hang_detected.png
 game\core\tools\images\common\workshop_banner.png
 game\core\materials\default\default_mask.tga

@@ -70,7 +70,6 @@ internal sealed class MenuDll : IMenuDll
 				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, "/base/assets/" );
 				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, "/menu/code/" );
 				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, "/menu/assets/" );
-				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, "/citizen/assets/" );
 			}
 
 			FileSystem.Mounted.CreateAndMount( EngineFileSystem.Root, "/core/" );
