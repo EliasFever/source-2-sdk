@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using static Facepunch.Constants;
@@ -103,15 +104,15 @@ internal class DownloadPublicArtifacts( string name ) : Step( name )
 
 			if ( !string.IsNullOrEmpty( BlacklistPath ) )
 			{
-				var path = Path.GetFullPath( Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + BlacklistPath + ".txt" );
+				var path = Path.Combine( Directory.GetCurrentDirectory(), BlacklistPath + ".txt" );
 
 				foreach ( var line in File.ReadLines( path ) )
 				{
-					if ( string.IsNullOrEmpty( line ) ) continue;
+					if ( string.IsNullOrWhiteSpace( line ) ) continue;
 
-					if ( line.Replace( '/', Path.DirectorySeparatorChar ) == entry.Path.Replace( '/', Path.DirectorySeparatorChar ) )
+					if ( Regex.IsMatch( entry.Path.Replace( '/', Path.DirectorySeparatorChar ), "^" + Regex.Escape( line.Trim().Replace( '/', Path.DirectorySeparatorChar ) ).Replace( "\\*", ".*" ).Replace( "\\?", "." ) + "$", RegexOptions.IgnoreCase ) )
 					{
-						Log.Info( $"{entry.Path} was blacklisted from being replaced!" );
+						Log.Info( $"{entry.Path} was blacklisted!" );
 						Interlocked.Increment( ref skippedCount );
 						return;
 					}
