@@ -933,6 +933,13 @@ public enum SceneCameraDebugMode
 	QuadOverdraw = 100,
 	[Title( "Overdraw" ), Icon( "layers" )]
 	Overdraw = 101,
-	[Title( "Ambient Occlusion" ), Icon( "radio_button_checked" )]
+	[Title( "Ambient Occlusion (Diffuse)" ), Icon( "radio_button_checked" )]
 	AmbientOcclusion = 14,
+
+	[Title( "Ambient Occlusion (Specular)" ), Icon( "radio_button_checked" )]
+	AmbientOcclusionSpec = 15,
+	[Title( "Tangent-Space Normals" ), Icon( "shuffle" )]
+	NormalTangent = 20,
+	[Title( "Cubemap View" ), Icon( "flare" )]
+	Cubemap = 17
 }
