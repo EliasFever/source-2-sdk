@@ -7,6 +7,8 @@ public class DropObjectAttribute : System.Attribute
 {
 	public string Type { get; }
 	public string[] Extensions { get; }
+	public int Priority { get; set; } = 0;
+
 	public DropObjectAttribute( string type, params string[] extensions )
 	{
 		Type = type;

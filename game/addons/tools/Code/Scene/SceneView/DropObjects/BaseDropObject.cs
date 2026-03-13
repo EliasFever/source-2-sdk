@@ -159,7 +159,8 @@ public abstract class BaseDropObject
 
 	public static async Task<BaseDropObject> CreateDropFor( string text )
 	{
-		if ( string.IsNullOrEmpty( text ) ) return null;
+		if ( string.IsNullOrEmpty( text ) )
+			return null;
 
 		string type = "unknown";
 
@@ -167,22 +168,23 @@ public abstract class BaseDropObject
 		{
 			var package = await Package.FetchAsync( text, false );
 			if ( package is not null )
-			{
 				type = package.TypeName;
-			}
 		}
 
 		var dropObjs = EditorTypeLibrary.GetTypesWithAttribute<DropObjectAttribute>();
 
-		foreach ( var obj in dropObjs )
-		{
-			var attribute = obj.Attribute;
-			if ( (!string.IsNullOrEmpty( attribute.Type ) && attribute.Type == type) || attribute.Extensions.Any( text.EndsWith ) )
+		var match = dropObjs
+			.Where( obj =>
 			{
-				return EditorTypeLibrary.Create<BaseDropObject>( obj.Type.TargetType );
-			}
-		}
+				var a = obj.Attribute;
+				return (!string.IsNullOrEmpty( a.Type ) && a.Type == type) ||
+					   a.Extensions.Any( ext => text.EndsWith( ext, StringComparison.OrdinalIgnoreCase ) );
+			} )
+			.OrderByDescending( obj => obj.Attribute.Priority )
+			.FirstOrDefault();
 
-		return null;
+		return match.Type?.TargetType is Type t
+			? EditorTypeLibrary.Create<BaseDropObject>( t )
+			: null;
 	}
 }
