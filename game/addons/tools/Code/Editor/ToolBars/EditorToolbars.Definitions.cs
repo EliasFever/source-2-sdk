@@ -27,12 +27,8 @@ public static partial class EditorToolBars
 				Active = true,
 				ActiveResolver = () =>
 				{
-					if ( EditorToolManager.CurrentModeName != nameof( MeshTool ) )
-						return false;
-
-					return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
-						&& meshTool.MoveMode?.GetType() == typeof( ResizeMode );
-				} },
+					return EditorToolManager.CurrentModeName == nameof( MeshTool ) && SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
+						&& meshTool.MoveMode?.GetType() == typeof( ResizeMode ); } },
 
 			new() { Name="Move",
 				ShortcutAction = "mesh.position.mode",
@@ -47,12 +43,8 @@ public static partial class EditorToolBars
 				Description="Translate. Move the selected objects",
 				ActiveResolver = () =>
 				{
-					if ( EditorToolManager.CurrentModeName != nameof( MeshTool ) )
-						return false;
-
-					return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
-						&& meshTool.MoveMode?.GetType() == typeof( MeshEditor.PositionMode );
-				} },
+					return EditorToolManager.CurrentModeName == nameof( MeshTool ) && SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
+						&& meshTool.MoveMode?.GetType() == typeof( MeshEditor.PositionMode ); } },
 
 			new() { Name="Rotate",
 				ShortcutAction = "mesh.rotate.mode",
@@ -67,12 +59,8 @@ public static partial class EditorToolBars
 				Description="Rotate. Rotate the selected objects",
 				ActiveResolver = () =>
 				{
-					if ( EditorToolManager.CurrentModeName != nameof( MeshTool ) )
-						return false;
-
-					return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
-						&& meshTool.MoveMode?.GetType() == typeof( RotateMode );
-				} },
+					return EditorToolManager.CurrentModeName == nameof( MeshTool ) && SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
+						&& meshTool.MoveMode?.GetType() == typeof( RotateMode ); } },
 
 			new() { Name="Scale",
 				ShortcutAction = "mesh.scale.mode",
@@ -87,12 +75,8 @@ public static partial class EditorToolBars
 				Description="Scale. Scale the selected objects",
 				ActiveResolver = () =>
 				{
-					if ( EditorToolManager.CurrentModeName != nameof( MeshTool ) )
-						return false;
-
-					return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
-						&& meshTool.MoveMode?.GetType() == typeof( ScaleMode );
-				} },
+					return EditorToolManager.CurrentModeName == nameof( MeshTool ) && SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
+						&& meshTool.MoveMode?.GetType() == typeof( ScaleMode ); } },
 
 			new() { Name="Pivot",
 				Icon="hammer/pivot_tool_icon.png",
@@ -106,12 +90,8 @@ public static partial class EditorToolBars
 				Description="Pivot Manipulation. Set the location of the gizmo for the current selection",
 				ActiveResolver = () =>
 				{
-					if ( EditorToolManager.CurrentModeName != nameof( MeshTool ) )
-						return false;
-
-					return SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
-						&& meshTool.MoveMode?.GetType() == typeof( PivotMode );
-				} },
+					return EditorToolManager.CurrentModeName == nameof( MeshTool ) && SceneViewWidget.Current?.Tools?.CurrentTool is MeshTool meshTool
+						&& meshTool.MoveMode?.GetType() == typeof( PivotMode ); } },
 
 			new() { Separator=true },
 			new() { Separator=true },
@@ -226,7 +206,11 @@ public static partial class EditorToolBars
 				Group = "MainTools",
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
-				Description="Modify subdivided faces using brush tools" },
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.SelectDisplacementTool,
+				Description="Modify subdivided faces using brush tools",
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( MeshTool )
+					&& EditorToolManager.CurrentSubModeName == nameof( DisplacementTool ) },
 
 			new() { Name="Physics Tool",
 				Icon="hammer/physics_tool_icon.png",

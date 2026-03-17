@@ -775,6 +775,9 @@ public static class EditorToolBarsActions
 	public static void SelectBlendTool()
 		=> Activate( nameof( MeshTool ), nameof( VertexPaintTool ) );
 
+	public static void SelectDisplacementTool()
+		=> Activate( nameof( MeshTool ), nameof( DisplacementTool ) );
+
 	private static void OpenMeshSubTool( Func<EditorTool> toolFactory )
 	{
 		var tools = SceneViewWidget.Current?.Tools;
