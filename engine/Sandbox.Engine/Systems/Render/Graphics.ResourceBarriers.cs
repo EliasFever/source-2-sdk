@@ -176,7 +176,7 @@ public static partial class Graphics
 			case ResourceState.NonPixelShaderResource:
 				imageLayout = RenderImageLayout_t.RENDER_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 				accessFlags = RenderBarrierAccessFlags_t.ShaderReadBit;
-				dstStageFlags = RenderBarrierPipelineStageFlags_t.VertexInputBit;
+				dstStageFlags = RenderBarrierPipelineStageFlags_t.PreRasterizationShadersBit | RenderBarrierPipelineStageFlags_t.ComputeShaderBit;
 				break;
 			case ResourceState.PixelShaderResource:
 				imageLayout = RenderImageLayout_t.RENDER_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
