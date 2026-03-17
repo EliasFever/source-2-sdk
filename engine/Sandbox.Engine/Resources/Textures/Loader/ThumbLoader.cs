@@ -18,7 +18,7 @@ internal static class ThumbLoader
 	{
 		try
 		{
-			if ( Game.Resources.Get<Texture>( $"{filename}.png" ) is { } cached )
+			if ( Game.Resources.Get<Texture>( filename ) is { } cached )
 				return cached;
 
 			var placeholder = Texture.Create( 1, 1 )
@@ -27,7 +27,7 @@ internal static class ThumbLoader
 				.Finish();
 
 			placeholder.IsLoaded = false;
-			placeholder.RegisterWeakResourceId( $"{filename}.png" );
+			placeholder.RegisterWeakResourceId( filename );
 
 			_ = LoadIntoTexture( filename, placeholder );
 

@@ -419,7 +419,7 @@ partial class FaceTool
 					var transform = go.WorldTransform;
 					var newBounds = newMesh.CalculateBounds( transform );
 					var newTransfrom = transform.WithPosition( newBounds.Center );
-					newMesh.ApplyTransform( new Transform( transform.Rotation.Inverse * (transform.Position - newTransfrom.Position) ) );
+					newMesh.ApplyTransform( new Transform( -transform.PointToLocal( newTransfrom.Position ) ) );
 					go.WorldTransform = newTransfrom;
 					newMeshComponent.RebuildMesh();
 
