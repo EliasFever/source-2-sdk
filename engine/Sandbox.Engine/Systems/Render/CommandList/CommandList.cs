@@ -1240,19 +1240,29 @@ public sealed unsafe partial class CommandList
 	/// <param name="flags">Text alignment flags (optional).</param>
 	public void DrawText( TextRendering.Scope scope, Rect rect, TextFlag flags = TextFlag.LeftTop )
 	{
+		// Resolve the Scope at entry-add time so we store a texture reference instead of
+		// boxing the Scope struct into object fields.
+		var tex = TextRendering.GetOrCreateTexture( scope, default, flags );
+		if ( !tex.IsValid ) return; // headless or invalid
 		static void Execute( ref Entry entry, CommandList commandList )
 		{
-			var rect = new Rect( entry.Data1.x, entry.Data1.y, entry.Data1.z, entry.Data1.w );
-			var scope = (TextRendering.Scope)entry.Object1;
-			var flags = (TextFlag)entry.Object2;
-			Graphics.DrawText( rect, scope, flags );
+			var position = new Rect( entry.Data1.x, entry.Data1.y, entry.Data1.z, entry.Data1.w );
+			var flags = (TextFlag)(int)entry.Data2.x;
+			var filter = (FilterMode)(int)entry.Data2.y;
+			var texture = (Texture)entry.Object1;
+
+			Graphics.Attributes.Set( "Texture", texture );
+			Graphics.Attributes.Set( "SamplerIndex", SamplerState.GetBindlessIndex( new SamplerState() { Filter = filter } ) );
+
+			var rect = position.Align( texture.Size, flags );
+			Graphics.DrawQuad( rect.Floor(), Material.UI.Text, Color.White );
 		}
 
 		AddEntry( &Execute, new Entry
 		{
-			Object1 = scope,
-			Object2 = flags,
-			Data1 = new Vector4( rect.Left, rect.Top, rect.Width, rect.Height )
+			Object1 = tex,
+			Data1 = new Vector4( rect.Left, rect.Top, rect.Width, rect.Height ),
+			Data2 = new Vector4( (float)(int)flags, (float)(int)scope.FilterMode, 0, 0 )
 		} );
 	}
 }

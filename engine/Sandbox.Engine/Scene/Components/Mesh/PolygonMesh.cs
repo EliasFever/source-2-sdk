@@ -3586,7 +3586,7 @@ public sealed partial class PolygonMesh : IJsonConvert
 		return Topology.FindPreviousEdgeInFaceLoop( hFaceVertex );
 	}
 
-	private void FindCornerVerticesForFace( FaceHandle hFace, float minCornerAngle, out List<VertexHandle> outCornerVertices )
+	public void FindCornerVerticesForFace( FaceHandle hFace, float minCornerAngle, out List<VertexHandle> outCornerVertices )
 	{
 		outCornerVertices = new List<VertexHandle>();
 

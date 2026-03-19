@@ -65,10 +65,14 @@ file sealed record MemberProperty<T>( ITrackTarget Parent, MemberDescription Mem
 		switch ( Member )
 		{
 			case PropertyDescription propDesc:
+				if ( Equals( propDesc.GetValue( target ), value ) ) return;
+
 				propDesc.SetValue( target, value );
 				return;
 
 			case FieldDescription fieldDesc:
+				if ( Equals( fieldDesc.GetValue( target ), value ) ) return;
+
 				fieldDesc.SetValue( target, value );
 				return;
 
