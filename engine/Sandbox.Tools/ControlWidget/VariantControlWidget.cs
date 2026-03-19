@@ -18,14 +18,21 @@ public class VariantControlWidget : ControlWidget
 
 		_value = o.GetProperty( nameof( Variant.Value ) );
 
-		Layout = Layout.Row();
+		Layout = Layout.Grid();
 
 		RebuildUI();
 	}
 
+	/// <summary>
+	/// We don't want to paint anything, let the underlying control do that
+	/// </summary>
+	protected override void OnPaint() { }
+
 	void RebuildUI()
 	{
 		Layout.Clear( true );
+
+		var grid = Layout as GridLayout;
 
 		var variant = SerializedProperty.GetValue<Variant>();
 		var t = variant.Type;
@@ -37,7 +44,7 @@ public class VariantControlWidget : ControlWidget
 			var editor = ControlWidget.Create( custom );
 			if ( editor != null )
 			{
-				Layout.Add( editor );
+				grid.AddCell( 0, 0, editor, alignment: TextFlag.LeftCenter );
 			}
 			else
 			{
