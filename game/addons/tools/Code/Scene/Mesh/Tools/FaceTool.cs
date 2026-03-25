@@ -79,10 +79,6 @@ public sealed partial class FaceTool( MeshTool tool ) : SelectionTool<MeshFace>(
 
 		using var scope = Gizmo.Scope( "FaceTool" );
 
-		var result = MeshTrace.Run();
-		if ( result.Hit && result.Component is MeshComponent )
-			Gizmo.Hitbox.TrySetHovered( result.EndPosition );
-
 		if ( _faceObject.IsValid() && _faceObject.World != Scene.SceneWorld )
 		{
 			_hoverFace = default;
@@ -90,6 +86,10 @@ public sealed partial class FaceTool( MeshTool tool ) : SelectionTool<MeshFace>(
 
 			CreateFaceObject();
 		}
+
+		_hoverFace = MeshTrace.TraceFace( out var hitPosition );
+		if ( _hoverFace.IsValid() )
+			Gizmo.Hitbox.TrySetHovered( hitPosition );
 
 		if ( Gizmo.IsHovered && Tool.MoveMode.AllowSceneSelection && !IsLassoSelecting )
 		{
@@ -220,7 +220,6 @@ public sealed partial class FaceTool( MeshTool tool ) : SelectionTool<MeshFace>(
 
 	private void SelectFace()
 	{
-		_hoverFace = TraceFace();
 		UpdateSelection( _hoverFace );
 
 		if ( Gizmo.IsAltPressed && Gizmo.WasRightMousePressed )

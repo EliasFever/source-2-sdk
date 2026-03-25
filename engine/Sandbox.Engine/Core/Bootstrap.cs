@@ -36,6 +36,8 @@ internal static class Bootstrap
 		{
 			InitMinimal( EngineGlobal.GetGameRootFolder() );
 
+			DLLImportResolver.SetupResolvers();
+
 			StartupTiming = new Api.Events.EventRecord( $"StartupTiming.{(Application.IsEditor ? "Editor" : (Application.IsHeadless ? "Server" : "Game"))}" );
 			StartupTiming.StartTimer( "Time" );
 

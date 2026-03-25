@@ -711,9 +711,9 @@ internal sealed partial class NetworkObject : IValid, IDeltaSnapshot
 		}
 	}
 
-	internal void OnNetworkTableMessage( ObjectNetworkTableMsg message )
+	internal void OnNetworkTableMessage( ObjectNetworkTableMsg message, Connection source = null )
 	{
-		ReadDataTable( message.TableData );
+		ReadDataTable( message.TableData, source: source );
 	}
 
 	internal void OnRefreshMessage( Connection source, ObjectRefreshMsg message )

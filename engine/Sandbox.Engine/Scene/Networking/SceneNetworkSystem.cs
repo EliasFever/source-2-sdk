@@ -884,6 +884,10 @@ public partial class SceneNetworkSystem : GameNetworkSystem
 
 	private void OnObjectRefreshDescendant( ObjectRefreshDescendantMsg message, Connection source )
 	{
+		// Is this a request from someone? If so, check if they can refresh objects.
+		if ( source is not null && !source.CanRefreshObjects )
+			return;
+
 		var scene = Game.ActiveScene;
 		if ( !scene.IsValid() )
 			return;
@@ -936,6 +940,10 @@ public partial class SceneNetworkSystem : GameNetworkSystem
 
 	private void OnObjectRefreshComponent( ObjectRefreshComponentMsg message, Connection source )
 	{
+		// Is this a request from someone? If so, check if they can refresh objects.
+		if ( source is not null && !source.CanRefreshObjects )
+			return;
+
 		var scene = Game.ActiveScene;
 		if ( !scene.IsValid() )
 			return;
@@ -1130,7 +1138,7 @@ public partial class SceneNetworkSystem : GameNetworkSystem
 		if ( !source.IsHost && source.Id != obj._net.Owner )
 			return;
 
-		obj._net.OnNetworkTableMessage( message );
+		obj._net.OnNetworkTableMessage( message, source );
 	}
 
 	private void OnObjectDetach( ObjectDetachMsg message, Connection source, Guid msgId )
