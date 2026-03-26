@@ -448,7 +448,7 @@ PS
 			CalculateIndirectLighting( lightingTerms, finalCombinerInput ); 
 
 			float4 lighting = float4( 0.0, 0.0, 0.0, 1.0 );
-			lighting.rgb += lightingTerms.vDiffuse.rgb; 
+			lighting.rgb += lightingTerms.vDiffuse.rgb * 0.3183f; 
 			lighting.rgb += lightingTerms.vIndirectDiffuse.rgb;
 
 			col *= lighting;
