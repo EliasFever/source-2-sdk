@@ -75,12 +75,6 @@ internal static partial class InputRouter
 	{
 		get
 		{
-			if ( IMenuDll.Current is not null )
-			{
-				var menu = IMenuDll.Current.InputContext;
-				if ( menu is not null ) yield return menu;
-			}
-
 			// if we even have a game menu!
 			if ( IGameInstance.Current is not null )
 			{

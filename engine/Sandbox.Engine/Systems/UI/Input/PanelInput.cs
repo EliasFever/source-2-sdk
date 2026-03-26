@@ -409,7 +409,6 @@ internal class PanelInput
 
 			Active = hovered;
 
-			IMenuDll.Current?.ClosePopups( hovered );
 			IGameInstanceDll.Current?.ClosePopups( hovered );
 
 			if ( Active == null )

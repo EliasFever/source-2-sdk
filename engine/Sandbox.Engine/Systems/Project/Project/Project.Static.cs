@@ -107,10 +107,6 @@ public partial class Project
 	{
 		AddFromFileBuiltIn( "addons/base/.sbproj" );
 
-		if ( !Application.IsStandalone && !Application.IsHeadless )
-		{
-			AddFromFileBuiltIn( "addons/menu/.sbproj" );
-		}
 
 		if ( Application.IsEditor || Application.IsUnitTest )
 		{

@@ -15,7 +15,6 @@
 		<ProjectReference Include="..\..\Sandbox.AppSystem\Sandbox.AppSystem.csproj" />
 		<ProjectReference Include="..\..\Sandbox.Compiling\Sandbox.Compiling.csproj" />
 		<ProjectReference Include="..\..\Sandbox.Engine\Sandbox.Engine.csproj" />
-		<ProjectReference Include="..\..\Sandbox.Menu\Sandbox.Menu.csproj" />
 	</ItemGroup>
 
 </Project>

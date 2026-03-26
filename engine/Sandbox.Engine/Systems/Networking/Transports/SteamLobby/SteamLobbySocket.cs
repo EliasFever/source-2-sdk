@@ -739,7 +739,6 @@ internal class SteamLobbySocket : NetworkSocket, ILobby
 		if ( SteamLobby.GetData( "toxic" ) == "1" )
 		{
 			IGameInstanceDll.Current.Disconnect();
-			IMenuSystem.ShowServerError( "Disconnected", "Inoperable Server State" );
 			Log.Warning( "Disconnecting - Inoperable Server State" );
 			return;
 		}
@@ -747,7 +746,6 @@ internal class SteamLobbySocket : NetworkSocket, ILobby
 		if ( SteamLobby.GetData( "disbanded" ) == "1" )
 		{
 			IGameInstanceDll.Current.Disconnect();
-			IMenuSystem.ShowServerError( "Disconnected", "Lobby Disbanded" );
 			Log.Warning( "Disconnecting - Lobby Disbanded" );
 			return;
 		}

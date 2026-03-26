@@ -32,9 +32,7 @@ public partial class Panel
 	/// </summary>
 	IDisposable PushGlobalContext()
 	{
-		var rootPanel = FindRootPanel();
-		var isMenu = GlobalContext.Menu.UISystem?.RootPanels.Contains( rootPanel ); // assume game context
-		return isMenu == true ? GlobalContext.MenuScope() : GlobalContext.GameScope();
+		return GlobalContext.GameScope();
 	}
 
 	/// <summary>

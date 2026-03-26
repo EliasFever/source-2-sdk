@@ -65,24 +65,6 @@ internal class GameInstance : IGameInstance
 	/// </summary>
 	public void Close()
 	{
-		// Close all modals when closing the game menu
-		if ( IModalSystem.Current is not null )
-		{
-			using ( IMenuDll.Current?.PushScope() )
-			{
-				IModalSystem.Current.CloseAll();
-			}
-		}
-
-		// Show review modal
-		if ( Application.GamePackage is not null )
-		{
-			using ( IMenuDll.Current?.PushScope() )
-			{
-				IMenuSystem.Current?.OnPackageClosed( Application.GamePackage );
-			}
-		}
-
 		// Reset the cursor
 		InputRouter.ShutdownUserCursors();
 		Mouse.Visibility = MouseVisibility.Auto;

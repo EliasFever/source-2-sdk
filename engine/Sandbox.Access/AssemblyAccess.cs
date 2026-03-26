@@ -99,12 +99,6 @@ internal partial class AssemblyAccess
 			// do the heavy work of touching everything
 			InitTouches( bytes );
 
-			if ( !CheckPassesRules() )
-			{
-				Result.Success = false;
-				return;
-			}
-
 			if ( Result.Errors.Count > 0 )
 			{
 				Result.Success = false;

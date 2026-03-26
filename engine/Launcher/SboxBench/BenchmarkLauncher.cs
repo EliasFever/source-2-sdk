@@ -24,14 +24,13 @@ public class GameAppSystem : AppSystem
 		Environment.SetEnvironmentVariable( "SBOX_MODE", "BENCHMARK" );
 
 		CreateGame();
-		CreateMenu();
 
 		// Disable asserts for all benchmarks
 		NativeEngine.EngineGlobal.Plat_SetNoAssert();
 
 		var createInfo = new AppSystemCreateInfo()
 		{
-			WindowTitle = "s&box benchmark",
+			WindowTitle = "Ignis benchmark",
 			Flags = AppSystemFlags.IsGameApp
 		};
 

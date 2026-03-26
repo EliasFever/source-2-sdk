@@ -64,14 +64,6 @@ public class AppSystem
 	}
 
 	/// <summary>
-	/// Create the Menu instance.
-	/// </summary>
-	protected void CreateMenu()
-	{
-		MenuDll.Create();
-	}
-
-	/// <summary>
 	/// Create the Game (Sandbox.GameInstance)
 	/// </summary>
 	protected void CreateGame()
@@ -173,7 +165,6 @@ public class AppSystem
 		ConVarSystem.SaveAll();
 
 		IToolsDll.Current?.Exiting();
-		IMenuDll.Current?.Exiting();
 		IGameInstanceDll.Current?.Exiting();
 
 		// Flush API

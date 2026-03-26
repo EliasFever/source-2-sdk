@@ -23,11 +23,10 @@ public class GameAppSystem : AppSystem
 		base.Init();
 
 		CreateGame();
-		CreateMenu();
 
 		var createInfo = new AppSystemCreateInfo()
 		{
-			WindowTitle = "s&box",
+			WindowTitle = "Ignis",
 			Flags = AppSystemFlags.IsGameApp
 		};
 

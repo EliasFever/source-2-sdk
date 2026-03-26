@@ -97,7 +97,6 @@ internal class AccountInformation
 				Package.Cache( favourite, true );
 			}
 
-			IMenuDll.Current?.RunEvent( "menu.home.rebuild" );
 			IToolsDll.Current?.RunEvent( "account.update" );
 		}
 		finally

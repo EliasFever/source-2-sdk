@@ -25,7 +25,6 @@ internal static partial class SteamNetwork
 				return true;
 			}
 
-			IMenuSystem.ShowServerError( "Disconnected", "Invalid Authentication Ticket" );
 			Log.Warning( "Disconnecting - Invalid Authentication Ticket" );
 
 			return false;

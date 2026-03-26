@@ -14,7 +14,6 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo( "Sandbox.Hotload.Test" )]
 [assembly: InternalsVisibleTo( "Sandbox.GameInstance" )]
 [assembly: InternalsVisibleTo( "Sandbox.Tools" )]
-[assembly: InternalsVisibleTo( "Sandbox.Menu" )]
 [assembly: InternalsVisibleTo( "Sandbox.AppSystem" )]
 [assembly: InternalsVisibleTo( "MenuBuild" )]
 [assembly: InternalsVisibleTo( "ShaderCompiler" )]

@@ -15,7 +15,6 @@ public class EditorAppSystem : AppSystem
 		if ( !CheckProject() )
 			return;
 
-		CreateMenu();
 		CreateGame();
 		CreateEditor();
 

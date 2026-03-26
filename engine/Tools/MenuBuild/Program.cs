@@ -19,12 +19,10 @@ class Program
 			Project.AddFromFileBuiltIn( "editor/ShaderGraph/.sbproj" );
 			Project.AddFromFileBuiltIn( "editor/MovieMaker/.sbproj" );
 			Project.AddFromFileBuiltIn( "editor/Hammer/.sbproj" );
-			var menuProject = Project.AddFromFile( "addons/menu/.sbproj" );
 
 			SyncContext.RunBlocking( Project.CompileAsync() );
 
 			CopyCompilerOutput( baseProject );
-			CopyCompilerOutput( menuProject );
 		}
 
 		return 0;

@@ -242,8 +242,6 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			}
 		};
 
-		IMenuDll.Current?.Reset();
-
 		// Run GC and finalizers to clear any native resources held
 		GC.Collect();
 		GC.WaitForPendingFinalizers();
@@ -389,8 +387,6 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 
 		ResetEnvironment();
 
-		IMenuDll.Current?.OnGameExited();
-
 		Mounting.MountUtility.TickPreviewRenders();
 	}
 
@@ -495,10 +491,6 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 	public void SimulateUI()
 	{
 		bool mouseIsAllowed = true;
-		if ( IMenuDll.Current is not null )
-		{
-			mouseIsAllowed = !IMenuDll.Current.HasOverlayMouseInput();
-		}
 
 		using ( Game.ActiveScene?.Push() )
 		{
@@ -533,11 +525,6 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 		{
 			LoadingScreen.IsVisible = false;
 			LoadingScreen.Media = null;
-
-			using ( IMenuDll.Current?.PushScope() )
-			{
-				IMenuSystem.Current?.Popup( "error", "Loading Error", $"There was an error when loading this game. {e.Message}" );
-			}
 
 			Log.Warning( e, e.Message );
 		}
@@ -687,8 +674,6 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			if ( !Application.IsEditor )
 			{
 				Game.IsPlaying = true;
-
-				IMenuDll.Current?.OnGameEntered();
 			}
 		}
 		finally

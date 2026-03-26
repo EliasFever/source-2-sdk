@@ -17,7 +17,6 @@ public static partial class Graphics
 		{
 			using ( new Graphics.Scope( in setup ) )
 			{
-				RenderUiOverlay();
 				DebugOverlay.Render();
 			}
 
@@ -41,14 +40,5 @@ public static partial class Graphics
 		{
 			currentCamera.OnRenderStage( renderStage );
 		}
-	}
-
-	static void RenderUiOverlay()
-	{
-		if ( Application.IsStandalone )
-			return;
-
-		using var _ = GlobalContext.MenuScope();
-		GlobalContext.Current.UISystem.Render();
 	}
 }

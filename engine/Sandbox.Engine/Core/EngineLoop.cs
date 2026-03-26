@@ -180,10 +180,7 @@ internal static class EngineLoop
 		//
 		// Let the context's tick
 		//
-
-		IMenuDll.Current?.Tick();
 		IGameInstanceDll.Current?.Tick();
-		IMenuDll.Current?.LateTick();
 		IToolsDll.Current?.Tick();
 
 
@@ -322,11 +319,6 @@ internal static class EngineLoop
 		{
 			IGameInstanceDll.Current?.SimulateUI();
 		}
-
-		using ( _simulateUiMenu.Start() )
-		{
-			IMenuDll.Current?.SimulateUI();
-		}
 	}
 
 	private static Logger nativeLogger = Logging.GetLogger( "Native" );
@@ -409,7 +401,6 @@ internal static class EngineLoop
 		var engineChain = g_pEngineServiceMgr.GetEngineSwapChain();
 
 		IGameInstanceDll.Current?.OnRender( engineChain );
-		IMenuDll.Current?.OnRender( engineChain );
 	}
 
 	/// <summary>

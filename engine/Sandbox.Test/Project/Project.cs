@@ -76,32 +76,4 @@ public class ProjectTests
 		}
 	}
 	*/
-
-	/// <summary>
-	/// Initialize the menu addon
-	/// </summary>
-	[TestMethod]
-	public async Task MenuInitialization()
-	{
-		Project.AddFromFileBuiltIn( "addons/base/.sbproj" );
-
-		var project = Project.AddFromFile( "addons/menu/.sbproj" );
-
-		Assert.IsNotNull( project.ConfigFilePath );
-		Assert.IsNotNull( project.GetRootPath() );
-		Assert.IsNotNull( project.GetAssetsPath() );
-
-		await Project.SyncWithPackageManager();
-		await Project.CompileAsync();
-
-		var assemblies = PackageManager.MountedFileSystem.FindFile( "/.bin/", "*.dll", false ).ToArray();
-
-		Assert.AreEqual( 2, assemblies.Length );
-
-		foreach ( var asm in assemblies )
-		{
-			Console.WriteLine( asm );
-		}
-
-	}
 }

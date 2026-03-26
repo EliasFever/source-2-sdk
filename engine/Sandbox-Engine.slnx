@@ -52,12 +52,11 @@
     <Project Path="Mounting/Sandbox.Mounting/Sandbox.Mounting.csproj" />
   </Folder>
   <Folder Name="/Engine/Tier1/">
-    <Project Path="Sandbox.Engine/Sandbox.Engine.csproj" DefaultStartup="true" />
+    <Project Path="Sandbox.Engine/Sandbox.Engine.csproj" />
   </Folder>
   <Folder Name="/Engine/Tier2/">
     <Project Path="Sandbox.AppSystem/Sandbox.AppSystem.csproj" />
     <Project Path="Sandbox.GameInstance/Sandbox.GameInstance.csproj" />
-    <Project Path="Sandbox.Menu/Sandbox.Menu.csproj" />
     <Project Path="Sandbox.Tools/Sandbox.Tools.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
@@ -66,8 +65,8 @@
   <Folder Name="/Tests/">
     <Project Path="Benchmark/Benchmark.csproj" />
     <Project Path="Sandbox.Hotload.Test/Sandbox.Hotload.Test.csproj" />
-    <Project Path="Sandbox.Test/Sandbox.Test.csproj" />
     <Project Path="Sandbox.Test.Unit/Sandbox.Test.Unit.csproj" />
+    <Project Path="Sandbox.Test/Sandbox.Test.csproj" />
   </Folder>
   <Folder Name="/Tests/Resources/">
     <Project Path="Sandbox.Test.Generate/Sandbox.Test.Generate.csproj" />

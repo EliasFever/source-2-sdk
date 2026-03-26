@@ -179,8 +179,6 @@ namespace Sandbox.Twitch
 		{
 			if ( string.IsNullOrWhiteSpace( message.Message ) )
 				return;
-
-			Engine.Streamer.RunEvent( "stream.message", message );
 		}
 
 		private async void IRC_OnPing()
@@ -197,8 +195,6 @@ namespace Sandbox.Twitch
 			{
 				_channels.Add( message.Channel );
 			}
-
-			Engine.Streamer.RunEvent( "stream.join", message.User );
 		}
 
 		private void IRC_OnPart( IRCMessage message )
@@ -207,8 +203,6 @@ namespace Sandbox.Twitch
 			{
 				_channels.Remove( message.Channel );
 			}
-
-			Engine.Streamer.RunEvent( "stream.leave", message.User );
 		}
 
 		private void HandleIRCMessage( IRCMessage message )

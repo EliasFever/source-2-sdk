@@ -8,11 +8,6 @@ internal partial class GlobalContext
 	/// </summary>
 	public static IDisposable GameScope() => new GlobalContextScope( Game, clearAsyncContext: true );
 
-	/// <summary>
-	/// Should only be called at a really high level, when doing menu stuff
-	/// </summary>
-	public static IDisposable MenuScope() => new GlobalContextScope( Menu );
-
 
 	public struct GlobalContextScope : IDisposable
 	{

@@ -402,7 +402,6 @@ internal partial class NetworkSystem
 			catch ( Exception e )
 			{
 				IGameInstanceDll.Current.Disconnect();
-				IMenuSystem.ShowServerError( "Disconnected", "Error Deserializing Snapshot" );
 				Log.Error( e );
 
 				return;
@@ -472,7 +471,6 @@ internal partial class NetworkSystem
 		}
 
 		IGameInstanceDll.Current.Disconnect();
-		IMenuSystem.ShowServerError( "Disconnected", msg.Reason );
 		Log.Warning( $"Disconnecting - {msg.Reason}" );
 
 		return Task.CompletedTask;

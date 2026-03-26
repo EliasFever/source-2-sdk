@@ -35,11 +35,7 @@ internal sealed class CompilerCategory : ProjectSettingsWindow.Category
 		set => configuration.WarningsAsErrors = value;
 	}
 
-	public bool Whitelist
-	{
-		get => configuration.Whitelist;
-		set => configuration.Whitelist = value;
-	}
+	public bool Whitelist => false;
 
 	public bool Unsafe
 	{
@@ -94,7 +90,6 @@ internal sealed class CompilerCategory : ProjectSettingsWindow.Category
 			if ( project.Config.IsStandaloneOnly )
 			{
 				sheet.AddRow( so.GetProperty( nameof( Unsafe ) ) );
-				sheet.AddRow( so.GetProperty( nameof( Whitelist ) ) );
 			}
 
 			BodyLayout.Add( sheet );

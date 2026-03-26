@@ -44,16 +44,6 @@ namespace Sandbox.Engine
 		/// </summary>
 		public static bool IsActive => CurrentService != null;
 
-		internal static void RunEvent( string name )
-		{
-			IMenuDll.Current?.RunEvent( name );
-		}
-
-		internal static void RunEvent( string name, object argument )
-		{
-			IMenuDll.Current?.RunEvent( name, argument );
-		}
-
 		static async Task<bool> Init( IStreamService service, ServiceToken token )
 		{
 			_serviceToken = token;

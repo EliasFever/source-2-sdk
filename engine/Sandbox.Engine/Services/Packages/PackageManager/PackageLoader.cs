@@ -2,6 +2,7 @@
 using Sandbox.Engine;
 using Sandbox.Internal;
 using Sentry;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -92,13 +93,8 @@ internal sealed partial class PackageLoader : IDisposable
 		try
 		{
 			result = PackageManager.AccessControl.VerifyAssembly( dll, out trustedDll );
-			if ( result.Success )
-			{
-				eventRecord.FinishTimer( "Time" );
-				eventRecord.Submit();
 
-				return true;
-			}
+			return true;
 		}
 		catch ( System.Exception e )
 		{
@@ -204,12 +200,7 @@ internal sealed partial class PackageLoader : IDisposable
 	{
 		assembly = null;
 
-		if ( !TestAccessControl( stream, out var trustedDll ) )
-		{
-			log.Warning( $"Couldn't load {assmName} - access control error" );
-			trustedDll?.Dispose();
-			return false;
-		}
+		TestAccessControl( stream, out var trustedDll );
 
 		assembly = AddAssembly( null, assmName, trustedDll, null );
 		changedPackageDlls.Add( (null, assmName) );
@@ -236,40 +227,8 @@ internal sealed partial class PackageLoader : IDisposable
 
 		TrustedBinaryStream trustedDll = null;
 
-		//
-		// Careful now. Remote packages should ALWAYS be access controlled.
-		// Local packages, doesn't matter so much.
-		//
-		bool needsAccessControl = true;
-		if ( ap.Package is LocalPackage localPackage )
-		{
-			if ( DisableAccessControl ) needsAccessControl = false;
-			if ( ToolsMode && isToolAssembly ) needsAccessControl = false;
-			if ( localPackage.Project.Config.IsStandaloneOnly ) needsAccessControl = false;
-		}
+		trustedDll = PackageManager.AccessControl.TrustUnsafe( bytes );
 
-		//
-		// If this is a locally compiled package, and it's enabled - then skip
-		// access control. This is used for tool packages which are ALWAYS local.
-		//
-		if ( !needsAccessControl )
-		{
-			trustedDll = PackageManager.AccessControl.TrustUnsafe( bytes );
-		}
-
-		//
-		// otherwise, we need to do access control
-		//
-		else
-		{
-			if ( !TestAccessControl( dll_stream, out trustedDll ) )
-			{
-				trustedDll?.Dispose();
-				log.Warning( $"Couldn't load {assmName} - access control error" );
-				return null;
-			}
-			trustedDll?.Dispose();
-		}
 
 		//
 		// Report errors here to sentry with extra information

@@ -158,7 +158,6 @@ internal partial class NetworkSystem
 			return;
 
 		IGameInstanceDll.Current.Disconnect();
-		IMenuSystem.ShowServerError( "Disconnected", reasonString );
 		Log.Warning( $"Disconnecting - {reasonString}" );
 	}
 

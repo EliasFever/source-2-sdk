@@ -223,11 +223,6 @@ public static class Application
 			return gameScene;
 		}
 
-		if ( IMenuDll.Current?.Scene is Scene menuScene && menuScene.IsValid() )
-		{
-			return menuScene;
-		}
-
 		return null;
 	}
 

@@ -80,10 +80,6 @@ internal static class Bootstrap
 			}
 			else
 			{
-				using ( var _ = StartupTiming?.ScopeTimer( "Menu PreInit Bootstrap" ) )
-				{
-					IMenuDll.Current?.Bootstrap();
-				}
 				using ( var _ = StartupTiming?.ScopeTimer( "Game PreInit Bootstrap" ) )
 				{
 					IGameInstanceDll.Current?.Bootstrap();
@@ -198,12 +194,6 @@ internal static class Bootstrap
 				// generally available completely immediately.
 				using var timeout = new CancellationTokenSource( 5000 );
 				SyncContext.RunBlocking( Services.Inventory.WaitForSteamInventoryItems( timeout.Token ) );
-			}
-
-			if ( IMenuDll.Current is not null )
-			{
-				using var x = StartupTiming?.ScopeTimer( $"MenuBootstrap" );
-				SyncContext.RunBlocking( IMenuDll.Current.Initialize() );
 			}
 
 			if ( IGameInstanceDll.Current is not null )

@@ -288,15 +288,6 @@ internal class UISystem
 				mouseState = Sandbox.Engine.InputContext.InputState.UI;
 				buttonState = Sandbox.Engine.InputContext.InputState.UI;
 			}
-
-			//
-			// The developer console is open
-			//
-			if ( IMenuSystem.Current?.ForceCursorVisible ?? false )
-			{
-				mouseState = Sandbox.Engine.InputContext.InputState.UI;
-				buttonState = Sandbox.Engine.InputContext.InputState.UI;
-			}
 		}
 
 		//

@@ -172,8 +172,8 @@ partial class ManagedCommand : Command
 
 	public override void Run( string argstring )
 	{
-		using var contextLocal = _isMenu ? GlobalContext.MenuScope() : GlobalContext.GameScope();
-		using var scope = _isMenu ? IMenuDll.Current?.PushScope() : IGameInstanceDll.Current?.PushScope();
+		using var contextLocal =  GlobalContext.GameScope();
+		using var scope = IGameInstanceDll.Current?.PushScope();
 
 		var caller = Caller ?? Connection.Local;
 

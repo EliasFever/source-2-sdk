@@ -241,7 +241,6 @@ public static partial class Storage
 				options.PublishedFileId = existingId;
 			}
 
-			Game.Overlay.WorkshopPublish( options );
 		}
 	}
 }

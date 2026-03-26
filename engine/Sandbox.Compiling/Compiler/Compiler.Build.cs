@@ -237,26 +237,6 @@ partial class Compiler
 				output.Successful = true;
 
 				peStream.Seek( 0, System.IO.SeekOrigin.Begin );
-
-				if ( _config.Whitelist && Group.AccessControl is { } access )
-				{
-					var result = access.VerifyAssembly( peStream, out TrustedBinaryStream stream );
-					if ( !result.Success )
-					{
-						log.Error( "Whitelist violation(s), build unsuccessful." );
-
-						output.Successful = false;
-
-						foreach ( var error in result.WhitelistErrors )
-						{
-							foreach ( var location in error.Locations )
-							{
-								output.Diagnostics.Add( Diagnostic.Create( WhitelistRule, location.RoslynLocation ?? Location.None, error.Name ) );
-							}
-						}
-					}
-					stream?.Dispose();
-				}
 			}
 
 			output.AssemblyData = peStream.ToArray();
