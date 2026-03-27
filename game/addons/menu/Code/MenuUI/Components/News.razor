@@ -5,17 +5,11 @@
 @inherits Panel
 
 <root>
-    <card class="news" style="background-image: url(@NewsImage)" onclick=@(OpenNewsUrl)>
-        <label class="eyebrow">Latest Update</label>
-
-        <label class="large">
-            @NewsTitle
-        </label>
-
-        <label class="small">
-            @NewsDescription
-        </label>
-    </card>
+    <Card class="news" style="background-image: url(@NewsImage)" onclick=@(OpenNewsUrl)>
+        <ChildContent>
+            <label class="eyebrow">Latest Update</label>
+        </ChildContent>
+    </Card>
 </root>
 
 @code {

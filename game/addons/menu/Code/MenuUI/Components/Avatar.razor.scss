@@ -31,4 +31,13 @@ Avatar
 			height: 32px;
 		}
 	}
+	
+    &.small
+    {
+        .avatar
+        {
+            width: 16px;
+            height: 16px;
+        }
+    }
 }

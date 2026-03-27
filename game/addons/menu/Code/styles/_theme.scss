@@ -91,11 +91,11 @@ icon
 	font-size: $text-regular;
 	color: $default-text;
 
-	&.medium
-	{
-		font-size: $text-medium;
-		font-family: $font-heading;
-	}
+    &.medium 
+    {
+        font-size: $text-medium;
+        font-family: "Material Icons";
+    }
 
 	&.large
 	{
@@ -119,15 +119,14 @@ icon
 	}
 }
 
-badge
-{
-	padding: 3px 6px;
-	pointer-events: all;
-	align-items: center;
-	border-radius: $rounding-default;
-	background-color: $default-800;
-	flex-shrink: 0;
-	gap: 6px;
+badge {
+    padding: 3px 6px;
+    pointer-events: all;
+    align-items: center;
+    border-radius: $rounding-large;
+    background-color: $default-800;
+    flex-shrink: 0;
+    gap: 6px;
 
 	Label
 	{
@@ -161,12 +160,16 @@ separator
 {
 	background-color: $default-border;
 
-	&.vertical
-	{
-		height: 100%;
-		min-height: 32px;
-		width: 1px;
-	}
+    &.vertical {
+        height: 100%;
+        min-height: 40px;
+        width: 1px;
+    }
+
+    &.horizontal {
+        flex-grow: 1;
+        height: 1px;
+    }
 }
 
 @mixin border
