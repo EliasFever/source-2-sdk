@@ -481,8 +481,6 @@ public class RectView : Widget
 
 		var multiplier = material.ShaderName.StartsWith( "shaders/hl2k_" ) ? 3.1415926f : 0.8f;
 
-		var multiplier = material.ShaderName.StartsWith( "shaders/hl2k_" ) ? 3.1415926f : 0.8f;
-
 		var light = new ScenePointLight( world )
 		{
 			Radius = 4000,
