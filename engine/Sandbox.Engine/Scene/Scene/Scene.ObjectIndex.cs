@@ -46,7 +46,7 @@ public partial class Scene : GameObject
 
 			t = t.BaseType;
 		}
-		return types.ToArray();
+		return [.. types];
 	} );
 
 	/// <summary>

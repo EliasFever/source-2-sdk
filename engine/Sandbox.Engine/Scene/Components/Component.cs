@@ -216,10 +216,10 @@ public abstract partial class Component : IJsonConvert, IComponentLister, IValid
 	internal virtual void OnDestroyInternal()
 	{
 		try { OnDestroy(); }
-		catch ( System.Exception e ) { Log.Error( e, $"Exception when calling 'OnDestroy' on {this}" ); }
+		catch ( Exception e ) { Log.Error( e, $"Exception when calling 'OnDestroy' on {this}" ); }
 
 		try { OnComponentDestroy?.Invoke(); }
-		catch ( System.Exception e ) { Log.Error( e, $"Exception when calling 'OnDestroy' on {this}" ); }
+		catch ( Exception e ) { Log.Error( e, $"Exception when calling 'OnDestroy' on {this}" ); }
 
 		// Unlink from GameObject now so we're no longer valid
 		GameObject = null;
@@ -252,37 +252,25 @@ public abstract partial class Component : IJsonConvert, IComponentLister, IValid
 	private Action _onComponentUpdate;
 	private Action _onComponentFixedUpdate;
 
-	[Group( "Component" )]
-	[Property]
-	public Action OnComponentEnabled { get; set; }
+	internal Action OnComponentEnabled { get; set; }
 
-	[Group( "Component" )]
-	[Property]
-	public Action OnComponentStart { get; set; }
+	internal Action OnComponentStart { get; set; }
 
-	[Group( "Component" )]
-	[Property]
-	public Action OnComponentUpdate
+	internal Action OnComponentUpdate
 	{
 		get => _onComponentUpdate;
 		set => SetUpdateAction<IUpdateSubscriber>( ref _onComponentUpdate, value, Scene.updateComponents );
 	}
 
-	[Group( "Component" )]
-	[Property]
-	public Action OnComponentFixedUpdate
+	internal Action OnComponentFixedUpdate
 	{
 		get => _onComponentFixedUpdate;
 		set => SetUpdateAction<IFixedUpdateSubscriber>( ref _onComponentFixedUpdate, value, Scene.fixedUpdateComponents );
 	}
 
-	[Group( "Component" )]
-	[Property]
-	public Action OnComponentDisabled { get; set; }
+	internal Action OnComponentDisabled { get; set; }
 
-	[Group( "Component" )]
-	[Property]
-	public Action OnComponentDestroy { get; set; }
+	internal Action OnComponentDestroy { get; set; }
 
 	internal void UpdateEnabledStatus()
 	{
@@ -469,7 +457,7 @@ public abstract partial class Component : IJsonConvert, IComponentLister, IValid
 	/// </summary>
 	public async void Invoke( float secondsDelay, Action action, CancellationToken ct = default )
 	{
-		await Task.DelaySeconds( secondsDelay );
+		await Task.DelaySeconds( secondsDelay, ct );
 
 		if ( !this.IsValid() ) return;
 		if ( !this.Active ) return;
