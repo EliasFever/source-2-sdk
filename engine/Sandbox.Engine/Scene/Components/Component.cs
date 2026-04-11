@@ -270,7 +270,7 @@ public abstract partial class Component : IJsonConvert, IComponentLister, IValid
 
 	internal Action OnComponentDisabled { get; set; }
 
-	internal Action OnComponentDestroy { get; set; }
+	public Action OnComponentDestroy { get; set; }
 
 	internal void UpdateEnabledStatus()
 	{
