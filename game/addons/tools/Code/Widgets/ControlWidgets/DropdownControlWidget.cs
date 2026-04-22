@@ -8,6 +8,11 @@ public abstract class DropdownControlWidget<T> : ControlWidget
 	public override bool SupportsMultiEdit => true;
 
 	protected PopupWidget _menu;
+	ScrollArea _scroller;
+	Widget _listCanvas;
+	LineEdit _searchEdit;
+	string _searchText = string.Empty;
+	object[] _entries;
 
 	public DropdownControlWidget( SerializedProperty property ) : base( property )
 	{
@@ -24,6 +29,21 @@ public abstract class DropdownControlWidget<T> : ControlWidget
 	}
 
 	protected abstract IEnumerable<object> GetDropdownValues();
+
+	protected virtual bool EnableSearch => false;
+	protected virtual string SearchPlaceholder => "Search...";
+	protected virtual float SearchEntryHeight => Theme.ControlHeight + 8.0f;
+	protected virtual Color SearchEntryBackground => Theme.ControlBackground;
+
+	protected virtual string GetSearchText( object item )
+	{
+		if ( item is Entry entry )
+		{
+			return $"{entry.Label}\n{entry.Description}\n{entry.Value}";
+		}
+
+		return item?.ToString() ?? string.Empty;
+	}
 
 	/// <summary>
 	/// Returns the display text shown in the dropdown button.
@@ -92,20 +112,73 @@ public abstract class DropdownControlWidget<T> : ControlWidget
 		_menu = new PopupWidget( null );
 
 		_menu.Layout = Layout.Column();
-		_menu.Width = ScreenRect.Width;
+		_menu.MinimumWidth = ScreenRect.Width;
+		_menu.MaximumWidth = ScreenRect.Width;
 
-		var scroller = _menu.Layout.Add( new ScrollArea( this ), 1 );
-		scroller.Canvas = new Widget( scroller )
+		if ( EnableSearch )
+		{
+			var searchRow = _menu.Layout.AddRow();
+			searchRow.Margin = 6;
+			searchRow.Spacing = 6;
+			searchRow.Add( new IconButton( "search" ) { Background = Color.Transparent, TransparentForMouseEvents = true, IconSize = 16 } );
+
+			_searchEdit = new LineEdit { Text = _searchText ?? string.Empty };
+			_searchEdit.MinimumHeight = SearchEntryHeight;
+			_searchEdit.MaximumHeight = SearchEntryHeight;
+			_searchEdit.SetStyles( $"background-color: {SearchEntryBackground.Hex};" );
+			_searchEdit.PlaceholderText = SearchPlaceholder;
+			_searchEdit.TextChanged += value =>
+			{
+				_searchText = value ?? string.Empty;
+				RebuildList();
+			};
+			searchRow.Add( _searchEdit, 0 );
+		}
+
+		_scroller = _menu.Layout.Add( new ScrollArea( this ), 1 );
+		_scroller.Canvas = new Widget( _scroller )
 		{
 			Layout = Layout.Column(),
-			VerticalSizeMode = SizeMode.CanGrow | SizeMode.Expand
+			VerticalSizeMode = SizeMode.CanGrow | SizeMode.Expand,
+			MaximumWidth = ScreenRect.Width
 		};
+		_listCanvas = _scroller.Canvas;
 
-		object[] entries = GetDropdownValues().ToArray();
+		_entries = GetDropdownValues().ToArray();
+		RebuildList();
 
-		foreach ( var o in entries )
+		_menu.Position = ScreenRect.BottomLeft;
+		_menu.Visible = true;
+		_menu.AdjustSize();
+		_menu.ConstrainToScreen();
+		_menu.OnPaintOverride = PaintMenuBackground;
+
+		_searchEdit?.Focus();
+	}
+
+	void RebuildList()
+	{
+		if ( !_menu.IsValid() || !_listCanvas.IsValid() )
+			return;
+
+		_listCanvas.Layout.Clear( true );
+
+		var query = (_searchText ?? string.Empty).Trim();
+		var filtered = string.IsNullOrEmpty( query )
+			? _entries
+			: _entries.Where( x => GetSearchText( x ).Contains( query, global::System.StringComparison.OrdinalIgnoreCase ) ).ToArray();
+
+		if ( filtered.Length == 0 )
 		{
-			var b = scroller.Canvas.Layout.Add( new MenuOption<T>( o, SerializedProperty ) );
+			var hint = _listCanvas.Layout.Add( new Label( "No results" ) );
+			hint.SetStyles( "padding: 8px; opacity: 0.6;" );
+			_listCanvas.AdjustSize();
+			return;
+		}
+
+		foreach ( var o in filtered )
+		{
+			var b = _listCanvas.Layout.Add( new MenuOption<T>( o, SerializedProperty ) );
 			b.MouseLeftPress = () =>
 			{
 				OnItemSelected( o );
@@ -114,16 +187,14 @@ public abstract class DropdownControlWidget<T> : ControlWidget
 			};
 		}
 
-		_menu.Position = ScreenRect.BottomLeft;
-		_menu.Visible = true;
+		_listCanvas.AdjustSize();
 		_menu.AdjustSize();
 		_menu.ConstrainToScreen();
-		_menu.OnPaintOverride = PaintMenuBackground;
 	}
 
 	bool PaintMenuBackground()
 	{
-		Paint.SetBrushAndPen( Theme.ControlBackground );
+		Paint.SetBrushAndPen( Theme.SurfaceBackground );
 		Paint.DrawRect( Paint.LocalRect, 0 );
 		return true;
 	}
