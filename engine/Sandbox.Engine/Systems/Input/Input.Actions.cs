@@ -103,6 +103,28 @@ public static partial class Input
 	}
 
 	/// <summary>
+	/// True if any input action or keyboard key was pressed this command/frame.
+	/// Useful for "press any button" prompts.
+	/// </summary>
+	public static bool AnyPressed()
+	{
+		if ( Application.IsHeadless ) return false;
+		if ( Suppressed ) return false;
+
+		if ( (Actions & ~LastActions) != 0 )
+			return true;
+
+		// Keyboard keys: check for new presses this frame
+		foreach ( var key in CurrentContext.KeysCurrent )
+		{
+			if ( !CurrentContext.KeysPrevious.Contains( key ) )
+				return true;
+		}
+
+		return false;
+	}
+
+	/// <summary>
 	/// Action was pressed but now it isn't
 	/// </summary>
 	[ActionGraphNode( "input.released" ), Pure, Category( "Input" ), Icon( "gamepad" )]
