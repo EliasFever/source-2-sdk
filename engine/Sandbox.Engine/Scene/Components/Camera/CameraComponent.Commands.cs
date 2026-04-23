@@ -1,4 +1,5 @@
 ﻿using Sandbox.Rendering;
+using Sandbox.Engine;
 using Sandbox.Utility;
 
 namespace Sandbox;
@@ -71,6 +72,14 @@ public sealed partial class CameraComponent : Component, Component.ExecuteInEdit
 	private void ExecuteCommandLists( Stage stage, SceneCamera currentCamera )
 	{
 		Scene.RunEvent<IRenderThread>( x => x.OnRenderStage( this, stage ) );
+
+		// RootPanel UI (GlobalContext.Current.UISystem) is simulated on the main thread and builds a single
+		// combined command list. Only execute it for cameras that opt-in to engine overlays, otherwise it will
+		// leak into asset thumbnails, inspector previews, and other editor render targets.
+		if ( stage == Stage.AfterUI && currentCamera?.EnableEngineOverlays == true )
+		{
+			GlobalContext.Current.UISystem?.Render();
+		}
 
 		if ( commandlists.TryGetValue( stage, out var list ) )
 		{
