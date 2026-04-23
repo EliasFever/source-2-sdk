@@ -312,6 +312,21 @@ public partial class StandaloneExporter
 		}
 
 		//
+		// Copy base binaries (.bin) required for bootstrap-time systems (we need this for our UISystem)
+		//
+		if ( _baseAssemblyFiles.Count > 0 )
+		{
+			foreach ( var (relativePath, bytes) in _baseAssemblyFiles )
+			{
+				QueueCopyFile( baseDir, new ProjectFile
+				{
+					Name = relativePath,
+					Contents = bytes
+				}, BuildStep.CopyCode );
+			}
+		}
+
+		//
 		// Copy loose files
 		//
 		{

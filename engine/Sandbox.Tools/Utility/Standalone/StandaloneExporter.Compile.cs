@@ -1,9 +1,14 @@
+using System;
+using System.Text;
 using System.Text.Json;
 
 namespace Editor;
 
 partial class StandaloneExporter
 {
+	// Assemblies that must live inside the base addon folder for bootstrap-time loading.
+	private readonly Dictionary<string, byte[]> _baseAssemblyFiles = new();
+
 	async Task Compile()
 	{
 		var compilerSettings = Project.Config.GetCompileSettings();
@@ -24,12 +29,33 @@ partial class StandaloneExporter
 
 		foreach ( var assembly in generated )
 		{
-			extrafiles[$".bin/{assembly.Compiler.AssemblyName}.dll"] = assembly.AssemblyData;
-			extrafiles[$".bin/{assembly.Compiler.AssemblyName}.xml"] = assembly.XmlDocumentation;
-			extrafiles[$".bin/{assembly.Compiler.AssemblyName}.cll"] = assembly.Archive.Serialize();
-			Logger.Info( $"Adding: {assembly.Compiler.AssemblyName}.dll" );
+			var assemblyName = assembly.Compiler.AssemblyName;
 
-			PeekAssembly( assembly.Compiler.AssemblyName, assembly.AssemblyData );
+			// Base must be loadable before the project assemblies, so ship it with the base addon.
+			if ( string.Equals( assemblyName, "package.base", StringComparison.OrdinalIgnoreCase )
+				|| string.Equals( assemblyName, "package.local.base", StringComparison.OrdinalIgnoreCase ) )
+			{
+				_baseAssemblyFiles[$"addons/base/.bin/{assemblyName}.dll"] = assembly.AssemblyData;
+
+				if ( !string.IsNullOrEmpty( assembly.XmlDocumentation ) )
+					_baseAssemblyFiles[$"addons/base/.bin/{assemblyName}.xml"] = Encoding.UTF8.GetBytes( assembly.XmlDocumentation );
+
+				var archiveBytes = assembly.Archive?.Serialize();
+				if ( archiveBytes is not null && archiveBytes.Length > 0 )
+					_baseAssemblyFiles[$"addons/base/.bin/{assemblyName}.cll"] = archiveBytes;
+
+				Logger.Info( $"Adding: {assemblyName}.dll (base addon)" );
+				PeekAssembly( assemblyName, assembly.AssemblyData );
+				continue;
+			}
+
+			extrafiles[$".bin/{assemblyName}.dll"] = assembly.AssemblyData;
+			if ( assembly.XmlDocumentation is not null && assembly.XmlDocumentation.Length > 0 )
+				extrafiles[$".bin/{assemblyName}.xml"] = assembly.XmlDocumentation;
+			extrafiles[$".bin/{assemblyName}.cll"] = assembly.Archive.Serialize();
+			Logger.Info( $"Adding: {assemblyName}.dll" );
+
+			PeekAssembly( assemblyName, assembly.AssemblyData );
 		}
 
 		_exportConfig.AssemblyFiles = extrafiles;
