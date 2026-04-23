@@ -285,10 +285,12 @@ partial class VertexPaintTool
 				World = world
 			};
 
+			var multiplier = material.ShaderName.StartsWith( "shaders/hl2k_" ) ? 3.1415926f : 0.8f;
+
 			var light = new ScenePointLight( world )
 			{
 				Radius = 4000,
-				LightColor = Color.White * 0.8f,
+				LightColor = Color.White * multiplier,
 				Position = new Vector3( 0, 0, 100 ),
 				ShadowsEnabled = true
 			};
