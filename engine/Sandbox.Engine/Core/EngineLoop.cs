@@ -315,6 +315,11 @@ internal static class EngineLoop
 		TooltipSystem.Frame();
 		PanelRealTime.Update();
 
+		// Tick the project-provided UI system (base installs one that manages DevUI, overlays, etc).
+		// This is separate from the panel UISystem simulation and needs to run even when not "playing"
+		// so editor sessions can lazily create debug roots when toggled.
+		Sandbox.Internal.IUISystem.Current?.Tick();
+
 		using ( _simulateUiGame.Start() )
 		{
 			IGameInstanceDll.Current?.SimulateUI();
