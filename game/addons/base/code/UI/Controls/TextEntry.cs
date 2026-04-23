@@ -1,4 +1,3 @@
-﻿using Sandbox.Rendering;
 using Sandbox.UI.Construct;
 using System.Globalization;
 
@@ -548,23 +547,6 @@ public partial class TextEntry : BaseControl
 	public override void OnDraw()
 	{
 		Label.ShouldDrawSelection = HasFocus;
-
-		var blinkRate = 0.8f;
-
-		if ( HasFocus && !Label.HasSelection() )
-		{
-			var blink = (TimeSinceNotInFocus * blinkRate) % blinkRate < (blinkRate * 0.5f);
-			var caret = Label.GetCaretRect( CaretPosition );
-			caret.Left = MathX.FloorToInt( caret.Left ); // avoid subpixel positions (blurry and ass)
-			caret.Width = 1;
-
-			var color = ComputedStyle.CaretColor ?? ComputedStyle.FontColor ?? Color.Black;
-			color.a *= blink ? 1.0f : 0f;
-
-			Draw.Rect( caret, color );
-		}
-
-		MarkRenderDirty();
 	}
 
 	internal float CaretBlinkTime => TimeSinceNotInFocus;
@@ -824,11 +806,9 @@ protected override bool IsPanelEmpty()
 
 sealed class CaretOverlay : Panel
 {
-	public override bool HasContent => true;
-
 	TextEntry Owner => Parent as TextEntry;
 
-	public override void BuildContentCommandList( CommandList commandList, ref RenderState state )
+	public override void OnDraw()
 	{
 		var owner = Owner;
 		if ( owner is null || !owner.IsValid )
@@ -866,7 +846,7 @@ sealed class CaretOverlay : Panel
 		var color = owner.ComputedStyle.CaretColor ?? owner.ComputedStyle.FontColor ?? Color.Black;
 		color.a *= blink ? 1.0f : 0f;
 
-		commandList.DrawQuad( caret, Material.UI.Box, color );
+		Draw.Rect( caret, color );
 
 		MarkRenderDirty();
 	}

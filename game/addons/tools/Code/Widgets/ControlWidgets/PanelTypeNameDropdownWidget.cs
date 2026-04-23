@@ -11,11 +11,11 @@ public sealed class PanelTypeDropdownWidget : DropdownControlWidget<string>
 {
 	readonly Type _baseType;
 
-	public PanelTypeNameDropdownWidget( SerializedProperty property ) : base( property )
+	public PanelTypeDropdownWidget( SerializedProperty property ) : base( property )
 	{
 		property.TryGetAttribute<PanelTypeDropdownAttribute>( out var attr );
 		if ( attr is null )
-			throw new Exception( "PanelTypeNameDropdownWidget property has no PanelTypeDropdownAttribute" );
+			throw new Exception( "PanelTypeDropdownWidget property has no PanelTypeDropdownAttribute" );
 		_baseType = attr.BaseType ?? typeof( Sandbox.UI.Panel );
 	}
 

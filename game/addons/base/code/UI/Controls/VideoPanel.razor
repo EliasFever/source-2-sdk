@@ -75,8 +75,6 @@
 		ReleaseShared();
 	}
 
-	public override bool HasContent => true;
-
 	public override void Tick()
 	{
 		base.Tick();
@@ -104,7 +102,7 @@
 		}
 	}
 
-	public override void BuildContentCommandList( Sandbox.Rendering.CommandList commandList, ref RenderState state )
+	public override void OnDraw()
 	{
 		if ( _videoPlayer is null )
 			return;
@@ -115,8 +113,15 @@
 		if ( tex is null )
 			return;
 
-		commandList.Attributes.Set( "Texture", tex );
-		commandList.DrawQuad( Box.Rect, Material.UI.Basic, Color.White.WithAlpha( Opacity ) );
+		var fit = ComputedStyle?.ObjectFit switch
+		{
+			ObjectFit.Cover => Length.Cover,
+			ObjectFit.Fill => Length.Percent( 100 ).Value,
+			ObjectFit.Contain => Length.Contain,
+			_ => Length.Contain,
+		};
+
+		DrawBackgroundTexture( tex, fit );
 	}
 
 	void AttachShared( string source )
