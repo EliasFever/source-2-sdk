@@ -308,6 +308,13 @@ public partial class Scene : GameObject
 		var slo = new SceneLoadOptions();
 		slo.IsSystemScene = true;
 		slo.IsAdditive = true;
+		slo.ShowLoadingScreen = false;
+		slo.MinimumLoadingScreenSeconds = 0.0f;
+		slo.RequireInputToContinue = false;
+		slo.RequireInputToContinueOverride = false;
+		slo.ContinueInputAction = null;
+		slo.ContinueInputActionOverride = null;
+		slo.LoadingOverlayPanelTypeNameOverride = null;
 		slo.SetScene( systemScene );
 		Load( slo );
 	}

@@ -13,6 +13,10 @@ internal partial class NetworkSystem
 			// Reset media when first starting a new connection loading phase,
 			// so stale media from a previous session doesn't bleed through.
 			LoadingScreen.Media = null;
+
+			LoadingScreen.CurrentContext = LoadingScreen.Context.NetworkConnect;
+			var policy = ProjectSettings.Loading.GetPolicy( LoadingSettings.LoadingContext.NetworkConnect );
+			LoadingScreen.OverlayPanelTypeName = policy.OverlayPanelTypeName;
 		}
 
 		LoadingScreen.IsVisible = true;

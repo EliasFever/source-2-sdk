@@ -66,6 +66,8 @@ public static partial class MenuUtility
 	static async Task LoadAsync( string ident, bool allowLaunchOverride, CancellationToken ct )
 	{
 		ThreadSafe.AssertIsMainThread();
+		LoadingScreen.CurrentContext = LoadingScreen.Context.SceneTransition;
+		LoadingScreen.OverlayPanelTypeName = ProjectSettings.Loading?.GetPolicy( LoadingSettings.LoadingContext.SceneTransition ).OverlayPanelTypeName;
 		LoadingScreen.IsVisible = true;
 		LoadingScreen.Media = null;
 		LoadingScreen.Title = "Loading Game..";

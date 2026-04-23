@@ -35,6 +35,17 @@ public static partial class Game
 		if ( !Networking.IsHost )
 			return false;
 
+		// Scene.Load intentionally doesn't show the loading overlay for editor scenes unless we're actively playing.
+		// However, callers can still request it via SceneLoadOptions.ShowLoadingScreen (eg, editor buttons/tools).
+		// Handle that here so it also works in-editor.
+		if ( Game.IsEditor && !Game.IsPlaying && options.ShowLoadingScreen )
+		{
+			ActiveScene?.BeginLoadingScreen( options );
+			ActiveScene?.StartLoading();
+			LoadingScreen.IsVisible = true;
+			LoadingScreen.Title = "Loading Scene";
+		}
+
 		// We don't want to send any networked messages to do with deletion or creation
 		// of GameObjects here. Because the client will destroy their scene locally
 		// anyway. This saves us sending a message for potentially 100s of objects.

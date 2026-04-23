@@ -40,6 +40,11 @@ public class ProjectSettings
 	public static SystemsConfig Systems => Get<SystemsConfig>( "Systems.config" );
 
 	/// <summary>
+	/// Get the <see cref="LoadingSettings"/> from the active project settings.
+	/// </summary>
+	public static LoadingSettings Loading => Get<LoadingSettings>( "Loading.config" );
+
+	/// <summary>
 	/// Reset any stored references to Project Settings.
 	/// </summary>
 	internal static void ClearCache()

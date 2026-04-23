@@ -250,6 +250,10 @@ public static class EditorScene
 
 		EditorEvent.Run( "scene.startplay" );
 
+		// Ensure the correct loading overlay is selected before we show the loading screen.
+		LoadingScreen.CurrentContext = LoadingScreen.Context.EditorPlay;
+		LoadingScreen.OverlayPanelTypeName = ProjectSettings.Loading?.GetPolicy( LoadingSettings.LoadingContext.EditorPlay ).OverlayPanelTypeName;
+
 		if ( playMode )
 		{
 			LoadingScreen.IsVisible = true;
@@ -300,6 +304,10 @@ public static class EditorScene
 	{
 		// Close any open overlay modals so they don't persist in the next play session
 		IModalSystem.Current?.CloseAll( true );
+
+		// If we were showing a loading screen during editor play, ensure we tear it down cleanly.
+		LoadingScreen.IsVisible = false;
+		LoadingScreen.ClearContext();
 
 		Game.IsClosing = true;
 

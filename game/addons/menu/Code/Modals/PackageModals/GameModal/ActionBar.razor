@@ -181,6 +181,8 @@
                 return;
             }
 
+            LoadingScreen.CurrentContext = LoadingScreen.Context.Startup;
+            LoadingScreen.OverlayPanelTypeName = ProjectSettings.Loading?.GetPolicy( LoadingSettings.LoadingContext.SceneTransition ).OverlayPanelTypeName;
             LoadingScreen.IsVisible = true;
             LoadingScreen.Title = "Loading..";
             LoadingScreen.Subtitle = "";
@@ -202,6 +204,8 @@
 
     async Task<bool> OnJoinGame()
     {
+        LoadingScreen.CurrentContext = LoadingScreen.Context.NetworkConnect;
+        LoadingScreen.OverlayPanelTypeName = ProjectSettings.Loading?.GetPolicy( LoadingSettings.LoadingContext.NetworkConnect ).OverlayPanelTypeName;
         LoadingScreen.IsVisible = true;
         LoadingScreen.Title = "Finding Game..";
         LoadingScreen.Subtitle = "Please wait while we find a game for you to join.";

@@ -228,6 +228,8 @@ public static partial class Networking
 	{
 		IGameInstanceDll.Current?.CloseGame();
 
+		LoadingScreen.CurrentContext = LoadingScreen.Context.NetworkConnect;
+		LoadingScreen.OverlayPanelTypeName = ProjectSettings.Loading?.GetPolicy( LoadingSettings.LoadingContext.NetworkConnect ).OverlayPanelTypeName;
 		LoadingScreen.IsVisible = true;
 		LoadingScreen.Title = "Server Loading..";
 
@@ -239,6 +241,7 @@ public static partial class Networking
 		{
 			Log.Warning( "Tried to reconnect but no connection string" );
 			LoadingScreen.IsVisible = false;
+			LoadingScreen.ClearContext();
 			return;
 		}
 
@@ -266,6 +269,7 @@ public static partial class Networking
 		}
 
 		LoadingScreen.IsVisible = false;
+		LoadingScreen.ClearContext();
 		Log.Info( "Reconnect failed." );
 	}
 

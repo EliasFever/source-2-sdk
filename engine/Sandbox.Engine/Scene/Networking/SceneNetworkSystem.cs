@@ -246,6 +246,7 @@ public partial class SceneNetworkSystem : GameNetworkSystem
 		connection.SendMessage( loadedMsg, NetFlags.Reliable );
 
 		LoadingScreen.IsVisible = false;
+		LoadingScreen.ClearContext();
 	}
 
 	/// <summary>
@@ -309,6 +310,8 @@ public partial class SceneNetworkSystem : GameNetworkSystem
 	{
 		if ( !Game.IsEditor && msg.ShowLoadingScreen )
 		{
+			LoadingScreen.CurrentContext = LoadingScreen.Context.SceneTransition;
+			LoadingScreen.OverlayPanelTypeName = ProjectSettings.Loading?.GetPolicy( LoadingSettings.LoadingContext.SceneTransition ).OverlayPanelTypeName;
 			LoadingScreen.IsVisible = true;
 			LoadingScreen.Title = "Loading Scene";
 		}

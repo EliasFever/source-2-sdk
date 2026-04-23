@@ -23,12 +23,15 @@ internal static class NetworkConsoleCommands
 	[ConCmd( "joinlobby", ConVarFlags.Protected )]
 	public static async Task FindAndJoinLobby()
 	{
+		LoadingScreen.CurrentContext = LoadingScreen.Context.NetworkConnect;
+		LoadingScreen.OverlayPanelTypeName = ProjectSettings.Loading?.GetPolicy( LoadingSettings.LoadingContext.NetworkConnect ).OverlayPanelTypeName;
 		LoadingScreen.IsVisible = true;
 		LoadingScreen.Title = "Fetching Lobbies";
 
 		if ( Networking.IsActive )
 		{
 			LoadingScreen.IsVisible = false;
+			LoadingScreen.ClearContext();
 			Log.Warning( "You are already connected to a server." );
 			return;
 		}
@@ -45,6 +48,7 @@ internal static class NetworkConsoleCommands
 		if ( !lobbies.Any() )
 		{
 			LoadingScreen.IsVisible = false;
+			LoadingScreen.ClearContext();
 			return;
 		}
 

@@ -328,6 +328,14 @@ internal class GameInstance : IGameInstance
 		Input.ReadConfig( ProjectSettings.Input );
 		Audio.Mixer.LoadFromSettings( ProjectSettings.Mixer, GlobalContext.Current.TypeLibrary );
 		LoadCursors();
+
+		// Apply per-project loading defaults.
+		// These can still be overridden per scene load via SceneLoadOptions.
+		var loading = ProjectSettings.Loading;
+		var policy = loading.GetPolicy( LoadingSettings.LoadingContext.SceneTransition );
+		LoadingScreen.DefaultMinimumVisibleSeconds = MathF.Max( 0.0f, policy.MinimumVisibleSeconds );
+		LoadingScreen.DefaultRequireInputToContinue = policy.RequireInputToContinue;
+		LoadingScreen.DefaultContinueInputAction = policy.ContinueInputAction;
 	}
 
 	/// <summary>
@@ -441,6 +449,10 @@ internal class GameInstance : IGameInstance
 		if ( Application.IsEditor && !Game.IsPlaying )
 			return true;
 
+		// Ensure the latest project settings are applied before we start loading scenes.
+		// This is important in-editor, where settings may have changed just before pressing Play.
+		LoadProjectSettings();
+
 		var startup_dedicated = Package.GetMeta<string>( "DedicatedServerStartupScene", "" );
 		var startup_game = Package.GetMeta<string>( "StartupScene", "start.scene" );
 		var startup_map = Package.GetMeta<string>( "MapStartupScene", null );
@@ -482,8 +494,34 @@ internal class GameInstance : IGameInstance
 			// might be used to load other scenes into it or something.
 			options.IsAdditive = true;
 
+			var loading = ProjectSettings.Loading;
+
+			// Startup is preceded by a native splash screen. By default we avoid showing the UI loading overlay or
+			// blocking on minimum visible time / input gating for this very first load, because the user can't see it
+			// and the splash may swallow input. Projects can optionally enable a startup overlay policy in settings.
+			if ( !Application.IsEditor && !(loading?.EnableStartupOverlay ?? false) )
+			{
+				options.ShowLoadingScreen = false;
+				options.MinimumLoadingScreenSeconds = 0.0f;
+				options.RequireInputToContinue = false;
+				options.RequireInputToContinueOverride = false;
+				options.ContinueInputAction = null;
+				options.ContinueInputActionOverride = null;
+				options.LoadingOverlayPanelTypeNameOverride = null;
+			}
+
 			if ( !options.SetScene( startupScene ) )
 				return false;
+
+			// Tag the initial load so the overlay can pick the appropriate visuals/policy (when shown).
+			if ( options.ShowLoadingScreen )
+			{
+				LoadingScreen.CurrentContext = Application.IsEditor ? LoadingScreen.Context.EditorPlay : LoadingScreen.Context.Startup;
+
+				var ctx = Application.IsEditor ? LoadingSettings.LoadingContext.EditorPlay : LoadingSettings.LoadingContext.Startup;
+				var policy = loading.GetPolicy( ctx );
+				LoadingScreen.OverlayPanelTypeName = policy.OverlayPanelTypeName;
+			}
 
 			Game.ActiveScene.RunEvent<ISceneStartup>( x => x.OnHostPreInitialize( options.GetSceneFile() ) );
 

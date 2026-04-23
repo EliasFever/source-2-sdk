@@ -71,8 +71,11 @@ public partial class Scene : GameObject
 			ProcessDeletes();
 		}
 
-		if ( !IsEditor && options.ShowLoadingScreen )
+		// In editor we usually don't want to show the loading overlay for every scene operation,
+		// but if the game is actively playing (playmode) and the caller requested it, show it.
+		if ( options.ShowLoadingScreen && ( !IsEditor || Game.IsPlaying ) )
 		{
+			BeginLoadingScreen( options );
 			StartLoading();
 			LoadingScreen.IsVisible = true;
 			LoadingScreen.Title = "Loading Scene";

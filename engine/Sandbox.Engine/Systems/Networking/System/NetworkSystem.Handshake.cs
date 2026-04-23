@@ -489,6 +489,7 @@ internal partial class NetworkSystem
 
 		Log.Trace( $"[{this}] I am spawning into the game!" );
 		LoadingScreen.IsVisible = false;
+		LoadingScreen.ClearContext();
 
 		Connection.Local.State = Connection.ChannelState.Connected;
 		source.State = Connection.ChannelState.Connected;

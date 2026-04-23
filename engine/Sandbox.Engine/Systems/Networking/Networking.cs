@@ -742,6 +742,8 @@ public static partial class Networking
 
 	static async Task<bool> JoinSteamLobbyServer( ulong steamid )
 	{
+		LoadingScreen.CurrentContext = LoadingScreen.Context.NetworkConnect;
+		LoadingScreen.OverlayPanelTypeName = ProjectSettings.Loading?.GetPolicy( LoadingSettings.LoadingContext.NetworkConnect ).OverlayPanelTypeName;
 		LoadingScreen.IsVisible = true;
 		LoadingScreen.Title = "Connecting";
 
@@ -749,6 +751,7 @@ public static partial class Networking
 		if ( lobbySocket is null )
 		{
 			LoadingScreen.IsVisible = false;
+			LoadingScreen.ClearContext();
 
 			// Try another one?
 			return false;
@@ -760,6 +763,7 @@ public static partial class Networking
 		if ( System is not null )
 		{
 			LoadingScreen.IsVisible = false;
+			LoadingScreen.ClearContext();
 			Log.Warning( "Network is already active - leaving lobby" );
 			lobbySocket?.Dispose();
 

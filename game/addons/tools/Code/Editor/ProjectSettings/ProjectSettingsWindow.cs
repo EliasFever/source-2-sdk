@@ -169,6 +169,7 @@ internal sealed class ProjectSettingsWindow : Window
 		{
 			AddCategoryToList( typeof( ProjectPage ), "Project" );
 			AddCategoryToList( typeof( GameCategory ), "Project" );
+			AddCategoryToList( typeof( LoadingCategory ), "Project" );
 			AddCategoryToList( typeof( StandaloneCategory ), "Project" );
 			AddCategoryToList( typeof( SystemsPage ), "Systems" );
 

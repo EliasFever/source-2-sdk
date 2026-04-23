@@ -201,6 +201,8 @@ public static partial class Game
 
 		Application.ClearGame();
 
+		LoadingScreen.CurrentContext = LoadingScreen.Context.SceneTransition;
+		LoadingScreen.OverlayPanelTypeName = ProjectSettings.Loading?.GetPolicy( LoadingSettings.LoadingContext.SceneTransition ).OverlayPanelTypeName;
 		LoadingScreen.IsVisible = true;
 
 		// Load new game
