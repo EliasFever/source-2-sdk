@@ -110,6 +110,8 @@ public partial class Popup : BasePopup
 		PopupSourceOffset = offset;
 
 		AddClass( "popup-panel" );
+		// Popups often need wheel scrolling but "drag-to-pan" is undesirable and interferes with selection drags.
+		CanDragScroll = false;
 		PositionMe( true );
 
 		switch ( Position )
