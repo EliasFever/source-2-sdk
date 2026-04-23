@@ -291,6 +291,15 @@ partial class ManagedCommand : Command
 			var oldValue = propertyInfo.GetValue( null );
 			var newValue = value.ToType( propertyInfo.PropertyType );
 
+			if ( propertyInfo.PropertyType.IsEnum
+			     && propertyInfo.PropertyType.GetCustomAttribute<FlagsAttribute>() is null
+			     && newValue is Enum enumValue
+			     && !Enum.IsDefined( propertyInfo.PropertyType, enumValue ) )
+			{
+				Log.Warning( $"Invalid value \"{value}\" for {Name} ({propertyInfo.PropertyType.Name})" );
+				return;
+			}
+
 			if ( newValue is float f )
 			{
 				if ( MinValue.HasValue ) f = Math.Max( f, MinValue.Value );
