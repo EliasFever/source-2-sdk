@@ -1,6 +1,7 @@
 ﻿using Editor;
 
 namespace Editor;
+
 public class Toggle : Widget
 {
 	public Action<bool> ValueChanged;

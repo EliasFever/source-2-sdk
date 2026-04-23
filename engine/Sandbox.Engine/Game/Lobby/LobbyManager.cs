@@ -142,12 +142,12 @@ internal static class LobbyManager
 
 		// TODO - store pending invites somewhere, or something?
 		// What if they're in a game?
-/*
-		using ( IMenuDll.Current?.PushScope() )
-		{
-			IMenuSystem.Current.Question( $"{friend.Name} invited you to a party!", "celebration", () => _ = PartyRoom.Join( lobby ), null );
-		}
-*/
+		/*
+				using ( IMenuDll.Current?.PushScope() )
+				{
+					IMenuSystem.Current.Question( $"{friend.Name} invited you to a party!", "celebration", () => _ = PartyRoom.Join( lobby ), null );
+				}
+		*/
 	}
 
 	static IEnumerable<ILobby> EnumerateLobbies( ulong id )

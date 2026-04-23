@@ -62,7 +62,7 @@ namespace Editor
 				DefaultSplashScreen,
 				Pixmap.FromFile
 			);
-			
+
 			// We get the colors from the splash, so that the progress bar 
 			// matches the overall tone of the image.
 			UpdateProgressColorsFromSplash();

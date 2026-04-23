@@ -138,9 +138,9 @@ public class DebugTextSceneObject : SceneCustomObject
 	private UI.FontSmooth _displayFontSmooth;
 	private Rendering.FilterMode _displayFilterMode;
 	private string _displayFontName;
-	private float  _lastFontSize = -1f;
+	private float _lastFontSize = -1f;
 	private string _cachedText;
-	private float  _nextRefreshTime;
+	private float _nextRefreshTime;
 
 	private const float RefreshInterval = 0.10f;
 	private const float MaxDistanceSquared = 5000f * 5000f;
@@ -156,11 +156,11 @@ public class DebugTextSceneObject : SceneCustomObject
 		RenderLayer = SceneRenderLayer.OverlayWithoutDepth;
 		Flags.CastShadows = false;
 		managedNative.ExecuteOnMainThread = false;
-		
+
 		TextBlock = TextRendering.Scope.Default;
 		InitTextBlock();
 	}
-	
+
 	void InitTextBlock()
 	{
 		TextBlock.FontName = DebugOverlaySystem.DebugFontName;
@@ -247,7 +247,7 @@ public class DebugTextSceneObject : SceneCustomObject
 		   .AppendLine( comp.GetType().Name );
 
 		_sb.Append( "Pos: " )
-		   .AppendLine( FormatVector3(comp.WorldPosition).ToString() );
+		   .AppendLine( FormatVector3( comp.WorldPosition ).ToString() );
 
 		_sb.AppendLine();
 

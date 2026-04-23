@@ -172,7 +172,7 @@ partial class ManagedCommand : Command
 
 	public override void Run( string argstring )
 	{
-		using var contextLocal =  GlobalContext.GameScope();
+		using var contextLocal = GlobalContext.GameScope();
 		using var scope = IGameInstanceDll.Current?.PushScope();
 
 		var caller = Caller ?? Connection.Local;
@@ -292,9 +292,9 @@ partial class ManagedCommand : Command
 			var newValue = value.ToType( propertyInfo.PropertyType );
 
 			if ( propertyInfo.PropertyType.IsEnum
-			     && propertyInfo.PropertyType.GetCustomAttribute<FlagsAttribute>() is null
-			     && newValue is Enum enumValue
-			     && !Enum.IsDefined( propertyInfo.PropertyType, enumValue ) )
+				 && propertyInfo.PropertyType.GetCustomAttribute<FlagsAttribute>() is null
+				 && newValue is Enum enumValue
+				 && !Enum.IsDefined( propertyInfo.PropertyType, enumValue ) )
 			{
 				Log.Warning( $"Invalid value \"{value}\" for {Name} ({propertyInfo.PropertyType.Name})" );
 				return;

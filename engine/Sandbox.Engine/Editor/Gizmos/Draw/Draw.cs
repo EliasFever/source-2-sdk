@@ -204,7 +204,7 @@ public static partial class Gizmo
 				textBlock.Outline.Color = outlineColor ?? Color.Black;
 			}
 			else textBlock.Outline.Enabled = false;
-			
+
 			so.TextBlock = textBlock;
 			so.Transform = Transform.Zero;
 			so.ScreenPos = pos;

@@ -75,25 +75,25 @@ public abstract partial class BaseStyles : ICloneable
 		switch ( property )
 		{
 			case "caret-width":
-			{
-				var l = Length.Parse( value );
-				if ( !l.HasValue ) return false;
-				CaretWidth = l;
-				return true;
-			}
+				{
+					var l = Length.Parse( value );
+					if ( !l.HasValue ) return false;
+					CaretWidth = l;
+					return true;
+				}
 
 			case "caret-blink":
 				CaretBlink = value.ToBool();
 				return true;
 
 			case "caret-blink-rate":
-			{
-				if ( !TryParseTimeSeconds( value, out var seconds ) )
-					return false;
+				{
+					if ( !TryParseTimeSeconds( value, out var seconds ) )
+						return false;
 
-				CaretBlinkRate = MathF.Max( 0.05f, seconds );
-				return true;
-			}
+					CaretBlinkRate = MathF.Max( 0.05f, seconds );
+					return true;
+				}
 
 			case "overflow":
 				return SetOverflow( value, x => Overflow = x );

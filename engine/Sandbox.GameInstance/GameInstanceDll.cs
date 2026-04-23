@@ -649,12 +649,12 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			LoadingScreen.IsVisible = false;
 			LoadingScreen.Media = null;
 
-/*
-			using ( IMenuDll.Current?.PushScope() )
-			{
-				IMenuSystem.Current?.Popup( "error", "Loading Error", $"There was an error when loading this game. {e.Message}" );
-			}
-*/
+			/*
+						using ( IMenuDll.Current?.PushScope() )
+						{
+							IMenuSystem.Current?.Popup( "error", "Loading Error", $"There was an error when loading this game. {e.Message}" );
+						}
+			*/
 			Log.Warning( e, e.Message );
 
 			if ( Application.IsEditor )

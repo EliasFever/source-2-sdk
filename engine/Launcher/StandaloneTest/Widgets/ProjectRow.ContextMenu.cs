@@ -36,11 +36,11 @@ public partial class ProjectRow
 	{
 		menu = new ContextMenu( this );
 		menu.AddSeparator();
-		
+
 		// TODO: I will probably add these launch params in the future, right now we're not using them unlike FP
 		// and maybe we'll have our own too (?)
 
-	//	menu.AddOption( $"Open with Vulkan validation layers", "developer_mode", () => OpenProject( LaunchFlags.VulkanValidation ) );
+		//	menu.AddOption( $"Open with Vulkan validation layers", "developer_mode", () => OpenProject( LaunchFlags.VulkanValidation ) );
 
 		// If the game supports VR, make it so that we can easily open with OpenXR debug layers
 		//if ( ControlModes.VR )

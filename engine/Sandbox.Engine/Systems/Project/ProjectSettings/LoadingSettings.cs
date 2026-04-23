@@ -42,13 +42,13 @@ public class LoadingSettings : ConfigData
 
 	[Group( "Startup" ), ShowIf( nameof( EnableStartupOverlay ), true )]
 	public float StartupMinimumVisibleSeconds { get; set; } = 0.0f;
-	
+
 	[Group( "Startup" ), ShowIf( nameof( EnableStartupOverlay ), true )]
 	public bool StartupRequireInputToContinue { get; set; } = false;
-	
+
 	[Group( "Startup" ), ShowIf( nameof( EnableStartupOverlay ), true )]
 	public string StartupContinueInputAction { get; set; }
-	
+
 	[Group( "Startup" ), ShowIf( nameof( EnableStartupOverlay ), true )]
 	[Title( "Overlay Panel Type" )]
 	[Description( "Fully qualified panel type name (Razor-generated class). Leave empty to use default overlay." )]
@@ -57,13 +57,13 @@ public class LoadingSettings : ConfigData
 
 	[Group( "Scene Transition" )]
 	public float SceneTransitionMinimumVisibleSeconds { get; set; } = 0.0f;
-	
+
 	[Group( "Scene Transition" )]
 	public bool SceneTransitionRequireInputToContinue { get; set; } = false;
-	
+
 	[Group( "Scene Transition" )]
 	public string SceneTransitionContinueInputAction { get; set; }
-	
+
 	[Group( "Scene Transition" )]
 	[Title( "Overlay Panel Type" )]
 	[Description( "Fully qualified panel type name (Razor-generated class). Leave empty to use default overlay." )]
@@ -72,13 +72,13 @@ public class LoadingSettings : ConfigData
 
 	[Group( "Network Connect" )]
 	public float NetworkConnectMinimumVisibleSeconds { get; set; } = 0.0f;
-	
+
 	[Group( "Network Connect" )]
 	public bool NetworkConnectRequireInputToContinue { get; set; } = false;
-	
+
 	[Group( "Network Connect" )]
 	public string NetworkConnectContinueInputAction { get; set; }
-	
+
 	[Group( "Network Connect" )]
 	[Title( "Overlay Panel Type" )]
 	[Description( "Fully qualified panel type name (Razor-generated class). Leave empty to use default overlay." )]
@@ -87,13 +87,13 @@ public class LoadingSettings : ConfigData
 
 	[Group( "Editor Play" )]
 	public float EditorPlayMinimumVisibleSeconds { get; set; } = 0.0f;
-	
+
 	[Group( "Editor Play" )]
 	public bool EditorPlayRequireInputToContinue { get; set; } = false;
-	
+
 	[Group( "Editor Play" )]
 	public string EditorPlayContinueInputAction { get; set; }
-	
+
 	[Group( "Editor Play" )]
 	[Title( "Overlay Panel Type" )]
 	[Description( "Fully qualified panel type name (Razor-generated class). Leave empty to use default overlay." )]

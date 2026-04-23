@@ -734,7 +734,7 @@ internal class SteamLobbySocket : NetworkSocket, ILobby
 		{
 			Networking.Disconnect();
 			IGameInstanceDll.Current.Disconnect();
-		//	IMenuSystem.ShowServerError( "Disconnected", "Lobby Disbanded" );
+			//	IMenuSystem.ShowServerError( "Disconnected", "Lobby Disbanded" );
 			Log.Warning( "Disconnecting - Lobby Disbanded" );
 			return;
 		}

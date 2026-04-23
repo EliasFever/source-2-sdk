@@ -1,4 +1,4 @@
-﻿﻿using Sandbox.Rendering;
+﻿using Sandbox.Rendering;
 using System.Text.Json.Nodes;
 
 namespace Sandbox;
