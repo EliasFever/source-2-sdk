@@ -120,6 +120,12 @@ game/sbox-standalone.runtimeconfig.json
 game/addons/menu/Transients
 game/core/maps/editor/_bakeresourcecache
 
+# Don't ignore base addon stuff
+!game/addons/base/**/*.cs.scss
+!game/addons/base/**/*.razor.scss
+
+
 # Need this for an example in Sweeper, we'll get rid of it in the future
 !game/samples/sweeper/Assets/c17imgseq/*
+!game/samples/sweeper/Assets/**
 !game/samples/sweeper/code/UI/**
