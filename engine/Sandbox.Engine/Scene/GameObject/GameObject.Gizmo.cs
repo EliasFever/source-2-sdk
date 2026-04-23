@@ -165,7 +165,7 @@ public partial class GameObject
 
 			ForEachChild( "DrawGizmos", false, c =>
 			{
-				if ( !c.Flags.Contains( GameObjectFlags.Hidden ) )
+				if ( !c.Flags.Contains( GameObjectFlags.Hidden ) && !c.Tags.Has( "hidden" ) )
 				{
 					c.DrawGizmos();
 				}

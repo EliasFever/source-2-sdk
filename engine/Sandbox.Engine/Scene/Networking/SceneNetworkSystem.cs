@@ -308,7 +308,9 @@ public partial class SceneNetworkSystem : GameNetworkSystem
 	/// </summary>
 	private async Task OnLoadSceneMsg( LoadSceneBeginMsg msg, Connection connection, Guid msgId )
 	{
-		if ( !Game.IsEditor && msg.ShowLoadingScreen )
+		// Always show the loading screen on clients when the host changes scene,
+		// so they see feedback immediately instead of a frozen frame.
+		if ( !Game.IsEditor )
 		{
 			LoadingScreen.CurrentContext = LoadingScreen.Context.SceneTransition;
 			LoadingScreen.OverlayPanelTypeName = ProjectSettings.Loading?.GetPolicy( LoadingSettings.LoadingContext.SceneTransition ).OverlayPanelTypeName;

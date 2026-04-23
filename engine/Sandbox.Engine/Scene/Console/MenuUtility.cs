@@ -132,7 +132,7 @@ public static partial class MenuUtility
 	public static void CancelLoading()
 	{
 		// Close the game
-		CloseGame();
+		//	CloseGame();
 
 		// Close the loading screen
 		LoadingScreen.IsVisible = false;

@@ -44,6 +44,7 @@ public abstract partial class BaseStyles : ICloneable
 		if ( bs._caretwidth != null ) _caretwidth = bs._caretwidth;
 		if ( bs._caretblink != null ) _caretblink = bs._caretblink;
 		if ( bs._caretblinkrate != null ) _caretblinkrate = bs._caretblinkrate;
+		if ( bs._backgroundPlaybackPaused.HasValue ) _backgroundPlaybackPaused = bs._backgroundPlaybackPaused;
 	}
 
 	/// <summary>
@@ -60,6 +61,7 @@ public abstract partial class BaseStyles : ICloneable
 		_caretwidth = bs._caretwidth;
 		_caretblink = bs._caretblink;
 		_caretblinkrate = bs._caretblinkrate;
+		_backgroundPlaybackPaused = bs._backgroundPlaybackPaused;
 	}
 
 	/// <summary>
@@ -158,6 +160,12 @@ public abstract partial class BaseStyles : ICloneable
 			case "scroll":
 				set( OverflowMode.Scroll );
 				return true;
+			case "clip":
+				set( OverflowMode.Clip );
+				return true;
+			case "clip-whole":
+				set( OverflowMode.ClipWhole );
+				return true;
 			case "visible":
 				set( OverflowMode.Visible );
 				return true;
@@ -183,8 +191,7 @@ public abstract partial class BaseStyles : ICloneable
 	{
 		var generated_hash = GetHashCodeGenerated();
 
-		generated_hash = HashCode.Combine( generated_hash, _backgroundImage, _borderImageSource, _maskImage );
-		generated_hash = HashCode.Combine( generated_hash, _caretwidth, _caretblink, _caretblinkrate );
+		generated_hash = HashCode.Combine( generated_hash, _backgroundImage, _borderImageSource, _maskImage, _backgroundPlaybackPaused, _caretwidth, _caretblink, _caretblinkrate );
 
 		return generated_hash;
 	}

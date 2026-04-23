@@ -117,7 +117,7 @@ internal unsafe interface IGameInstanceDll
 	/// <summary>
 	/// Called when the "disconnect" command is ran.
 	/// </summary>
-	public void Disconnect();
+	public void Disconnect( string message = null );
 
 	/// <summary>
 	/// Closes the current GameInstance immediately

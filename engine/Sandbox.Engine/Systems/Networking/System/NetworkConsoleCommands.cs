@@ -25,30 +25,27 @@ internal static class NetworkConsoleCommands
 	{
 		LoadingScreen.CurrentContext = LoadingScreen.Context.NetworkConnect;
 		LoadingScreen.OverlayPanelTypeName = ProjectSettings.Loading?.GetPolicy( LoadingSettings.LoadingContext.NetworkConnect ).OverlayPanelTypeName;
-		LoadingScreen.IsVisible = true;
-		LoadingScreen.Title = "Fetching Lobbies";
-
 		if ( Networking.IsActive )
 		{
-			LoadingScreen.IsVisible = false;
 			LoadingScreen.ClearContext();
 			Log.Warning( "You are already connected to a server." );
 			return;
 		}
 
-		var q = Steamworks.SteamMatchmaking.LobbyList;
-		q = q.FilterDistanceWorldwide();
+		var q = Steamworks.SteamMatchmaking.LobbyList
+			.FilterDistanceWorldwide()
+			.WithKeyValue( "lobby_type", "scene" )
+			.WithMaxResults( 2000 );
 
-		q = q.WithKeyValue( "lobby_type", "scene" );
-
-		q = q.WithMaxResults( 2000 );
-
+		Log.Info( "Finding best lobby..." );
 		var lobbies = await q.RequestAsync( default );
+
+		if ( Networking.IsActive )
+			return;
 
 		if ( !lobbies.Any() )
 		{
 			LoadingScreen.IsVisible = false;
-			LoadingScreen.ClearContext();
 			return;
 		}
 
@@ -58,8 +55,6 @@ internal static class NetworkConsoleCommands
 		}
 
 		var chosen = lobbies.First();
-
-		LoadingScreen.Title = "Joining Lobby";
 		Networking.Connect( chosen.Id );
 	}
 

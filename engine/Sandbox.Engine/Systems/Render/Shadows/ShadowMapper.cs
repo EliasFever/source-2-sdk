@@ -51,6 +51,15 @@ internal partial class ShadowMapper
 
 	int ShadowsAllocated { get; set; }
 
+	/// <summary>
+	/// Lifetime counters for tracking texture allocation health.
+	/// Created - Disposed should equal cache + pool + in-flight at any point.
+	/// If in-flight grows indefinitely, textures are being orphaned.
+	/// </summary>
+	internal static long TotalTexturesCreated { get; private set; }
+	internal static long TotalTexturesReleased { get; private set; }
+	internal static long TotalTexturesDisposed { get; private set; }
+
 
 	public ShadowMapper()
 	{
@@ -73,6 +82,7 @@ internal partial class ShadowMapper
 		GPUProjectedShadows.Clear();
 		GPUProjectedCubeShadows.Clear();
 		GPUDirectionalLightData.CascadeCount = 0;
+		GPUDirectionalLightData.Enabled = false;
 		ShadowsAllocated = 0;
 
 		// Save statistics from last frame, then reset
@@ -114,11 +124,24 @@ internal partial class ShadowMapper
 		public int DesiredResolution;
 		public int DebugLightIndex;
 		public bool IsCube;
+		public string DebugName;
 	}
 
 	public static ConditionalWeakTable<SceneLight, LightEntry> Cache = new();
 
-	public static long MemorySize => Cache.Where( x => x.Value.ShadowMap is not null ).Sum( x => g_pRenderDevice.ComputeTextureMemorySize( x.Value.ShadowMap.native ) );
+	public static long MemorySize
+	{
+		get
+		{
+			long total = 0;
+			foreach ( var kvp in Cache )
+			{
+				if ( kvp.Value.ShadowMap is not null )
+					total += g_pRenderDevice.ComputeTextureMemorySize( kvp.Value.ShadowMap.native );
+			}
+			return total;
+		}
+	}
 
 	struct PooledTexture
 	{
@@ -128,7 +151,7 @@ internal partial class ShadowMapper
 
 	record struct PoolKey( int Resolution, bool IsCube );
 
-	static readonly Dictionary<PoolKey, Stack<PooledTexture>> TexturePool = new();
+	static readonly Dictionary<PoolKey, Queue<PooledTexture>> TexturePool = new();
 
 	/// <summary>
 	/// How long a texture sits unused in the cache before being evicted and returned to the pool.
@@ -143,8 +166,10 @@ internal partial class ShadowMapper
 	static Texture AcquireTexture( int resolution, bool isCube )
 	{
 		var key = new PoolKey( resolution, isCube );
-		if ( TexturePool.TryGetValue( key, out var stack ) && stack.Count > 0 )
-			return stack.Pop().Texture;
+		if ( TexturePool.TryGetValue( key, out var queue ) && queue.Count > 0 )
+			return queue.Dequeue().Texture;
+
+		TotalTexturesCreated++;
 
 		if ( isCube )
 			return Texture.CreateCube( resolution, resolution, LocalShadowDepthFormat ).AsRenderTarget().Finish();
@@ -158,13 +183,14 @@ internal partial class ShadowMapper
 			return;
 
 		var key = new PoolKey( resolution, isCube );
-		if ( !TexturePool.TryGetValue( key, out var stack ) )
+		if ( !TexturePool.TryGetValue( key, out var queue ) )
 		{
-			stack = new Stack<PooledTexture>();
-			TexturePool[key] = stack;
+			queue = new Queue<PooledTexture>();
+			TexturePool[key] = queue;
 		}
 
-		stack.Push( new PooledTexture { Texture = texture, ReturnedAt = RealTime.Now } );
+		queue.Enqueue( new PooledTexture { Texture = texture, ReturnedAt = RealTime.Now } );
+		TotalTexturesReleased++;
 	}
 
 	/// <summary>
@@ -202,10 +228,11 @@ internal partial class ShadowMapper
 		// Dispose pooled textures that have been idle for too long
 		foreach ( var kvp in TexturePool )
 		{
-			var stack = kvp.Value;
-			while ( stack.Count > 0 && now - stack.Peek().ReturnedAt > PoolDisposeTime )
+			var queue = kvp.Value;
+			while ( queue.Count > 0 && now - queue.Peek().ReturnedAt >= PoolDisposeTime )
 			{
-				stack.Pop().Texture?.Dispose();
+				queue.Dequeue().Texture?.Dispose();
+				TotalTexturesDisposed++;
 			}
 		}
 	}
@@ -278,6 +305,8 @@ internal partial class ShadowMapper
 
 	internal int DoDirectionalLight( SceneLight sceneObject, ISceneView view )
 	{
+		GPUDirectionalLightData.Enabled = true;
+
 		if ( !CSMEnabled )
 			return 0;
 

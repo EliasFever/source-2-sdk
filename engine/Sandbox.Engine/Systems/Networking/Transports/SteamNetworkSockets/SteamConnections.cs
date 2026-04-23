@@ -1,6 +1,5 @@
-﻿using System.Collections.Concurrent;
-using NativeEngine;
-using Sandbox.Internal;
+﻿using NativeEngine;
+using Sandbox.Engine;
 using Steamworks;
 using Steamworks.Data;
 using System.Runtime.CompilerServices;
@@ -25,8 +24,7 @@ internal static partial class SteamNetwork
 				return true;
 			}
 
-			Log.Warning( "Disconnecting - Invalid Authentication Ticket" );
-
+			IGameInstanceDll.Current.Disconnect( "Invalid Authentication Ticket" );
 			return false;
 		}
 
@@ -255,19 +253,13 @@ internal static partial class SteamNetwork
 
 			while ( OutgoingMessages.Reader.TryRead( out var msg ) )
 			{
-				var gcHandle = GCHandle.Alloc( msg.Data, GCHandleType.Pinned );
-				var dataPtr = gcHandle.AddrOfPinnedObject();
-
-				PinnedBuffers[dataPtr] = gcHandle;
-
-				var steamMsgPtr = Glue.Networking.AllocateMessageWithManagedBuffer( msg.Connection, dataPtr, msg.Data.Length, msg.Flags );
+				// Let Steam allocate the native buffer so there's no need to pin managed arrays.
+				var steamMsgPtr = Glue.Networking.AllocateMessage( msg.Connection, msg.Data.Length, msg.Flags );
 				if ( steamMsgPtr == IntPtr.Zero )
-				{
-					// Allocation failed, clean up immediately
-					PinnedBuffers.TryRemove( dataPtr, out _ );
-					gcHandle.Free();
 					continue;
-				}
+
+				var nativeBuffer = Glue.Networking.GetMessageDataBuffer( steamMsgPtr );
+				Marshal.Copy( msg.Data, 0, nativeBuffer, msg.Data.Length );
 
 				_messageBatch[batchCount++] = steamMsgPtr;
 
@@ -308,7 +300,7 @@ internal static partial class SteamNetwork
 				for ( var i = 0; i < count; i++ )
 				{
 					var msg = Unsafe.Read<SteamNetworkMessage>( (void*)ptr[i] );
-					var data = new byte[msg.Size];
+					var data = GC.AllocateUninitializedArray<byte>( msg.Size );
 					Marshal.Copy( (IntPtr)msg.Data, data, 0, data.Length );
 
 					var m = new IncomingSteamMessage { Connection = msg.Connection, Data = data };

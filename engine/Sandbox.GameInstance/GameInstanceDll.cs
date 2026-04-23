@@ -2,6 +2,7 @@
 using Sandbox.Audio;
 using Sandbox.Diagnostics;
 using Sandbox.Internal;
+using Sandbox.Modals;
 using Sandbox.UI;
 using Sandbox.Utility;
 using Sandbox.VR;
@@ -21,6 +22,7 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 	PackageLoader.Enroller AssemblyEnroller { get; set; }
 
 	private bool _isAssemblyLoadingPaused;
+	private CancellationTokenSource _loadGameCts;
 
 	public void Bootstrap()
 	{
@@ -54,12 +56,12 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			if ( Application.IsStandalone )
 			{
 				// In standalone, we don't ship code - only assets
-				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, $"/base/assets" );
+				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, $"/base/Assets" );
 				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Root, "/core/" );
 			}
 			else
 			{
-				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, "/base/assets/" );
+				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, "/base/Assets/" );
 				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Addons, "/base/code/" );
 				FileSystem.Mounted.CreateAndMount( EngineFileSystem.Root, "/core/" );
 			}
@@ -214,6 +216,8 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 	/// </summary>
 	public void ResetEnvironment()
 	{
+		using var scope = GlobalContext.GameScope();
+
 		Log.Trace( "Game Menu - ResetEnvironment" );
 
 
@@ -237,7 +241,7 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			DidMountNetworkedFiles = false;
 		}
 
-		FontManager.Instance.Reset();
+		FontManager.Instance.Clear( false );
 		FontManager.Instance.LoadAll( FileSystem.Mounted );
 
 		AssemblyEnroller?.Dispose();
@@ -456,7 +460,11 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 
 	public void CloseGame()
 	{
+		CancelLoad();
+
 		if ( gameInstance is null ) return;
+
+		using var scope = GlobalContext.GameScope();
 
 		ConVarSystem.SaveAll();
 
@@ -597,9 +605,28 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 		BasePopup.CloseAll( panelClickedOn as Panel );
 	}
 
-	public void Disconnect()
+	public void Disconnect( string message = null )
 	{
+		// cancel any in-progress load right now instead of waiting for tick
+		CancelLoad();
 		Game.Close();
+
+		if ( !string.IsNullOrEmpty( message ) )
+		{
+			//	using var scope = GlobalContext.MenuScope();
+			IModalSystem.Current.Notice( "Disconnected", message, "wifi_off" );
+
+			Log.Warning( $"Disconnected: {message.Replace( "\n", "" )}" );
+		}
+
+		LoadingScreen.IsVisible = false;
+	}
+
+	private void CancelLoad()
+	{
+		_loadGameCts?.Cancel();
+		_loadGameCts?.Dispose();
+		_loadGameCts = null;
 	}
 
 	/// <summary>
@@ -610,16 +637,37 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 		try
 		{
 			ThreadSafe.AssertIsMainThread();
-			await LoadGamePackageAsyncInternal( ident, flags, ct );
+
+			_loadGameCts?.Cancel();
+			_loadGameCts?.Dispose();
+			_loadGameCts = CancellationTokenSource.CreateLinkedTokenSource( ct );
+
+			await LoadGamePackageAsyncInternal( ident, flags, _loadGameCts.Token );
 		}
 		catch ( System.Exception e )
 		{
 			LoadingScreen.IsVisible = false;
 			LoadingScreen.Media = null;
 
+/*
+			using ( IMenuDll.Current?.PushScope() )
+			{
+				IMenuSystem.Current?.Popup( "error", "Loading Error", $"There was an error when loading this game. {e.Message}" );
+			}
+*/
 			Log.Warning( e, e.Message );
+
+			if ( Application.IsEditor )
+			{
+				// raise in editor, load has failed and we should alert the user
+				throw;
+			}
 		}
+
+		LoadingScreen.IsVisible = false;
+		LoadingScreen.Media = null;
 	}
+
 
 	public async Task LoadGamePackageAsyncInternal( string ident, GameLoadingFlags flags, CancellationToken ct )
 	{
@@ -629,8 +677,8 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 		//
 		if ( gameInstance is not null && !flags.Contains( GameLoadingFlags.Reload ) )
 		{
-			Package.TryParseIdent( ident, out var iparts );
-			Package.TryParseIdent( gameInstance?.Ident, out var oparts );
+			Package.TryParseIdent( ident, out (string org, string package, int? version, bool local) iparts );
+			Package.TryParseIdent( gameInstance?.Ident, out (string org, string package, int? version, bool local) oparts );
 
 			// No need to recreate - this is the same package (and the same version)
 			if ( iparts.package == oparts.package && iparts.org == oparts.org && iparts.version == oparts.version )
@@ -673,14 +721,7 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 
 		try
 		{
-			if ( Application.IsStandalone )
-			{
-				newInstance = new StandaloneGameInstance( ident, flags );
-			}
-			else
-			{
-				newInstance = new GameInstance( ident, flags );
-			}
+			newInstance = Application.IsStandalone ? new StandaloneGameInstance( ident, flags ) : new GameInstance( ident, flags );
 
 			using var _ = GlobalContext.GameScope();
 
@@ -692,17 +733,15 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 
 			if ( !Application.IsDedicatedServer && !Application.IsStandalone )
 			{
-				await Task.Delay( 10 );
+				await Task.Delay( 10, ct );
 			}
 
 			if ( !await newInstance.LoadAsync( AssemblyEnroller, ct ) )
 			{
-				ResetEnvironment();
-				newInstance.Close();
-				newInstance.Shutdown();
-				newInstance = default;
+				if ( ct.IsCancellationRequested )
+					return;
 
-				throw new System.Exception( "Loading failed." );
+				throw new Exception( "GameInstance load failed" );
 			}
 
 			if ( ct.IsCancellationRequested )
@@ -746,10 +785,7 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			{
 				if ( !gameInstance.OpenStartupScene() )
 				{
-					ResetEnvironment();
-					LoadingScreen.IsVisible = false;
-					LoadingScreen.Media = null;
-					return;
+					throw new Exception( "Failed to load startup scene" );
 				}
 			}
 
@@ -772,6 +808,8 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			// Loading failed
 			if ( newInstance is not null )
 			{
+				using var _ = GlobalContext.GameScope();
+
 				newInstance.Close();
 				newInstance.Shutdown();
 				newInstance = default;
@@ -931,8 +969,11 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			Log.Info( $" with map: '{LaunchArguments.Map}'" );
 		}
 
-		await IGameInstanceDll.Current.LoadGamePackageAsync( gameIdent, GameLoadingFlags.Host, default );
-		Log.Info( $"Load Complete" );
+		LoadingScreen.IsVisible = true;
+		LoadingScreen.Media = null;
+		LoadingScreen.Title = null;
+
+		await Current.LoadGamePackageAsync( gameIdent, GameLoadingFlags.Host, default );
 	}
 
 	public static void Create()

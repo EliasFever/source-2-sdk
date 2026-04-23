@@ -133,6 +133,7 @@ internal class GameInstance : IGameInstance
 		Log.Trace( $"LoadAsync: {Ident} (dev:{IsDeveloperHost})" );
 		SentrySdk.AddBreadcrumb( $"Loading Game {Ident}", "gameinstance.load" );
 
+		LoadingScreen.Title = "Fetching Package Info";
 		_package = await Package.FetchAsync( Ident, false );
 
 		if ( !IsDeveloperHost )
@@ -162,10 +163,16 @@ internal class GameInstance : IGameInstance
 			return true;
 		}
 
+		if ( Package.TypeName != "game" )
+		{
+			throw new Exception( $"Package {Ident} is not a game" );
+		}
+
 		var achievementTask = _package.GetAchievements();
 
 		Log.Trace( $"Install Async {Package.Title}" );
 		LoadingScreen.Title = $"Installing {Package.Title}";
+		LoadingScreen.Media = Package.LoadingScreen.MediaUrl;
 
 		var identWithVersion = Package.FullIdent;
 

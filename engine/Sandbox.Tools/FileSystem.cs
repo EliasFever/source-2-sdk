@@ -79,7 +79,7 @@ public static class FileSystem
 
 		Content = new AggregateFileSystem();
 		Content.CreateAndMount( EngineFileSystem.Root, "/core/" );
-		Content.CreateAndMount( EngineFileSystem.Root, "/addons/base/assets/" );
+		Content.CreateAndMount( EngineFileSystem.Root, "/addons/base/Assets/" );
 		Content.Mount( Cloud );
 
 		foreach ( var addon in Project.All.Where( x => x.Active ) )

@@ -148,12 +148,21 @@ public static partial class Game
 		if ( IGameInstance.Current is not null )
 		{
 			IGameInstance.Current.Close();
-			LaunchArguments.Reset();
+		}
+		else
+		{
+			// Conna: game instance will call disconnect. If we don't have a game instance then we
+			// need to call it ourselves.
+			Networking.Disconnect();
+
+			Application.ClearGame();
 		}
 
-		// Standalone mode and Dedicated Server only: exit whole app
+		LaunchArguments.Reset();
+
 		if ( Application.IsStandalone || Application.IsDedicatedServer )
 		{
+			// exit whole app
 			Application.Exit();
 		}
 	}
@@ -204,11 +213,10 @@ public static partial class Game
 		LoadingScreen.CurrentContext = LoadingScreen.Context.SceneTransition;
 		LoadingScreen.OverlayPanelTypeName = ProjectSettings.Loading?.GetPolicy( LoadingSettings.LoadingContext.SceneTransition ).OverlayPanelTypeName;
 		LoadingScreen.IsVisible = true;
+		LoadingScreen.Media = null;
+		LoadingScreen.Title = null;
 
-		// Load new game
-		Log.Info( $"Loading {gameIdent}.." );
 		await IGameInstanceDll.Current.LoadGamePackageAsync( gameIdent, GameLoadingFlags.Host, default );
-		Log.Info( $"Loading {gameIdent} complete!" );
 	}
 
 	/// <summary>

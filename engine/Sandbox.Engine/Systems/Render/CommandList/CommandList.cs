@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Sandbox.Rendering;
@@ -267,9 +268,16 @@ public sealed unsafe partial class CommandList
 	{
 		static void Execute( ref Entry entry, CommandList commandList )
 		{
-			Graphics.Attributes.SetComboEnum( entry.Token, (T)entry.Object2 );
+			Graphics.Attributes.SetCombo( entry.Token, (int)entry.Data1.x );
 		}
-		AddEntry( &Execute, new Entry { Token = token, Object2 = t } );
+		var intValue = Unsafe.SizeOf<T>() switch
+		{
+			1 => Unsafe.As<T, byte>( ref t ),
+			2 => (int)Unsafe.As<T, short>( ref t ),
+			8 => (int)Unsafe.As<T, long>( ref t ),
+			_ => Unsafe.As<T, int>( ref t )
+		};
+		AddEntry( &Execute, new Entry { Token = token, Data1 = new Vector4( intValue, 0, 0, 0 ) } );
 	}
 
 	[Obsolete]
@@ -697,6 +705,19 @@ public sealed unsafe partial class CommandList
 		}
 
 		AddEntry( &Execute, new Entry { Object1 = indexBuffer, Object2 = material, Object3 = indirectBuffer, Data1 = new Vector4( bufferOffset, (int)primitiveType, 0, 0 ), Object4 = attributes } );
+	}
+
+	/// <summary>
+	/// Draws indexed geometry with instancing. Each instance shares the same index buffer.
+	/// </summary>
+	public void DrawIndexedInstanced( GpuBuffer indexBuffer, Material material, int instanceCount, RenderAttributes attributes = null, Graphics.PrimitiveType primitiveType = Graphics.PrimitiveType.Triangles )
+	{
+		static void Execute( ref Entry entry, CommandList commandList )
+		{
+			Graphics.DrawIndexedInstanced( (GpuBuffer)entry.Object1, (Material)entry.Object2, (int)entry.Data1.x, (RenderAttributes)entry.Object3, (Graphics.PrimitiveType)(int)entry.Data1.y );
+		}
+
+		AddEntry( &Execute, new Entry { Object1 = indexBuffer, Object2 = material, Data1 = new Vector4( instanceCount, (int)primitiveType, 0, 0 ), Object3 = attributes } );
 	}
 
 	/// <summary>

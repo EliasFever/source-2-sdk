@@ -202,7 +202,7 @@ internal static class Bootstrap
 				SyncContext.RunBlocking( IGameInstanceDll.Current.Initialize() );
 			}
 
-			if ( SteamClient.IsValid )
+			if ( SteamClient.IsValid && ErrorReporter.IsUsingSentry )
 			{
 				SentrySdk.ConfigureScope( scope =>
 				{

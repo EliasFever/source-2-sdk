@@ -20,9 +20,9 @@ public partial class ViewportTools : Widget
 
 	void AddSeparator( Layout layout )
 	{
-		layout.AddSpacingCell( Spacing );
+		layout.AddSpacingCell( 4 );
 		layout.Add( new Separator() );
-		layout.AddSpacingCell( Spacing );
+		layout.AddSpacingCell( 4 );
 	}
 
 	public void Rebuild()
@@ -46,7 +46,7 @@ public partial class ViewportTools : Widget
 		};
 
 		var toolbar = toolbarWidget.Layout = Layout.Row();
-		toolbar.Margin = new Sandbox.UI.Margin( 2, Margin, Margin, Margin );
+		toolbar.Margin = new Sandbox.UI.Margin( 2, Margin, 2, Margin );
 		toolbar.Spacing = Spacing;
 
 		var left = toolbar.AddRow( 1 );
@@ -81,6 +81,7 @@ public partial class ViewportTools : Widget
 		toolbar.AddStretchCell();
 
 		var centerGroup = center.Add( AddGroup() );
+		centerGroup.Layout.Spacing = Spacing;
 		BuildPlayToolbar( centerGroup.Layout );
 
 		BuildToolbarRight( right );
@@ -180,8 +181,7 @@ public partial class ViewportTools : Widget
 
 		w.FixedHeight = Theme.RowHeight;
 		w.Layout = Layout.Row();
-		w.Layout.Spacing = Spacing;
-		w.Layout.Margin = new( 2, 0 );
+		w.Layout.Spacing = 2;
 		return w;
 	}
 }

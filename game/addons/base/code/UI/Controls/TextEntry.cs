@@ -88,7 +88,6 @@ public partial class TextEntry : BaseControl
 		set => Label.CaretPosition = value;
 	}
 
-	public override bool HasContent => true;
 
 	/// <summary>
 	/// Whether to allow automatic replacement of emoji codes with their actual unicode emoji characters. See <see cref="Emoji"/>.
@@ -546,9 +545,26 @@ public partial class TextEntry : BaseControl
 	}
 
 
-	public override void BuildContentCommandList( CommandList commandList, ref RenderState state )
+	public override void OnDraw()
 	{
-		// caret is drawn by CaretOverlay child so it renders above glyphs
+		Label.ShouldDrawSelection = HasFocus;
+
+		var blinkRate = 0.8f;
+
+		if ( HasFocus && !Label.HasSelection() )
+		{
+			var blink = (TimeSinceNotInFocus * blinkRate) % blinkRate < (blinkRate * 0.5f);
+			var caret = Label.GetCaretRect( CaretPosition );
+			caret.Left = MathX.FloorToInt( caret.Left ); // avoid subpixel positions (blurry and ass)
+			caret.Width = 1;
+
+			var color = ComputedStyle.CaretColor ?? ComputedStyle.FontColor ?? Color.Black;
+			color.a *= blink ? 1.0f : 0f;
+
+			Draw.Rect( caret, color );
+		}
+
+		MarkRenderDirty();
 	}
 
 	internal float CaretBlinkTime => TimeSinceNotInFocus;

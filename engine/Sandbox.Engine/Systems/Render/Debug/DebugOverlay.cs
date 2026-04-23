@@ -116,6 +116,12 @@ public static partial class DebugOverlay
 			pos.y += OverlaySpacing;
 		}
 
+		if ( overlay_ui == 1 )
+		{
+			DebugOverlay.UI.Draw( ref pos );
+			pos.y += OverlaySpacing;
+		}
+
 		if ( ShadowMapper.DebugEnabled )
 			ShadowMapper.Draw( ref pos, Hud );
 	}
