@@ -1,0 +1,401 @@
+@using Sandbox.UI
+@using System;
+@using System.Linq;
+
+@namespace Sweeper.UI.Loading
+@inherits Panel
+
+<root>
+	
+	<div class="underlay-bg @((UnderlayShown || IsClosing) ? "shown" : "hidden") @(IsClosing ? "outro" : "")" />
+
+	@if (IsActive)
+	{
+		<div class="overlay-shell @(IsClosing ? "outro" : "")">
+			<div class="Content">
+				<div class="LeftColumn">
+					<div class="PresentChapter">
+
+						<div class="Chapter-panel">
+							<div class="ChapterNum h2">Chapter @ChapterDisplay.Number</div>
+							<div class="ChapterTitle h1">@ChapterDisplay.Title</div>
+						</div>
+
+						<div class="ChapterDesc h2">
+							@ChapterDescTyped
+						</div>
+
+					</div>
+
+					<img class="img engine" src="engine-logo.png" />
+				</div>
+
+				<div class="RightColumn">
+					<div class="Russell-tip" style="flex-direction: column;">
+
+						<div class="title row">
+							<img class="img Russell" src="russell-tip.gif" />
+							<div class="title h3">Russell's Tip:</div>
+						</div>
+
+						<div class="text row">
+							<div class="tip-viewport">
+								<div class="@TipClass">@CurrentTip</div>
+							</div>
+							<div class="breaker" />
+						</div>
+
+					</div>
+
+					<div class="status-area">
+						<div class="loading-panel state-panel @(IsLoaded ? "hidden" : "shown")">
+
+							<image class="loading-anim" src="@LoadingAnimSrc" />
+
+							<div class="loading-info">
+								<div class="h3">Please wait</div>
+								<div class="h1 loading-line">
+									<div class="word">LOADING</div>
+									<div class="dots">@LoadingDotsPadded</div>
+								</div>
+							</div>
+
+						</div>
+
+						<div class="loading-panel continue-panel state-panel @(IsLoaded ? "shown" : "hidden")">
+
+							<div class="loading-info">
+								<div class="h3">Press any button</div>
+								<div class="h1">TO START</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+			<div class="background  @((UnderlayShown || IsClosing) ? "shown" : "hidden")" style="background-image: url(@BackgroundUrl);" />
+
+			<div class="bg line" />
+
+			<div class="footer" />
+		</div>
+	}
+
+</root>
+
+@code
+{
+	bool EngineVisible => LoadingScreen.IsVisible;
+	bool IsActive => EngineVisible || LoadingOverlayState.PrewarmRequested || IsClosing;
+
+	bool IsLoaded => LoadingScreen.IsAwaitingInput;
+
+	bool IsClosing { get; set; }
+	float OutroStartedAt { get; set; }
+	bool WasEngineVisible { get; set; }
+	bool WasActive { get; set; }
+	bool UnderlayShown { get; set; }
+	bool UnderlayShowPending { get; set; }
+
+	float OutroDuration { get; set; } = 3.25f;
+
+	string BackgroundUrl => string.IsNullOrWhiteSpace(LoadingScreen.Media) ? "loading_bg.png" : LoadingScreen.Media;
+
+	LoadingOverlayContentSettings Content => 
+		ProjectSettings.Get<LoadingOverlayContentSettings>(filename: "LoadingOverlayContent.config");
+
+	Dictionary<string, string> Chapter => Content?.Chapter ?? new Dictionary<string, string>();
+	string ChapterDesc => !string.IsNullOrWhiteSpace(Content?.ChapterDesc) ? Content.ChapterDesc : FallbackChapterDesc;
+	List<string> Tips => (Content?.Tips?.Count ?? 0) > 0 ? Content.Tips : FallbackTips;
+
+	const string FallbackChapterDesc = "It is five years before the collapse of the Citadel, and the death of Eli Vance.";
+
+	static readonly List<string> FallbackTips = new List<string>()
+	{
+		"Oh, just so you know — the Russells have a built-in display. Shows your resin, ammo. ",
+		"Honestly, if there's a gorilla on the loose I'm not sure a headcrab's gonna make it much worse.",
+		"I downloaded the internet before the war."
+	};
+
+	string ChapterDescTyped => string.IsNullOrEmpty(ChapterDesc) ? "" : ChapterDesc[..Math.Clamp(ChapterDescVisibleCount,
+min: 0, ChapterDesc.Length)];
+
+	const float TipIntervalSeconds = 7.0f;
+	const float TipSwipeSeconds = 0.7f;
+
+	int TipIndex { get; set; }
+	int NextTipIndex { get; set; }
+	int TipPhase { get; set; } // 0 = idle, 1 = exiting, 2 = pre-enter
+	float NextTipAt { get; set; }
+	float TipSwapCommitAt { get; set; }
+	float TipEnterAt { get; set; }
+
+	int LoadingDotCount { get; set; }
+	string LoadingDotsPadded => new string(c: '.', LoadingDotCount).PadRight(totalWidth: 2);
+
+	float ChapterDescTypeDelay { get; set; } = 0.35f;
+	float ChapterDescCharsPerSecond { get; set; } = 55.0f;
+	float ChapterDescShownAt { get; set; }
+	int ChapterDescVisibleCount { get; set; }
+
+	float LoadingAnimFps { get; set; } = 48.0f;
+	const int LoadingAnimFrameCount = 61;
+	float LoadingAnimShownAt { get; set; }
+	int LoadingAnimFrameIndex { get; set; }
+	string LoadingAnimSrc => $"c17imgseq/c17seg{LoadingAnimFrameIndex:0000}.png";
+
+	string TipClass => TipPhase switch
+	{
+		1 => "text tip exiting",
+		2 => "text tip pre-enter",
+		_ => "text tip"
+	};
+
+	string CurrentTip => GetTip(TipIndex);
+
+	(string Number, string Title) ChapterDisplay
+	{
+		get
+		{
+			if (Chapter is null || Chapter.Count == 0)
+				return ("1", "Entanglement");
+
+			KeyValuePair<string, string> selected = Chapter
+				.OrderBy(kvp => int.TryParse(kvp.Key, out int number) ? number : int.MaxValue)
+				.ThenBy(kvp => kvp.Value ?? "", StringComparer.OrdinalIgnoreCase)
+				.First();
+
+			return (selected.Key ?? "", selected.Value ?? "");
+		}
+	}
+
+	public override void Tick()
+	{
+		base.Tick();
+
+		bool activeNow = IsActive;
+		bool shouldUpdateVisuals = EngineVisible || LoadingOverlayState.PrewarmRequested;
+
+		// Deactivated without an outro (eg, prewarm cleared and no real load occurred).
+		if ( !activeNow )
+		{
+			if ( WasActive )
+			{
+				WasActive = false;
+				WasEngineVisible = false;
+				UnderlayShown = false;
+				UnderlayShowPending = false;
+				ResetState();
+			}
+
+			return;
+		}
+
+		// Panel becomes active (either via prewarm or engine loading).
+		if ( activeNow && !WasActive )
+		{
+			WasActive = true;
+			IsClosing = false;
+			UnderlayShown = false;
+			UnderlayShowPending = true;
+			ResetShowState();
+		}
+
+		if ( UnderlayShowPending && activeNow && !IsClosing )
+		{
+			UnderlayShown = true;
+			UnderlayShowPending = false;
+		}
+
+		// Reset per-cycle UI state on real loading start.
+		if ( EngineVisible && !WasEngineVisible )
+		{
+			IsClosing = false;
+			ResetShowState();
+		}
+
+		// Complete the outro and clear any prewarm hold.
+		if ( IsClosing && RealTime.Now >= OutroStartedAt + OutroDuration )
+		{
+			IsClosing = false;
+			WasActive = false;
+			WasEngineVisible = false;
+			UnderlayShown = false;
+			UnderlayShowPending = false;
+			ResetState();
+
+			if ( LoadingOverlayState.PrewarmRequested )
+				LoadingOverlayState.ClearPrewarm();
+			return;
+		}
+
+		// Start outro when engine finishes a real loading phase.
+		if ( WasEngineVisible && !EngineVisible && !IsClosing )
+		{
+			IsClosing = true;
+			OutroStartedAt = RealTime.Now;
+		}
+
+		WasEngineVisible = EngineVisible;
+
+		if ( !shouldUpdateVisuals )
+		{
+			return;
+		}
+
+		UpdateChapterDescTyping();
+		UpdateLoadingAnim();
+		UpdateLoadingDots();
+		UpdateTips();
+	}
+
+	private void ResetState()
+	{
+		ResetTipState();
+		LoadingDotCount = 0;
+		ChapterDescVisibleCount = 0;
+		LoadingAnimFrameIndex = 0;
+		UnderlayShown = false;
+		UnderlayShowPending = false;
+	}
+
+	private void ResetShowState()
+	{
+		ChapterDescShownAt = RealTime.Now;
+		LoadingAnimShownAt = RealTime.Now;
+		ChapterDescVisibleCount = 0;
+		ResetTipState();
+		LoadingDotCount = 0;
+		LoadingAnimFrameIndex = 0;
+	}
+
+	private void UpdateLoadingAnim()
+	{
+		if (IsLoaded)
+		{
+			LoadingAnimFrameIndex = 0;
+			return;
+		}
+
+		float fps = MathF.Max(1.0f, LoadingAnimFps);
+		float elapsed = MathF.Max(0, RealTime.Now - LoadingAnimShownAt);
+		LoadingAnimFrameIndex = (int)(elapsed * fps) % LoadingAnimFrameCount;
+	}
+
+	private void UpdateChapterDescTyping()
+	{
+		if (IsLoaded)
+		{
+			ChapterDescVisibleCount = ChapterDesc?.Length ?? 0;
+			return;
+		}
+
+		string source = ChapterDesc ?? "";
+		if (source.Length == 0)
+		{
+			ChapterDescVisibleCount = 0;
+			return;
+		}
+
+		float elapsed = RealTime.Now - ChapterDescShownAt - ChapterDescTypeDelay;
+		if (elapsed <= 0)
+		{
+			ChapterDescVisibleCount = 0;
+			return;
+		}
+
+		ChapterDescVisibleCount = Math.Clamp((int)(elapsed * ChapterDescCharsPerSecond), 0, source.Length);
+	}
+
+	private void UpdateLoadingDots()
+	{
+		if (IsLoaded)
+		{
+			LoadingDotCount = 0;
+			return;
+		}
+
+		LoadingDotCount = (int)(RealTime.Now * 2.0f) % 3;
+	}
+
+	private void UpdateTips()
+	{
+		if (NextTipAt <= 0)
+		{
+			TipIndex = 0;
+			NextTipIndex = (Tips?.Count ?? 0) > 1 ? 1 : 0;
+			NextTipAt = RealTime.Now + TipIntervalSeconds;
+			return;
+		}
+
+		if (TipPhase == 2)
+		{
+			if (RealTime.Now < TipEnterAt)
+				return;
+
+			TipPhase = 0;
+			return;
+		}
+
+		if (TipPhase == 1)
+		{
+			if (RealTime.Now < TipSwapCommitAt)
+				return;
+
+			TipIndex = NextTipIndex;
+			NextTipIndex = (Tips?.Count ?? 0) > 1 ? (TipIndex + 1) % Tips.Count : TipIndex;
+			NextTipAt = RealTime.Now + TipIntervalSeconds;
+			TipPhase = 2;
+			TipEnterAt = RealTime.Now + 0.01f;
+			return;
+		}
+
+		if (RealTime.Now < NextTipAt)
+			return;
+
+		if (Tips is null || Tips.Count <= 1)
+		{
+			NextTipAt = RealTime.Now + TipIntervalSeconds;
+			return;
+		}
+
+		NextTipIndex = (TipIndex + 1) % Tips.Count;
+		TipPhase = 1;
+		TipSwapCommitAt = RealTime.Now + TipSwipeSeconds;
+	}
+
+	private void ResetTipState()
+	{
+		TipPhase = 0;
+		NextTipAt = 0;
+	}
+
+	private string GetTip(int index)
+	{
+		if (Tips is null || Tips.Count == 0)
+			return "";
+
+		if (index < 0)
+			index = 0;
+
+		return Tips[index % Tips.Count] ?? "";
+	}
+
+	protected override int BuildHash()
+	{
+		HashCode hash = new HashCode();
+		hash.Add( IsActive );
+		hash.Add( IsClosing );
+		hash.Add( UnderlayShown );
+		hash.Add( IsLoaded );
+		hash.Add( BackgroundUrl );
+		hash.Add( LoadingAnimFrameIndex );
+		hash.Add( LoadingDotCount );
+		hash.Add( ChapterDescVisibleCount );
+		hash.Add( TipIndex );
+		hash.Add( TipPhase );
+		return hash.ToHashCode();
+	}
+
+}

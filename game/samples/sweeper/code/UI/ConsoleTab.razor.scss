@@ -1,0 +1,15 @@
+.devgroupwrap
+{
+	flex-direction: column;
+	width: 100%;
+}
+
+.devgroupwrap.nointeract
+{
+	.devgroup-body,
+	.devgroup-footer
+	{
+		opacity: 0.35;
+		pointer-events: none;
+	}
+}

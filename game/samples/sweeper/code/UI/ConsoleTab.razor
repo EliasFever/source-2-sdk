@@ -1,0 +1,115 @@
+@using Sandbox.UI
+@using Sandbox.UI.Dev
+@using Sandbox.Diagnostics;
+@using System;
+
+@inherits Panel
+
+@implements IDevUiTab
+
+@attribute [SkipHotload]
+@attribute [StyleSheet]
+
+<root class="devtab mygame-tab">
+
+	<Columns>
+		<Left>
+			<div class="devgroupwrap @(CanInteract ? "" : "nointeract")">
+			<Group Title="BITCH LOG" Icon="self_improvement">
+				<HeaderRight>
+					<button class="button" onclick="@(() => CanInteract = true)">On</button>
+					<button class="button" onclick="@(() => CanInteract = false)">Off</button>
+				</HeaderRight>
+			
+				<Body>
+					<div class="hint">Some bitches can be logged.</div>
+				</Body>
+
+
+
+				<Footer style=" justify-content: center;">
+					
+					<div class="hint" style=" justify-content: flex-start; opacity: 0.3; flex-grow: 1; ">
+						This can be logged.
+					</div>
+
+						<button class="button" onmousedown=@BitchLog>Log it, Bitch.</button>
+					</Footer>
+				</Group>
+			</div>
+
+				<div class="devgroupwrap">
+				<Group Title="MOVIE" Icon="movie">
+
+					<Body>
+						<div class="hint" style="margin-bottom:12px;"> Watching </div>
+    					
+						<div class="vidwrapper" style="flex-direction: column; border: 1px #454545">
+								
+							<VideoPanel Handle="@_handle" Source="Scene01.mp4" />
+
+							<VideoControls Handle="@_handle" />
+						</div>
+
+						<Row style="padding: 15px;">
+							<Left>
+								<button class="overlay-row">CONSOLE OUTPUT</button>
+							</Left>
+							<Right>
+								<button class="overlay-row right">IMAGE LIT ▾</button>
+							</Right>
+						</Row>
+
+					</Body>
+				
+				</Group>
+				</div>
+			</Left>
+
+			<Right>
+				<div class="devgroupwrap">
+				<Group Title="DANCHING SHEPHARD" Icon="insights" style="">
+
+					<Body>
+						<div class="hint">Not much to say about this one. </div>
+						<img src="sexydance.gif" style="flex-grow: 0; width: 300px; height: 400px; align-self: center;" />
+					</Body>
+
+					<Footer style=" justify-content: center;">
+					
+						<div class="hint" style=" justify-content: center; opacity: 0.3; flex-grow: 1; ">
+							Look at him go!
+						</div>
+					</Footer>
+				</Group>
+				</div>
+
+			</Right>
+	</Columns>
+
+</root>
+
+@code
+{
+	public string DevTabTitle => "Sweeper";
+	public int DevTabOrder => 100;
+	VideoHandle _handle = new VideoHandle();
+
+	bool CanInteract { get; set; } = true;
+
+	static Logger DevLog = new Logger(name: "Swepeer");
+
+	void BitchLog()
+	{
+		string[] BitchQuotes = { "YEAH, MR.WHITE! YEAH, SCIENCE, BITCH!",
+			"This is my own private domicile and I will not be harassed... bitch!",
+			"Yo, Gatorade me bitch.",
+			"I wanted to leave them on the counter, bitch!",
+			"I made you my bitch! Is that...acceptable?!"
+			};
+
+		Random r = new Random();
+		DevLog.Warning(BitchQuotes.GetValue(r.Next(BitchQuotes.Count())));
+	}
+
+}

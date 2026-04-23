@@ -5,9 +5,10 @@
   "Ident": "sweeper",
   "Schema": 1,
   "IncludeSourceFiles": false,
-  "Resources": null,
+  "Resources": ".png",
   "PackageReferences": [],
   "EditorReferences": null,
+  "Mounts": null,
   "IsStandaloneOnly": false,
   "Metadata": {
     "MaxPlayers": 64,
@@ -24,6 +25,7 @@
       "Icon": "view_in_ar",
       "Order": -10,
       "Description": "The bare minimum required to get started in s&box."
-    }
+    },
+    "LaunchMode": "Normal"
   }
 }
