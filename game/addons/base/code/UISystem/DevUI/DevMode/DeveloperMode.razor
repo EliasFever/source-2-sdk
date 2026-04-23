@@ -1,0 +1,57 @@
+@namespace Sandbox.UI.Dev
+@inherits Panel
+
+@attribute [StyleSheet("DeveloperMode.razor.scss")]
+
+<root id="DeveloperMode">
+	<DevWindow @ref="Window"></DevWindow>
+
+</root>
+
+
+@code
+{
+	public Console Console { get; set; }
+	public DevWindow Window { get; set; }
+
+	public static bool Open { get; protected set; }
+
+	// Keep this as an int so it can be set via `devui 0/1`.
+	[ConVar( "devui", Help = "Toggle the developer UI", Saved = true )]
+	public static int DevUI
+	{
+		get => Open ? 1 : 0;
+		set => Open = value != 0;
+	}
+
+	bool wasOpen;
+
+	public override void Tick()
+	{
+		base.Tick();
+
+		// Keep DevLayer's input class in sync even if Open is restored from a saved convar
+		// before this panel exists (or if we somehow miss the transition).
+		FindRootPanel()?.SetClass( "developermode", Open );
+
+		if ( Open != wasOpen )
+		{
+			wasOpen = Open;
+
+			if (Open)
+				Window?.FocusConsole();
+			else
+				Window?.BlurConsole();
+		}
+
+		SetClass("open", Open);
+	}
+
+	public override Panel FindPopupPanel() => this;
+
+	[ConCmd("con_toggle")]
+	static void ToggleConsole()
+	{
+		Open = !Open;
+	}
+}
