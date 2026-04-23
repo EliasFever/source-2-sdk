@@ -31,7 +31,7 @@ IconPanel, i
 	}
 }
 
-.textentry
+Textentry
 {
 	cursor: text;
 	align-items: center;
@@ -41,7 +41,8 @@ IconPanel, i
 	flex-direction: row;
 	position: relative;
 	padding: 10px;
-
+	caret-color: #08f;
+	
 	&.disabled
 	{
 		cursor: default;
@@ -137,9 +138,9 @@ IconPanel, i
 
 .popup-panel
 {
-	background-color: #1b202c;
+	background-color: #3e4549;
 	flex-direction: column;
-	color: #8e9ec2;
+	color: rgb(235, 235, 235);
 	transition: all 0.1s ease-out;
 	position: absolute;
 	z-index: 1000;
@@ -147,8 +148,7 @@ IconPanel, i
 	min-width: 10px;
 	overflow: scroll;
 	pointer-events: all;
-	box-shadow: 3px 3px 64px #000;
-	border-radius: 4px;
+	box-shadow: 2px 0px 12px #0000006d;
 
 	&.medium
 	{
@@ -228,11 +228,13 @@ IconPanel, i
 
 	button
 	{
-		padding: 2px 8px;
+		padding: 2px 10px;
 		cursor: pointer;
-		font-family: Poppins;
-		font-weight: 600;
+		font-family: Roboto Mono;
+		font-weight: 450;
 		flex-shrink: 0;
+		gap: 8px;
+		align-items: center;
 
 		&:hover
 		{

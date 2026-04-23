@@ -22,6 +22,8 @@ public partial class TextEntry : BaseControl
 	/// The <see cref="Label"/> that contains the text of this text entry.
 	/// </summary>
 	protected Label Label { get; init; }
+	internal Label CaretLabel => Label;
+	readonly CaretOverlay Caret;
 
 	bool _disabled;
 
@@ -202,6 +204,17 @@ public partial class TextEntry : BaseControl
 		Label = Add.Label( "", "content-label" );
 		Label.Tokenize = false;
 		Label.Style.WhiteSpace = WhiteSpace.Pre;
+
+		// Draw the caret as a dedicated child so it renders on top of the label text.
+		// TextEntry's content renders before children, which can cause wide carets to be covered by glyphs.
+		Caret = AddChild<CaretOverlay>();
+		Caret.Style.Position = PositionMode.Absolute;
+		Caret.Style.Left = 0;
+		Caret.Style.Top = 0;
+		Caret.Style.Right = 0;
+		Caret.Style.Bottom = 0;
+		Caret.Style.PointerEvents = PointerEvents.None;
+		Caret.Style.Dirty();
 	}
 
 	public override void OnPaste( string text )
@@ -478,11 +491,13 @@ public partial class TextEntry : BaseControl
 	{
 		UpdateAutoComplete();
 		TimeSinceNotInFocus = 0;
+		Caret?.MarkRenderDirty();
 	}
 
 	protected override void OnBlur( PanelEvent e )
 	{
 		//UpdateAutoComplete();
+		Caret?.MarkRenderDirty();
 
 		if ( Numeric )
 		{
@@ -533,25 +548,10 @@ public partial class TextEntry : BaseControl
 
 	public override void BuildContentCommandList( CommandList commandList, ref RenderState state )
 	{
-		Label.ShouldDrawSelection = HasFocus;
-
-		var blinkRate = 0.8f;
-
-		if ( HasFocus && !Label.HasSelection() )
-		{
-			var blink = (TimeSinceNotInFocus * blinkRate) % blinkRate < (blinkRate * 0.5f);
-			var caret = Label.GetCaretRect( CaretPosition );
-			caret.Left = MathX.FloorToInt( caret.Left ); // avoid subpixel positions (blurry and ass)
-			caret.Width = 1;
-
-			var color = ComputedStyle.CaretColor ?? ComputedStyle.FontColor ?? Color.Black;
-			color.a *= blink ? 1.0f : 0f;
-
-			commandList.DrawQuad( caret, Material.UI.Box, color );
-		}
-
-		MarkRenderDirty();
+		// caret is drawn by CaretOverlay child so it renders above glyphs
 	}
+
+	internal float CaretBlinkTime => TimeSinceNotInFocus;
 
 	void RealtimeEmojiReplace()
 	{
@@ -663,6 +663,11 @@ public partial class TextEntry : BaseControl
 
 		if ( Label.IsValid() )
 			Label.Multiline = Multiline;
+
+		Label.ShouldDrawSelection = HasFocus;
+
+		if ( HasFocus )
+			Caret?.MarkRenderDirty();
 
 		if ( !HasFocus )
 			TimeSinceNotInFocus = 0;
@@ -794,9 +799,59 @@ public partial class TextEntry : BaseControl
 	/// <summary>
 	/// The TextEntry has the :empty style when the text is unset
 	/// </summary>
-	protected override bool IsPanelEmpty()
+protected override bool IsPanelEmpty()
 	{
 		return TextLength == 0;
 	}
 
+}
+
+sealed class CaretOverlay : Panel
+{
+	public override bool HasContent => true;
+
+	TextEntry Owner => Parent as TextEntry;
+
+	public override void BuildContentCommandList( CommandList commandList, ref RenderState state )
+	{
+		var owner = Owner;
+		if ( owner is null || !owner.IsValid )
+			return;
+
+		if ( !owner.HasFocus )
+			return;
+
+		if ( owner.CaretLabel.HasSelection() )
+			return;
+
+		var blinkEnabled = owner.ComputedStyle.CaretBlink ?? true;
+		var blinkPeriod = owner.ComputedStyle.CaretBlinkRate ?? 1.0f;
+		blinkPeriod = MathF.Max( 0.05f, blinkPeriod );
+
+		var t = owner.CaretBlinkTime;
+		var blink = !blinkEnabled || (t % blinkPeriod) < (blinkPeriod * 0.5f);
+
+		var caret = owner.CaretLabel.GetCaretRect( owner.CaretPosition );
+
+		// Snap in screen-space so caret thickness/position stays stable across ScaleToScreen values.
+		var caretLeftScreen = caret.Left * owner.ScaleToScreen;
+		caret.Left = MathX.FloorToInt( caretLeftScreen ) * owner.ScaleFromScreen;
+
+		var caretWidth = owner.ComputedStyle.CaretWidth?.GetPixels( owner.Box.RectInner.Width ) ?? 1.0f;
+		var caretWidthScreen = caretWidth * owner.ScaleToScreen;
+		caret.Width = MathF.Max( 1.0f, MathF.Round( caretWidthScreen ) ) * owner.ScaleFromScreen;
+
+		// Keep the caret fully inside the visible region so wider carets don't get clipped at edges.
+		var inner = owner.Box.RectInner;
+		var maxLeft = inner.Right - caret.Width;
+		if ( maxLeft < inner.Left ) maxLeft = inner.Left;
+		caret.Left = caret.Left.Clamp( inner.Left, maxLeft );
+
+		var color = owner.ComputedStyle.CaretColor ?? owner.ComputedStyle.FontColor ?? Color.Black;
+		color.a *= blink ? 1.0f : 0f;
+
+		commandList.DrawQuad( caret, Material.UI.Box, color );
+
+		MarkRenderDirty();
+	}
 }
