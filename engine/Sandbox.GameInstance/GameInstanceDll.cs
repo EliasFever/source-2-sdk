@@ -632,7 +632,7 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 	/// <summary>
 	/// Loads the game asynchronously
 	/// </summary>
-	public async Task LoadGamePackageAsync( string ident, GameLoadingFlags flags, CancellationToken ct )
+	public async Task<bool> LoadGamePackageAsync( string ident, GameLoadingFlags flags, CancellationToken ct )
 	{
 		try
 		{
@@ -642,7 +642,10 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			_loadGameCts?.Dispose();
 			_loadGameCts = CancellationTokenSource.CreateLinkedTokenSource( ct );
 
-			await LoadGamePackageAsyncInternal( ident, flags, _loadGameCts.Token );
+			var token = _loadGameCts.Token;
+			await LoadGamePackageAsyncInternal( ident, flags, token );
+
+			return !token.IsCancellationRequested;
 		}
 		catch ( System.Exception e )
 		{
@@ -666,6 +669,8 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 
 		LoadingScreen.IsVisible = false;
 		LoadingScreen.Media = null;
+
+		return false;
 	}
 
 
