@@ -82,6 +82,7 @@ public static partial class Networking
 					Map = e.Map,
 					Members = e.Players,
 					MaxMembers = e.MaxPlayers,
+					Ping = e.Ping,
 					Data = new()
 				};
 
@@ -155,6 +156,7 @@ public static partial class Networking
 		q = q.WithKeyValue( "protocol", $"{Protocol.Network}" );
 		q = q.WithKeyValue( "api", $"{Protocol.Api}" );
 		q = q.WithNotEqual( "toxic", 1 );
+		q = q.WithNotEqual( "disbanded", 1 );
 
 		foreach ( var filter in filters )
 		{
@@ -202,6 +204,7 @@ public static partial class Networking
 			var item = new LobbyInformation();
 			item.LobbyId = l.Id;
 			item.OwnerId = l.Owner.Id;
+			item.Ping = -1;
 
 			item.MaxMembers = l.MaxMembers;
 			item.Members = l.MemberCount;
