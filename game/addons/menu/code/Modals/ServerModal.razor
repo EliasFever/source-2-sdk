@@ -120,7 +120,7 @@
 	void OpenMapInfo()
 	{
 		if ( MapPackage is null ) return;
-		Game.Overlay.ShowPackageModal( MapPackage.FullIdent );
+		Game.Overlay.ShowMapModal( MapPackage.FullIdent );
 	}
 
 	protected override int BuildHash() => System.HashCode.Combine( Server.LobbyId, GamePackage?.Thumb, MapPackage?.Thumb, MenuHelpers.HasAuthority );

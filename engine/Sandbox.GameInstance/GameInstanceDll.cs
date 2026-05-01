@@ -607,6 +607,17 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 
 	public void Disconnect( string message = null )
 	{
+		if ( !string.IsNullOrEmpty( message ) )
+		{
+			Log.Warning( $"Disconnected: {message.Replace( "\n", "" )}" );
+		}
+
+		if ( Networking.IsMatchmaking )
+		{
+			// don't want any disconnection popups, or to close the game or loading ui - matchmaking should handle all that
+			return;
+		}
+
 		// cancel any in-progress load right now instead of waiting for tick
 		CancelLoad();
 		Game.Close();
@@ -615,8 +626,6 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 		{
 			//	using var scope = GlobalContext.MenuScope();
 			IModalSystem.Current.Notice( "Disconnected", message, "wifi_off" );
-
-			Log.Warning( $"Disconnected: {message.Replace( "\n", "" )}" );
 		}
 
 		LoadingScreen.IsVisible = false;
@@ -985,27 +994,10 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 	{
 		IGameInstanceDll.Current = new GameInstanceDll();
 
-		// PreJIT the methods in these dlls to avoid doing it during the game
-		{
-			var e = new Api.Events.EventRecord( "PreJIT.Game" );
-
-			using ( e.ScopeTimer( "Sandbox.GameInstance" ) )
-			{
-				Sandbox.ReflectionUtility.PreJIT( typeof( GameInstanceDll ).Assembly );
-			}
-
-			using ( e.ScopeTimer( "Sandbox.System" ) )
-			{
-				Sandbox.ReflectionUtility.PreJIT( typeof( Vector3 ).Assembly );
-			}
-
-			using ( e.ScopeTimer( "Sandbox.Engine" ) )
-			{
-				Sandbox.ReflectionUtility.PreJIT( typeof( Bootstrap ).Assembly );
-			}
-
-			e.Submit();
-		}
+		// PreJIT the methods in these dlls on background threads to avoid stalls during gameplay
+		_ = Sandbox.ReflectionUtility.PreJITAsync( typeof( GameInstanceDll ).Assembly );
+		_ = Sandbox.ReflectionUtility.PreJITAsync( typeof( Vector3 ).Assembly );
+		_ = Sandbox.ReflectionUtility.PreJITAsync( typeof( Bootstrap ).Assembly );
 	}
 
 	/// <summary>
