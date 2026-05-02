@@ -1,5 +1,5 @@
 ﻿using Refit;
-using Sandbox.Engine;
+using Sandbox.Internal;
 using Sandbox.Protobuf;
 using System.Collections.Concurrent;
 using System.Net.Http;

@@ -355,6 +355,11 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 		if ( a?.CodeArchiveBytes is null )
 			return;
 
+		// Only send code archives if we're a developer host (editor) or a dedicated server
+		// started with a local project — clients can download remote packages from sbox.game.
+		if ( !Application.IsEditor && !(Application.IsDedicatedServer && Application.GamePackage is LocalPackage) )
+			return;
+
 		//
 		// If we're not a dedicated server OR this isn't a game assembly,
 		// just use the original archive bytes
