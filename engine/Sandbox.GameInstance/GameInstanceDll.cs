@@ -820,6 +820,9 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			if ( !Application.IsEditor )
 			{
 				Game.IsPlaying = true;
+
+				LoadingScreen.Title = flags.Contains( GameLoadingFlags.Host ) ? "Starting Game" : "Joining Game..";
+				await Task.Yield();
 			}
 		}
 		finally
@@ -838,17 +841,8 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 
 	private void OnPackageInstalled( PackageManager.ActivePackage package, string context )
 	{
-		Log.Trace( $"OnPackageInstalled: {package.Package.FullIdent} {context}" );
-
-		// only load if a game context (tools can install packages)
 		if ( context != "game" ) return;
-
-		// Load all the GameResources and fonts in the package
-		if ( package.FileSystem is not null )
-		{
-			ResourceLoader.LoadAllGameResource( package.FileSystem );
-			FontManager.Instance.LoadAll( package.FileSystem );
-		}
+		Log.Trace( $"OnPackageInstalled: {package.Package.FullIdent} {context}" );
 	}
 
 	/// <summary>

@@ -160,7 +160,8 @@ internal class LargeNetworkFiles
 				Log.Info( $"Download file {file}" );
 			}
 
-			LoadingScreen.Title = $"Download file ({currentCount + 1}/{downloadQueue.Count}) {file}";
+			LoadingScreen.Title = $"Downloading Files ({currentCount + 1}/{downloadQueue.Count})";
+			LoadingScreen.Subtitle = file;
 
 			if ( RedirectFileSystem.FileExists( file.NormalizeFilename( true ) ) )
 			{
@@ -195,6 +196,8 @@ internal class LargeNetworkFiles
 
 			currentCount++;
 		}
+
+		LoadingScreen.Subtitle = null;
 
 		downloadQueue.Clear();
 
