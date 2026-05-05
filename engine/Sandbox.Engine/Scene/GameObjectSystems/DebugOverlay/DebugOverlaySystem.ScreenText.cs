@@ -155,7 +155,6 @@ public class DebugTextSceneObject : SceneCustomObject
 	{
 		RenderLayer = SceneRenderLayer.OverlayWithoutDepth;
 		Flags.CastShadows = false;
-		managedNative.ExecuteOnMainThread = false;
 
 		TextBlock = TextRendering.Scope.Default;
 		InitTextBlock();
