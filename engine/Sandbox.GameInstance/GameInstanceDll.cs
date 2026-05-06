@@ -843,6 +843,9 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 	{
 		if ( context != "game" ) return;
 		Log.Trace( $"OnPackageInstalled: {package.Package.FullIdent} {context}" );
+
+		// Register assemblies from this package so types are available immediately.
+		AssemblyEnroller?.LoadPackage( package.Package.FullIdent, true );
 	}
 
 	/// <summary>

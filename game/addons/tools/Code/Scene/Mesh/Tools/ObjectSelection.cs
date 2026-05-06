@@ -406,6 +406,8 @@ public sealed partial class ObjectSelection( MeshTool tool ) : SelectionTool
 
 		foreach ( var go in Scene.GetAllObjects( true ) )
 		{
+			if ( go.Tags.Has( "hidden" ) ) continue;
+
 			var bounds = go.GetBounds();
 			if ( !frustum.IsInside( bounds, !fullyInside ) )
 			{

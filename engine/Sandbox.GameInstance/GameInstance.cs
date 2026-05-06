@@ -190,7 +190,6 @@ internal class GameInstance : IGameInstance
 				}
 			}
 
-			EngineFileSystem.ProjectSettings = new AggregateFileSystem();
 			LoadProjectSettings();
 			SetupFileWatch();
 			return true;
