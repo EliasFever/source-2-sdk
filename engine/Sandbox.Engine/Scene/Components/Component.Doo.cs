@@ -64,7 +64,7 @@ public abstract partial class Component : Doo.IHost
 	/// <summary>
 	/// Returns true if the given Doo is currently running on this component.
 	/// </summary>
-	public bool IsRunning( Doo doo )
+	public bool IsRunningDoo( Doo doo )
 	{
 		if ( _doos == null ) return false;
 
