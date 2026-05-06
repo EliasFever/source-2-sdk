@@ -24,18 +24,15 @@ partial class ObjectSelection
 
 			AddTitle( "Object Mode", "layers" );
 
-			_meshes = so.Targets.OfType<GameObject>()
+			_meshes = [.. so.Targets.OfType<GameObject>()
 				.Select( x => x.GetComponent<MeshComponent>() )
-				.Where( x => x.IsValid() )
-				.ToArray();
+				.Where( x => x.IsValid() )];
 
-			_modelRenderers = so.Targets.OfType<GameObject>()
+			_modelRenderers = [.. so.Targets.OfType<GameObject>()
 				.Select( x => x.GetComponent<ModelRenderer>() )
-				.Where( x => x.IsValid() && x.Model.IsValid() && x.Model.HasRenderMeshes() )
-				.ToArray();
+				.Where( x => x.IsValid() && x.Model.IsValid() && x.Model.HasRenderMeshes() )];
 
-			_gos = so.Targets.OfType<GameObject>()
-				.ToArray();
+			_gos = [.. so.Targets.OfType<GameObject>()];
 
 			{
 				var group = AddGroup( "Operations" );
@@ -95,6 +92,7 @@ partial class ObjectSelection
 
 				CreateButton( "Clipping Tool", "content_cut", "mesh.open-clipping-tool", OpenClippingTool, _meshes.Length > 0, grid );
 				CreateButton( "Mirror Tool", "flip", "mesh.mirror-tool", OpenMirrorTool, _gos.Length > 0, grid );
+				CreateButton( "Boolean Tool", "difference", "mesh.boolean-tool", OpenBooleanTool, _meshes.Length == 2, grid );
 
 				grid.AddStretchCell();
 
@@ -188,6 +186,14 @@ partial class ObjectSelection
 		void OpenMirrorTool()
 		{
 			var tool = new MirrorTool( nameof( ObjectSelection ) );
+			tool.Manager = _tool.Tool.Manager;
+			_tool.Tool.CurrentTool = tool;
+		}
+
+		[Shortcut( "mesh.boolean-tool", "", typeof( SceneViewWidget ) )]
+		void OpenBooleanTool()
+		{
+			var tool = new BooleanTool( nameof( ObjectSelection ) );
 			tool.Manager = _tool.Tool.Manager;
 			_tool.Tool.CurrentTool = tool;
 		}
