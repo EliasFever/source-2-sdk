@@ -30,8 +30,8 @@ public class ToolPropertiesWindow : Widget
 
 		var scroll = new ScrollArea( this )
 		{
-			VerticalSizeMode = SizeMode.Flexible, 
-			HorizontalSizeMode = SizeMode.Flexible, 
+			VerticalSizeMode = SizeMode.Flexible,
+			HorizontalSizeMode = SizeMode.Flexible,
 			VerticalScrollbarMode = ScrollbarMode.Auto,
 			HorizontalScrollbarMode = ScrollbarMode.Off
 		};
@@ -100,7 +100,7 @@ public class ToolPropertiesWindow : Widget
 		using var x = SuspendUpdates.For( this );
 
 		_content.Clear( true );
-		
+
 		// Edge case: We need to pass Terrain Tool a specific way here
 		// In the future they might add a new subtool/handle a certain existing one diff
 		// So might need to update this in the future (?)
@@ -116,40 +116,6 @@ public class ToolPropertiesWindow : Widget
 
 			AddWidgetToContent( terrainWidget );
 			_content.AddStretchCell();
-			
-			return;
-		}
-
-		// Edge case: If FaceTool is active, show TextureTool as well
-		// I don't care what Garry says, face and texture tools come hand in hand
-		if ( tool is MeshEditor.FaceTool faceTool )
-		{
-			// FaceTool comes first
-			var faceWidget =
-				faceTool.CreateToolSidebar()
-				?? faceTool.CreateToolFooter()
-				?? faceTool.CreateShortcutsWidget();
-
-			AddWidgetToContent( faceWidget );
-
-			var activeView = SceneViewWidget.Current;
-			if ( activeView != null )
-			{
-				// TextureTool comes after
-				var textureTool = faceTool.ParentTool.Tools
-					.OfType<MeshEditor.TextureTool>()
-					.FirstOrDefault();
-
-				if ( textureTool != null )
-				{
-					var texWidget =
-						textureTool.CreateToolSidebar()
-						?? textureTool.CreateToolFooter()
-						?? textureTool.CreateShortcutsWidget();
-
-					AddWidgetToContent( texWidget );
-				}
-			}
 
 			return;
 		}
@@ -181,7 +147,7 @@ public class ToolPropertiesWindow : Widget
 		widget.MinimumWidth = 240f;
 		widget.HorizontalSizeMode = SizeMode.Expand | SizeMode.CanGrow;
 		widget.VerticalSizeMode = SizeMode.Default;
-		
+
 		_content.Margin = 0;
 		_content.Add( widget, 1 );
 		_currentToolWidget = widget;

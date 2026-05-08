@@ -19,7 +19,7 @@ partial class FaceTool
 		return new FaceSelectionWidget( GetSerializedSelection(), this );
 	}
 
-	public class FaceSelectionWidget : ToolSidebarWidget
+	public partial class FaceSelectionWidget : ToolSidebarWidget
 	{
 		private readonly MeshFace[] _faces;
 		private readonly List<IGrouping<MeshComponent, MeshFace>> _faceGroups;
@@ -49,6 +49,7 @@ partial class FaceTool
 			SelectByMaterial = EditorCookie.Get( "FaceTool.SelectByMaterial", false );
 			SelectByNormal = EditorCookie.Get( "FaceTool.SelectByNormal", true );
 			NormalThreshold = EditorCookie.Get( "FaceTool.NormalThreshold", 12.0f );
+			LoadTextureSettings();
 
 			if ( _meshTool.CurrentTool is FaceTool ft )
 			{
@@ -63,10 +64,11 @@ partial class FaceTool
 				EditorCookie.Set( "FaceTool.SelectByMaterial", SelectByMaterial );
 				EditorCookie.Set( "FaceTool.SelectByNormal", SelectByNormal );
 				EditorCookie.Set( "FaceTool.NormalThreshold", NormalThreshold );
+				SaveTextureSettings();
 			};
 
 			{
-				var group = AddGroup( "Operations" );
+				var group = AddGroup( "Operations", collapsible: true );
 
 				{
 					var row = new Widget { Layout = Layout.Row() };
@@ -94,26 +96,27 @@ partial class FaceTool
 
 					group.Add( row );
 				}
-			}
 
-			{
-				var group = AddGroup( "Slice" );
+				{
+					var row = new Widget { Layout = Layout.Row() };
+					row.Layout.Spacing = 4;
 
 				var grid = Layout.Row();
-				grid.Spacing = 2;
+				grid.Spacing = 4;
 
-				var control = ControlWidget.Create( tool.GetSerialized().GetProperty( nameof( NumCuts ) ) );
-				control.MinimumWidth = 100; // John: This makes it scale correctly in ToolProperties
-				control.FixedHeight = Theme.ControlHeight;
-				grid.Add( control );
+					var control = ControlWidget.Create( tool.GetSerialized().GetProperty( nameof( NumCuts ) ) );
 
-				CreateSmallButton( "Slice", "line_axis", "mesh.quad-slice", QuadSlice, _faces.Length > 0, grid );
+					control.MinimumWidth = 100; // John: This makes it scale correctly in ToolProperties
+					control.FixedHeight = Theme.ControlHeight;
+					control.ToolTip = "Slice Cuts";
+					row.Layout.Add( control );
 
-				group.Add( grid );
+					group.Add( row );
+				}
 			}
 
 			{
-				var group = AddGroup( "Tools" );
+				var group = AddGroup( "Tools", collapsible: true );
 
 				var grid = Layout.Row();
 				grid.Spacing = 4;
@@ -129,10 +132,12 @@ partial class FaceTool
 				group.Add( grid );
 			}
 
+			BuildTextureUI( so, target );
+
 			Layout.AddStretchCell();
 
 			{
-				var group = AddGroup( "Filtered Selection [Alt + Double Click]" );
+				var group = AddGroup( "Filtered Selection [Alt + Double Click]", collapsible: true );
 
 				var normalRow = Layout.Row();
 				normalRow.Spacing = 4;

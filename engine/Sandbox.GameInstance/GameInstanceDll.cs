@@ -303,7 +303,6 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 			Game.NodeLibrary.AddAssembly( a.Assembly );
 			ConVarSystem.AddAssembly( a.Assembly, "game" );
 			Cloud.UpdateTypes( a.Assembly );
-			Json.Initialize();
 			JsonUpgrader.UpdateUpgraders( TypeLibrary );
 
 			if ( !a.IsEditorAssembly && a.CodeArchiveBytes is not null )
@@ -762,6 +761,8 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 
 				throw new Exception( "GameInstance load failed" );
 			}
+
+			Json.PopulateReflectionCache( Game.TypeLibrary );
 
 			if ( ct.IsCancellationRequested )
 				return;

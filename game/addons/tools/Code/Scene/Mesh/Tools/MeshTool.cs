@@ -38,8 +38,7 @@ public partial class MeshTool : EditorTool
 		yield return new ObjectSelection( this );
 		yield return new VertexTool( this );
 		yield return new EdgeTool( this );
-		yield return new FaceTool( this ); 
-		yield return new TextureTool( this );
+		yield return new FaceTool( this );
 		yield return new VertexPaintTool( this );
 		yield return new DisplacementTool( this );
 	}
