@@ -866,6 +866,7 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 	public void OnRender( SwapChainHandle_t swapChain )
 	{
 		Game.Render( swapChain );
+		CCameraRenderer.RenderOverlay( swapChain );
 	}
 
 	/// <summary>
