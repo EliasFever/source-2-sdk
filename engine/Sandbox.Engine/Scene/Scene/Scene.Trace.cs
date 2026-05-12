@@ -323,6 +323,36 @@ public partial struct SceneTrace
 	}
 
 	/// <summary>
+	/// Casts a cone (base at bottom, apex at top).
+	/// </summary>
+	public readonly SceneTrace Cone( float height, float baseRadius )
+	{
+		var t = this;
+		t.PhysicsTrace = PhysicsTrace.Cone( height, baseRadius );
+		return t;
+	}
+
+	/// <summary>
+	/// Casts a cone from point A to point B.
+	/// </summary>
+	public SceneTrace Cone( float height, float baseRadius, in Vector3 from, in Vector3 to )
+	{
+		var t = this;
+		t.PhysicsTrace = PhysicsTrace.Cone( height, baseRadius, from, to );
+		return t;
+	}
+
+	/// <summary>
+	/// Casts a cone from a given position and direction, up to a given distance.
+	/// </summary>
+	public SceneTrace Cone( float height, float baseRadius, in Ray ray, in float distance )
+	{
+		var t = this;
+		t.PhysicsTrace = PhysicsTrace.Cone( height, baseRadius, ray, distance );
+		return t;
+	}
+
+	/// <summary>
 	/// Casts a ray from point A to point B.
 	/// </summary>
 	public SceneTrace Ray( in Vector3 from, in Vector3 to )
