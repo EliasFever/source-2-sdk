@@ -380,6 +380,26 @@ sealed public partial class Rigidbody : Component, Component.ExecuteInEditor, IG
 	}
 
 	/// <summary>
+	/// When enabled, contacts are freshly computed each frame instead of being
+	/// recycled from the previous frame. Enable on characters and player controllers
+	/// to avoid ghost collisions. Disabled by default for better performance and
+	/// improved stacking stability.
+	/// </summary>
+	[Advanced, Property]
+	public bool PreciseContacts
+	{
+		get;
+		set
+		{
+			if ( field == value ) return;
+
+			field = value;
+
+			if ( _body.IsValid() ) _body.PreciseContacts = value;
+		}
+	}
+
+	/// <summary>
 	/// The speed threshold below which this body will be put to sleep. Units per second.
 	/// Increase this to make the body sleep sooner, which is useful for stacking stability.
 	/// </summary>
@@ -505,6 +525,7 @@ sealed public partial class Rigidbody : Component, Component.ExecuteInEditor, IG
 		_body.AngularVelocity = _lastAngularVelocity;
 
 		_body.EnhancedCcd = EnhancedCcd;
+		_body.PreciseContacts = PreciseContacts;
 		_body.SleepThreshold = SleepThreshold;
 
 		// Make sure we clear these so we don't reapply them again later

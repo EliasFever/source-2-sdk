@@ -1305,4 +1305,16 @@ public sealed partial class PhysicsBody : IHandle
 	{
 		set => native.SetBullet( value );
 	}
+
+	/// <summary>
+	/// When enabled, contacts are freshly computed each frame instead of being
+	/// recycled from the previous frame. Enable on characters and player controllers
+	/// to avoid ghost collisions. Disabled by default for better performance and
+	/// improved stacking stability.
+	/// </summary>
+	public bool PreciseContacts
+	{
+		get => !native.IsContactRecyclingEnabled();
+		set => native.SetContactRecycling( !value );
+	}
 }

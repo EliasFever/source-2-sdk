@@ -946,6 +946,11 @@ public enum SceneCameraDebugMode
 	QuadOverdraw = 100,
 	[Title( "Overdraw" ), Icon( "layers" )]
 	Overdraw = 101,
+	[Title( "Motion Vectors" ), Icon( "animation" )]
+	MotionVectors = 102,
+	[Title( "Reactive Mask" ), Icon( "shield" )]
+	ReactiveMask = 103,
+
 	[Title( "Ambient Occlusion (Diffuse)" ), Icon( "radio_button_checked" )]
 	AmbientOcclusion = 14,
 
