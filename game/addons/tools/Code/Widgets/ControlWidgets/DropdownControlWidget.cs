@@ -16,7 +16,6 @@ public abstract class DropdownControlWidget<T> : ControlWidget
 
 	public DropdownControlWidget( SerializedProperty property ) : base( property )
 	{
-		Layout = Layout.Row();
 		Cursor = CursorShape.Finger;
 	}
 

@@ -22,8 +22,6 @@ public sealed partial class PlayerController : Component
 		Body.CollisionEventsEnabled = true;
 		Body.CollisionUpdateEventsEnabled = true;
 		Body.RigidbodyFlags = RigidbodyFlags.DisableCollisionSounds;
-		Body.PreciseContacts = true;
-		Body.EnhancedCcd = true;
 
 		BodyCollider = ColliderObject.GetOrAddComponent<CapsuleCollider>();
 		FeetCollider = ColliderObject.GetOrAddComponent<BoxCollider>();
