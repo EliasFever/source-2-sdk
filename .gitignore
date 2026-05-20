@@ -123,7 +123,7 @@ game/core/maps/editor/_bakeresourcecache
 # Don't ignore base addon stuff
 !game/addons/base/**/*.cs.scss
 !game/addons/base/**/*.razor.scss
-
+!game/addons/base/Assets/ui/static/**
 
 # Need this for an example in Sweeper, we'll get rid of it in the future
 !game/samples/sweeper/Assets/c17imgseq/*
