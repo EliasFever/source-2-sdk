@@ -101,8 +101,7 @@ partial class FaceTool
 					var row = new Widget { Layout = Layout.Row() };
 					row.Layout.Spacing = 4;
 
-				var grid = Layout.Row();
-				grid.Spacing = 4;
+					CreateButton( "Slice", "grid_4x4", "mesh.quad-slice", QuadSlice, _faces.Length > 0, row.Layout );
 
 					var control = ControlWidget.Create( tool.GetSerialized().GetProperty( nameof( NumCuts ) ) );
 
