@@ -3,3 +3,5 @@ game\addons\menu\*
 game\core\tools\images\common\hang_detected.png
 game\core\tools\images\common\workshop_banner.png
 game\core\materials\default\default_mask.tga
+game\core\materials\default\default_ao.tga
+game\core\materials\default\default_black_mask.tga
