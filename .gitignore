@@ -115,6 +115,8 @@ game/sbox-standalone.runtimeconfig.json
 !game/core/materials/default/default_mask.tga
 !game/core/materials/default/default_ao.tga
 !game/core/materials/default/default_black_mask.tga
+!game/core/sounds/editor/*
+game/core/sounds/editor/*.vsnd_c
 game/addons/menu/Transients
 game/core/maps/editor/_bakeresourcecache
 
