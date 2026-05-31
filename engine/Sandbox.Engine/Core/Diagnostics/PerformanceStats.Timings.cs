@@ -29,6 +29,7 @@ public static partial class PerformanceStats
 		public static Timings Ui { get; } = Get( "UI", "#b4869f" );
 		public static Timings Video { get; } = Get( "Video", "#f5cac3" );
 		public static Timings GcPause { get; } = Get( "GcPause", "#00f5d4" );
+		public static Timings AI { get; } = Get( "AI", "#3301a8" );
 
 		/// <summary>
 		/// Return a list of the main top tier timings we're interested in
@@ -39,7 +40,7 @@ public static partial class PerformanceStats
 
 		private static ReadOnlyCollection<Timings> BuildMain()
 		{
-			var list = new List<Timings> { Async, Animation, Audio, GcPause, Input, NavMesh, Network, Particles, Physics, Render, Update, Ui, Video };
+			var list = new List<Timings> { AI, Async, Animation, Audio, GcPause, Input, NavMesh, Network, Particles, Physics, Render, Update, Ui, Video };
 			if ( Application.IsEditor )
 				list.Add( Editor );
 			return list.AsReadOnly();
@@ -106,7 +107,7 @@ public static partial class PerformanceStats
 		long ticks;
 		double milliseconds;
 
-		internal Performance.ScopeSection Scope()
+		public Performance.ScopeSection Scope()
 		{
 			_superluminal.Start();
 
