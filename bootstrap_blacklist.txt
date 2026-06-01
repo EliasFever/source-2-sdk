@@ -5,4 +5,4 @@ game\core\tools\images\common\workshop_banner.png
 game\core\materials\default\default_mask.tga
 game\core\materials\default\default_ao.tga
 game\core\materials\default\default_black_mask.tga
-!game/core/sounds/editor/*
+game\core\sounds\editor\*
