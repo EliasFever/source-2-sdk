@@ -591,14 +591,14 @@ sealed public partial class Rigidbody : Component, Component.ExecuteInEditor, IG
 	internal Transform? TargetTransform { get; set; }
 
 	/// <summary>
-	/// Linear velocity before physics step. Internal until someone needs them.
+	/// Linear velocity before physics step.
 	/// </summary>
-	internal Vector3 PreVelocity { get; private set; }
+	public Vector3 PreVelocity { get; private set; }
 
 	/// <summary>
-	/// Angular velocity before physics step. Internal until someone needs them.
+	/// Angular velocity before physics step.
 	/// </summary>
-	internal Vector3 PreAngularVelocity { get; private set; }
+	public Vector3 PreAngularVelocity { get; private set; }
 
 	bool _isSimulatingPhysics;
 
