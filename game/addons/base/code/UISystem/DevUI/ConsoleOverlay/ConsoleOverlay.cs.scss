@@ -1,30 +1,28 @@
-
-consoleoverlay
-{
+consoleoverlay {
 	position: absolute;
 	left: 20px;
 	right: 20px;
 	top: 10px;
 	font-family: Roboto Mono;
 	flex-direction: column;
+	pointer-events: none;
 
-	&.hidden { display: none; }
+	&.hidden {
+		display: none;
+	}
 
-	.output
-	{
+	.output {
 		flex-direction: column;
 		justify-content: flex-end;
 		overflow: hidden;
 		flex-grow: 1;
 
-		ConsoleEntry
-		{
+		ConsoleEntry {
 			flex-shrink: 0;
 			color: #fff;
 			cursor: pointer;
 
-			label
-			{
+			label {
 				text-shadow: 2px 2px 0px #000;
 				padding: 2px 10px;
 				font-size: 12px;
@@ -32,21 +30,17 @@ consoleoverlay
 				background-color: #000d;
 			}
 
-			&.trace
-			{
+			&.trace {
 				color: #b6ff00;
 			}
 
-			&.warn
-			{
+			&.warn {
 				color: #ffd800;
 			}
 
-			&.error
-			{
+			&.error {
 				color: #ff0000;
 			}
 		}
 	}
 }
-
