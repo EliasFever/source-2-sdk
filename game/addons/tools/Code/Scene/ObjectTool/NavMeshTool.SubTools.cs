@@ -71,9 +71,36 @@ public class NavTestSettings : EditorTool
 
 			var so = EditorTypeLibrary.GetSerializedObject( SceneEditorSession.Active.Scene.NavMesh );
 
-			var control = new ControlSheet();
-			control.AddObject( so );
-			Layout.Add( control );
+			// This is how this used to work, keeping it here if Facepunch 
+			// adds something new and I need to rollback rq.
+
+			// var oldControl = new ControlSheet();
+			// oldControl.AddObject( so );
+			// Layout.Add( oldControl );
+
+			AddRows( AddGroup( "General" ), so,
+				"IsEnabled" );
+
+			AddRows( AddGroup( "Generation Input" ), so,
+				"IncludeStaticBodies",
+				"IncludeKeyframedBodies",
+				"ExcludedBodies",
+				"IncludedBodies",
+				"DeferGeneration" );
+
+			AddRows( AddGroup( "Bounds" ), so,
+				"CustomBounds",
+				"Bounds" );
+
+			AddRows( AddGroup( "Editor" ), so,
+				"EditorAutoUpdate",
+				"DrawMesh" );
+
+			AddRows( AddGroup( "Agent" ), so,
+				"AgentHeight",
+				"AgentRadius", 	
+				"AgentStepSize",
+				"AgentMaxSlope" );
 
 			so.OnPropertyChanged = ( p ) =>
 			{
@@ -81,7 +108,7 @@ public class NavTestSettings : EditorTool
 				SceneEditorSession.Active.HasUnsavedChanges = true;
 			};
 
-			Layout.AddSpacingCell( 8 );
+			Layout.AddSpacingCell( 5 );
 
 			Layout.Add( new Button( "Rebuild", "autorenew" )
 			{
@@ -93,6 +120,96 @@ public class NavTestSettings : EditorTool
 			} );
 
 			Layout.AddStretchCell();
+		}
+
+		private static void AddRows( Layout layout, SerializedObject serializedObject, params string[] propertyNames )
+		{
+			foreach ( var propertyName in propertyNames )
+			{
+				var property = serializedObject.GetProperty( propertyName );
+				if ( property is null )
+					continue;
+
+				var row = new CompactPropertyRow( property );
+				if ( row.IsValid() )
+					layout.Add( row );
+			}
+		}
+
+		private class CompactPropertyRow : Widget
+		{
+			private readonly SerializedProperty Property;
+
+			public CompactPropertyRow( SerializedProperty property )
+			{
+				Property = property;
+				HorizontalSizeMode = SizeMode.Flexible;
+				VerticalSizeMode = SizeMode.CanShrink;
+				MinimumWidth = 0;
+
+				Layout = Layout.Row();
+				Layout.Spacing = 4;
+				Layout.Margin = new Margin( 0, 1 );
+
+				var isBool = property.PropertyType == typeof( bool );
+				var label = new Label( property.DisplayName )
+				{
+					MinimumWidth = 0,
+					HorizontalSizeMode = SizeMode.CanShrink,
+					Alignment = TextFlag.LeftCenter
+				};
+
+				var hideLabel = property.Name == "Bounds";
+
+				if ( !isBool && !hideLabel )
+					label.FixedWidth = 104;
+
+				var control = ControlSheetRow.CreateEditor( property );
+				if ( !control.IsValid() )
+				{
+					Destroy();
+					return;
+				}
+
+				control.MinimumWidth = 0;
+
+				if ( isBool )
+				{
+					control.FixedWidth = Theme.RowHeight;
+					control.FixedHeight = Theme.RowHeight;
+					control.HorizontalSizeMode = SizeMode.CanShrink;
+				}
+				else
+				{
+					control.HorizontalSizeMode = SizeMode.Flexible;
+				}
+
+				if ( isBool )
+				{
+					label.HorizontalSizeMode = SizeMode.CanShrink;
+					Layout.Add( control, 0 );
+					Layout.Add( label, 0 );
+					Layout.AddStretchCell();
+				}
+				else
+				{
+					if ( !hideLabel )
+						Layout.Add( label, 0 );
+
+					Layout.Add( control, 1 );
+				}
+
+				ToolTip = ControlSheetFormatter.GetPropertyToolTip( property );
+			}
+
+			[EditorEvent.Frame]
+			private void UpdateVisibility()
+			{
+				if ( !IsValid || Parent is null || Property is null )
+					return;
+
+				Hidden = !Property.ShouldShow();
+			}
 		}
 	}
 }
