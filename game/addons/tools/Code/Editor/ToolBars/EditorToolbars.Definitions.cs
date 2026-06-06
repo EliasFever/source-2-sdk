@@ -104,7 +104,10 @@ public static partial class EditorToolBars
 				Group = "MainTools",
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
-				Description="Add new objects to the scene" },
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.SelectEntityTool,
+				Description="Add new objects to the scene",
+				ActiveResolver = () => EditorToolBarsActions.IsEntityToolActive() },
 
 			new() { Name="Block Tool",
 				ShortcutAction = "tools.block-tool",
@@ -240,7 +243,10 @@ public static partial class EditorToolBars
 				Group = "MainTools",
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
-				Description="Place pre-configured groups of objects on to a surface with randomization" },
+				ActionType = ToolActionType.MethodCall,
+				Method = EditorToolBarsActions.SelectClutterTool,
+				Description="Place pre-configured groups of objects on to a surface with randomization", 				
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( ClutterTool ) },
 
 			// John: These are very specific, pretty much not used in CS2/HLVR/HLX
 			// So for now just commenting it out.

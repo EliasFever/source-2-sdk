@@ -760,11 +760,27 @@ public static class EditorToolBarsActions
 	public static void SelectPathTool()
 		=> ActiveProjectTool( "PathTool" );
 
+	public static void SelectEntityTool()
+	{
+		if ( TryActivateProjectTool( "EntityPlacer" ) )
+			return;
+
+		if ( TryActivateProjectTool( "EntityTool" ) )
+			return;
+
+		Log.Warning( "Entity tool not found. Expected a project EditorTool named 'EntityPlacer' or a native EditorTool named 'EntityTool'." );
+	}
+
+	public static bool IsEntityToolActive()
+		=> IsCurrentTool( "EntityPlacer" ) || IsCurrentTool( "EntityTool" );
+
 	public static void SelectPhysicsTool()
 		=> Activate( nameof( PhysicsEditorTool ) );
 
 	public static void SelectTerraintool()
 		=> Activate( nameof( TerrainEditorTool ) );
+	public static void SelectClutterTool()
+		=> Activate( nameof( ClutterTool ) );
 
 	public static void SelectClippingTool()
 		=> OpenMeshSubTool( () => new ClipTool() );
@@ -832,13 +848,56 @@ public static class EditorToolBarsActions
 
 	public static void ActiveProjectTool( string tool )
 	{
+		if ( !TryActivateProjectTool( tool ) )
+			Log.Warning( $"Tool '{tool?.Trim()}' not found. Skipping activation." );
+	}
+
+	private static bool TryActivateProjectTool( string tool )
+	{
 		if ( string.IsNullOrWhiteSpace( tool ) )
-			return;
+			return false;
 
 		string toolName = tool.Trim();
 
-		// Resolve by full name or simple type name across loaded assemblies.
-		Type toolType = AppDomain.CurrentDomain.GetAssemblies()
+		var editorToolType = FindEditorToolType( toolName );
+		if ( editorToolType != null )
+		{
+			Activate( editorToolType.Name );
+			return true;
+		}
+
+		var toolType = FindType( toolName );
+		if ( toolType == null )
+			return false;
+
+		var ownerToolType = EditorTypeLibrary.GetTypesWithAttribute<EditorToolAttribute>()
+			.Select( x => x.Type )
+			.FirstOrDefault( t => t.TargetType == toolType || t.TargetType.IsAssignableFrom( toolType ) );
+
+		if ( ownerToolType?.TargetType != null )
+		{
+			Activate( ownerToolType.Name, toolType.Name );
+			return true;
+		}
+
+		return false;
+	}
+
+	private static bool IsCurrentTool( string toolName )
+	{
+		var toolType = FindEditorToolType( toolName );
+		return toolType != null && string.Equals( EditorToolManager.CurrentModeName, toolType.Name, StringComparison.Ordinal );
+	}
+
+	private static TypeDescription FindEditorToolType( string toolName )
+		=> EditorTypeLibrary.GetTypesWithAttribute<EditorToolAttribute>()
+			.Select( x => x.Type )
+			.FirstOrDefault( t => t != null && (t.IsNamed( toolName )
+				|| string.Equals( t.Name, toolName, StringComparison.Ordinal )
+				|| string.Equals( t.TargetType?.FullName, toolName, StringComparison.Ordinal )) );
+
+	private static Type FindType( string toolName )
+		=> AppDomain.CurrentDomain.GetAssemblies()
 			.SelectMany( a =>
 			{
 				try
@@ -852,37 +911,4 @@ public static class EditorToolBarsActions
 			} )
 			.FirstOrDefault( t => string.Equals( t.FullName, toolName, StringComparison.Ordinal )
 				|| string.Equals( t.Name, toolName, StringComparison.Ordinal ) );
-
-		if ( toolType == null )
-		{
-			Log.Warning( $"Tool '{toolName}' not found. Skipping activation." );
-			return;
-		}
-
-		var editorToolAttr = toolType.GetCustomAttribute<EditorToolAttribute>();
-		if ( editorToolAttr != null )
-		{
-			Activate( toolType.Name );
-			return;
-		}
-
-		var ownerToolType = EditorTypeLibrary.GetTypesWithAttribute<EditorToolAttribute>()
-			.Select( x => x.Type )
-			.FirstOrDefault( t => t.TargetType == toolType || t.TargetType.IsAssignableFrom( toolType ) );
-
-		if ( ownerToolType?.TargetType != null )
-		{
-			Activate( ownerToolType.Name, toolType.Name );
-			return;
-		}
-
-		toolType = AppDomain.CurrentDomain.GetAssemblies()
-			.Select( a => a.GetType( toolName ) )
-			.FirstOrDefault( t => t != null );
-
-		if ( toolType != null )
-			Activate( toolType.Name );
-		else
-			Log.Warning( $"Tool '{toolName}' not found. Skipping activation." );
-	}
 }
