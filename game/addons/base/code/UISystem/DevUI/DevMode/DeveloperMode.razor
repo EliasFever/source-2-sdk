@@ -15,6 +15,7 @@
 	public DevWindow Window { get; set; }
 
 	public static bool Open { get; protected set; }
+	public static bool Focused { get; protected set; } = true;
 
 	// Keep this as an int so it can be set via `devui 0/1`.
 	[ConVar( "devui", Help = "Toggle the developer UI", Saved = true )]
@@ -25,6 +26,7 @@
 	}
 
 	bool wasOpen;
+	bool wasFocused;
 
 	public override void Tick()
 	{
@@ -32,19 +34,22 @@
 
 		// Keep DevLayer's input class in sync even if Open is restored from a saved convar
 		// before this panel exists (or if we somehow miss the transition).
-		FindRootPanel()?.SetClass( "developermode", Open );
+		FindRootPanel()?.SetClass( "developermode", Open && Focused );
 
-		if ( Open != wasOpen )
+		if ( Open != wasOpen || Focused != wasFocused )
 		{
 			wasOpen = Open;
+			wasFocused = Focused;
 
-			if (Open)
+			if (Open && Focused)
 				Window?.FocusConsole();
 			else
 				Window?.BlurConsole();
 		}
 
 		SetClass("open", Open);
+		SetClass("focused", Focused);
+		Window?.SetClass( "unfocused", Open && !Focused );
 	}
 
 	public override Panel FindPopupPanel() => this;
@@ -53,5 +58,18 @@
 	static void ToggleConsole()
 	{
 		Open = !Open;
+	}
+
+	[ConCmd("con_focus")]
+	static void ToggleFocus()
+	{
+		if ( !Open )
+		{
+			Open = true;
+			Focused = true;
+			return;
+		}
+
+		Focused = !Focused;
 	}
 }

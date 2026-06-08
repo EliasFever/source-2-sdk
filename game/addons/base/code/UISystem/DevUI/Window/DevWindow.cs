@@ -4,10 +4,17 @@ using Sandbox;
 using Sandbox.UI;
 using Sandbox.UI.Construct;
 using System;
+using System.Diagnostics;
 
 [Library( "devwindow" )]
 public sealed class DevWindow : Panel
 {
+	[ConVar( "devui_window_dragdebug" )]
+	public static bool DragDebug { get; set; } = false;
+
+	[ConVar( "devui_window_force_render_while_interacting" )]
+	public static bool ForceRenderWhileInteracting { get; set; } = true;
+
 	const string CookieX = "devui.window.x";
 	const string CookieY = "devui.window.y";
 	const string CookieW = "devui.window.w";
@@ -45,10 +52,16 @@ public sealed class DevWindow : Panel
 	Vector2 DragStartMouse;
 	Vector2 DragStartPos;
 	Vector2 DragCurrentDelta;
+	Vector2 DragMouseOffsetScreen;
 
 	Vector2 ResizeStartMouse;
 	Vector2 ResizeStartSize;
 	Vector2 ResizeStartPos;
+
+	readonly Stopwatch _dragDebugTimer = Stopwatch.StartNew();
+	long _dragDebugLastLogMs;
+	int _dragDebugTickCount;
+	int _dragDebugMouseMoveCount;
 
 	string ActiveTabId => string.IsNullOrWhiteSpace( _activeTabId ) ? "log" : _activeTabId;
 
@@ -126,6 +139,9 @@ public sealed class DevWindow : Panel
 		DragStartMouse = Mouse.Position;
 		DragStartPos = new Vector2( Style.Left?.Value ?? 0.0f, Style.Top?.Value ?? 0.0f );
 		DragCurrentDelta = 0;
+
+		var startPosScreen = DragStartPos * ScaleToScreen;
+		DragMouseOffsetScreen = Mouse.Position - startPosScreen;
 		this.SetCursor( CursorType.Move );
 	}
 
@@ -205,8 +221,8 @@ public sealed class DevWindow : Panel
 
 		if ( IsDragging )
 		{
-			DragCurrentDelta = GetClampedDragDeltaFromScreen( Mouse.Position - DragStartMouse );
-			ApplyDragTransform( DragCurrentDelta );
+			var desiredPos = (Mouse.Position - DragMouseOffsetScreen) * ScaleFromScreen;
+			SetPosition( desiredPos );
 		}
 
 		if ( IsResizing )
@@ -220,6 +236,37 @@ public sealed class DevWindow : Panel
 			var delta = (Mouse.Position - ResizeStartMouse) * ScaleFromScreen;
 			SetSize( ResizeStartPos, ResizeStartSize + delta );
 		}
+
+		// If the window contents are static, the UI renderer can effectively "cache" and only redraw when something
+		// marks itself dirty. During drag/resize we want consistent redraw to avoid an extra frame of perceived lag
+		// compared to the hardware cursor.
+		if ( ForceRenderWhileInteracting && IsInteracting )
+		{
+			MarkRenderDirty();
+		}
+
+		if ( DragDebug && IsInteracting )
+		{
+			_dragDebugTickCount++;
+			var now = _dragDebugTimer.ElapsedMilliseconds;
+			if ( now - _dragDebugLastLogMs >= 1000 )
+			{
+				Log.Info( $"DevWindow interact rate: Tick={_dragDebugTickCount}/s MouseMove={_dragDebugMouseMoveCount}/s" );
+				_dragDebugTickCount = 0;
+				_dragDebugMouseMoveCount = 0;
+				_dragDebugLastLogMs = now;
+			}
+		}
+	}
+
+	protected override void OnMouseMove( MousePanelEvent e )
+	{
+		if ( DragDebug && IsInteracting )
+		{
+			_dragDebugMouseMoveCount++;
+		}
+
+		base.OnMouseMove( e );
 	}
 
 	protected override void OnMouseUp( MousePanelEvent e )
@@ -354,11 +401,13 @@ public sealed class DevWindow : Panel
 		var tx = new PanelTransform();
 		tx.AddTranslate( Length.Pixels( delta.x ), Length.Pixels( delta.y ) );
 		Style.Transform = tx;
+		Style.Dirty();
 	}
 
 	void ClearDragTransform()
 	{
 		Style.Transform = null;
+		Style.Dirty();
 	}
 
 	void SaveCookies()

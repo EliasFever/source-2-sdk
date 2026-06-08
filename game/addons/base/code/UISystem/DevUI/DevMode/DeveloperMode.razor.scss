@@ -26,7 +26,7 @@ DeveloperMode
 	left: 0px;
 	pointer-events: none;
 
-	&.open
+	&.open.focused
 	{
 		pointer-events: all;
 	}

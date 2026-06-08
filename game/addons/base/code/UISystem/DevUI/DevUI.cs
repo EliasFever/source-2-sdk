@@ -28,8 +28,8 @@ public class DevLayer : RootPanel
 		base.Tick();
 
 		// DevUI.cs.scss disables pointer events for the whole DevLayer unless this class is present.
-		// Keep it in sync with the devui open state so we never end up with a visible-but-non-interactive UI.
-		SetClass( "developermode", DeveloperMode.Open );
+		// Keep it in sync with the devui focused state so unfocused windows can stay visible without eating input.
+		SetClass( "developermode", DeveloperMode.Open && DeveloperMode.Focused );
 	}
 
 	void LoadDevUiStyles()
