@@ -89,7 +89,7 @@ public partial class ViewportTools : Widget
 		Layout.AddStretchCell();
 	}
 
-	[Shortcut( "editor.toggle-fullscreen", "F3", ShortcutType.Window )]
+	[Shortcut( "editor.toggle-fullscreen", "F4", ShortcutType.Window )]
 	internal static void ToggleFullscreen()
 	{
 		EditorWindow.SetFullscreen( SceneViewWidget.Current );
