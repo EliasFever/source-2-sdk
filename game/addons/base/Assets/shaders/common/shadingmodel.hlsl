@@ -113,7 +113,7 @@ class ShadingModelStandard
 
         // Lighting and UV coordinates
         o.vLightmapUV = m.LightmapUV;
-        o.vTextureCoords = m.TextureCoords;
+        o.vTextureCoords = m.TextureCoords.xy;
 
         // Adjustments
         {
