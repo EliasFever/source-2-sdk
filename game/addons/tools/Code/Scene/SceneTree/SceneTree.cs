@@ -226,9 +226,6 @@ public partial class SceneTreeWidget : Widget
 				if ( go.Parent is null || !ShouldShowGameObjectInHierarchy( go ) )
 					continue;
 
-				if ( go.IsPrefabInstance && !go.IsPrefabInstanceRoot )
-					continue;
-
 				if ( !go.Name.Contains( search, StringComparison.OrdinalIgnoreCase ) )
 					continue;
 

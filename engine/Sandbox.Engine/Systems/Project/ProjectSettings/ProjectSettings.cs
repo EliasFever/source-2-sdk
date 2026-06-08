@@ -45,6 +45,11 @@ public class ProjectSettings
 	public static LoadingSettings Loading => Get<LoadingSettings>( "Loading.config" );
 
 	/// <summary>
+	/// Get the <see cref="PlatformSettings"/> from the active project settings.
+	/// </summary>
+	public static PlatformSettings Platform => Get<PlatformSettings>( "Platform.config" );
+
+	/// <summary>
 	/// Reset any stored references to Project Settings.
 	/// </summary>
 	internal static void ClearCache()
@@ -71,6 +76,7 @@ public class ProjectSettings
 		if ( !string.IsNullOrEmpty( txt ) )
 		{
 			config.Deserialize( txt );
+			config.LoadedFromDisk = true;
 		}
 
 		return config;

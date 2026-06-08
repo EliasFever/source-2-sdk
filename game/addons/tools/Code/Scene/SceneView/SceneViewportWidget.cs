@@ -130,6 +130,7 @@ public partial class SceneViewportWidget : Widget
 	bool mouseWasPressed = false;
 	int framesAfterRelease = 0;
 	Vector2 initialMousePosition = Vector2.Zero;
+	Vector3 initialCameraPosition = Vector3.Zero;
 
 	/// <summary>
 	/// When the mouse is pressed, don't change the input enabled state
@@ -232,7 +233,7 @@ public partial class SceneViewportWidget : Widget
 			Renderer.Camera = _activeCamera;
 		}
 
-		_activeCamera.BackgroundColor = "#080808";
+		_activeCamera.BackgroundColor = EditorPreferences.CameraBackgroundColor;
 		_activeCamera.WorldPosition = State.CameraPosition;
 		_activeCamera.WorldRotation = State.CameraRotation;
 
@@ -345,6 +346,7 @@ public partial class SceneViewportWidget : Widget
 		if ( e.Button == MouseButtons.Right )
 		{
 			initialMousePosition = e.LocalPosition;
+			initialCameraPosition = cameraTargetPosition ?? GizmoInstance.GetValue<Vector3?>( "CameraTarget" ) ?? _activeCamera.WorldPosition;
 		}
 	}
 
@@ -431,7 +433,8 @@ public partial class SceneViewportWidget : Widget
 
 		// Unity does a 6 pixel deadzone to trigger the context menu
 		if ( e.KeyboardModifiers == KeyboardModifiers.None && e.Button == MouseButtons.Right &&
-			 Vector2.DistanceBetween( initialMousePosition, e.LocalPosition ) < 6 )
+			 Vector2.DistanceBetween( initialMousePosition, e.LocalPosition ) < 6 &&
+			 initialCameraPosition == (cameraTargetPosition ?? GizmoInstance.GetValue<Vector3?>( "CameraTarget" ) ?? _activeCamera.WorldPosition) )
 		{
 			var menu = new ContextMenu( this ) { Searchable = true };
 			bool HasSelection = Session.Selection.OfType<GameObject>().Any();
@@ -798,6 +801,7 @@ public partial class SceneViewportWidget : Widget
 				ViewMode.Top2d => new Vector2( size.x, size.y ),
 				ViewMode.Front2d => new Vector2( size.y, size.z ),
 				ViewMode.Side2d => new Vector2( size.z, size.x ),
+				ViewMode.Flat2d => new Vector2( size.x, size.y ),
 				_ => new Vector2( size.x, size.y )
 			};
 
