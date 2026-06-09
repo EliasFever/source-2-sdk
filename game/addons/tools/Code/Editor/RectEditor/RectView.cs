@@ -658,13 +658,18 @@ public class RectView : Widget
 
 		var multiplier = material.ShaderName.StartsWith( "shaders/hl2k_" ) ? 3.1415926f : 0.8f;
 
-		var light = new ScenePointLight( world )
+		var light = new SceneSpotLight( world )
 		{
 			Radius = 4000,
 			LightColor = Color.White * multiplier,
 			Position = new Vector3( 0, 0, 100 ),
+			ConeOuter = 89,
+			ConeInner = 75,
+			QuadraticAttenuation = 5f,
 			ShadowsEnabled = true
 		};
+
+		light.Rotation = Rotation.From( 90, 0, 0 );
 
 		var debugMode = Session.Settings.FastTextureSettings.DebugMode;
 
