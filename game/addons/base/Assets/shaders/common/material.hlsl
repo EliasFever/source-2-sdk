@@ -27,7 +27,7 @@ class Material
     float3 WorldTangentV;           // Probably shouldn't be here
     float2 LightmapUV;              // if D_BAKED_LIGHTING_FROM_LIGHTMAP
 
-    float4 TextureCoords; // if TOOL_VIS
+    float2 TextureCoords; // if TOOL_VIS
 
     // DEPRECATED
     float3 GeometricNormal;
