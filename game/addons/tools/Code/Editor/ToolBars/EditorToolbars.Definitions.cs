@@ -107,7 +107,14 @@ public static partial class EditorToolBars
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectEntityTool,
 				Description="Add new objects to the scene",
-				ActiveResolver = () => EditorToolBarsActions.IsEntityToolActive() },
+				ActiveResolver = () =>
+				{
+					if ( EditorToolManager.CurrentModeName != nameof( MeshTool ) )
+						return false;
+
+					var subMode = EditorToolManager.CurrentSubModeName;
+					return subMode == nameof( EntityTool ) || subMode == nameof( MeshTool );
+				} },
 
 			new() { Name="Block Tool",
 				ShortcutAction = "tools.block-tool",

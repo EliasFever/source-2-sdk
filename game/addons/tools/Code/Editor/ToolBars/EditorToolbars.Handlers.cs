@@ -748,6 +748,9 @@ public static class EditorToolBarsActions
 	public static void SelectObjects()
 		=> Activate( nameof( MeshTool ), nameof( ObjectSelection ) );
 
+	public static void SelectEntityTool()
+		=> Activate( nameof( MeshTool ), nameof( EntityTool ) );
+
 	public static void SelectNavigation()
 		=> Activate( nameof( NavMeshTool ) );
 
@@ -759,20 +762,6 @@ public static class EditorToolBarsActions
 
 	public static void SelectPathTool()
 		=> ActiveProjectTool( "PathTool" );
-
-	public static void SelectEntityTool()
-	{
-		if ( TryActivateProjectTool( "EntityPlacer" ) )
-			return;
-
-		if ( TryActivateProjectTool( "EntityTool" ) )
-			return;
-
-		Log.Warning( "Entity tool not found. Expected a project EditorTool named 'EntityPlacer' or a native EditorTool named 'EntityTool'." );
-	}
-
-	public static bool IsEntityToolActive()
-		=> IsCurrentTool( "EntityPlacer" ) || IsCurrentTool( "EntityTool" );
 
 	public static void SelectPhysicsTool()
 		=> Activate( nameof( PhysicsEditorTool ) );

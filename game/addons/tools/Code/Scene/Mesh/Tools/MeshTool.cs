@@ -41,6 +41,7 @@ public partial class MeshTool : EditorTool
 		yield return new FaceTool( this );
 		yield return new VertexPaintTool( this );
 		yield return new DisplacementTool( this );
+		yield return new EntityTool();
 	}
 
 	public override void OnEnabled()
