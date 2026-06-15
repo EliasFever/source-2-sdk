@@ -15,17 +15,17 @@ public static partial class MenuUtility
 		/// <summary>
 		/// Init a stream service
 		/// </summary>
-		public static async Task<bool> Connect(string serviceName)
+		public static async Task<bool> Connect( string serviceName )
 		{
-			return await Sandbox.Engine.Streamer.Init(serviceName);
+			return await Sandbox.Engine.Streamer.Init( serviceName );
 		}
 
 		/// <summary>
 		/// Disconnect from streaming service
 		/// </summary>
-		public static void Disconnect(string serviceName)
+		public static void Disconnect( string serviceName )
 		{
-			Sandbox.Engine.Streamer.Shutdown(serviceName);
+			Sandbox.Engine.Streamer.Shutdown( serviceName );
 		}
 	}
 }

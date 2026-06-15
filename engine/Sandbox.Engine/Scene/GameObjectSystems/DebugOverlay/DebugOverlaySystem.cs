@@ -13,8 +13,6 @@ public sealed partial class DebugOverlaySystem : GameObjectSystem<DebugOverlaySy
 		Listen( Stage.StartUpdate, -10000, StartUpdate, "BuildDebugOverlays" );
 		Listen( Stage.StartFixedUpdate, -10000, StartFixedUpdate, "BuildDebugOverlays" );
 		Listen( Stage.FinishFixedUpdate, 10000, EndFixedUpdate, "BuildDebugOverlays" );
-
-		LineMaterial = Material.Load( "materials/gizmo/line.vmat" );
 	}
 
 	void RemoveExpired()
@@ -45,7 +43,11 @@ public sealed partial class DebugOverlaySystem : GameObjectSystem<DebugOverlaySy
 			i--;
 		}
 
-		Scene.SceneWorld.DeletePendingObjects();
+		// don't force the scene world to exist just to flush deletes
+		if ( Scene.HasSceneWorld )
+		{
+			Scene.SceneWorld.DeletePendingObjects();
+		}
 	}
 
 	void StartUpdate()

@@ -88,6 +88,8 @@ public abstract class BaseGameMount
 		}
 
 		_entries.Clear();
+		_entriesByType.Clear();
+
 		RootFolder = null;
 	}
 
@@ -100,6 +102,7 @@ public abstract class BaseGameMount
 	}
 
 	readonly Dictionary<string, ResourceLoader> _entries = new Dictionary<string, ResourceLoader>( StringComparer.OrdinalIgnoreCase );
+	readonly Dictionary<ResourceType, List<ResourceLoader>> _entriesByType = new();
 
 	/// <summary>
 	/// All of the resources in this game
@@ -111,7 +114,16 @@ public abstract class BaseGameMount
 	/// </summary>
 	public ResourceLoader GetByPath( string path )
 	{
+		if ( path.EndsWith( "_c" ) ) path = path[..^2];
 		return _entries.TryGetValue( path, out var entry ) ? entry : default;
+	}
+
+	/// <summary>
+	/// Retrieves all resource loaders of a type
+	/// </summary>
+	public IReadOnlyCollection<ResourceLoader> GetAll( ResourceType type )
+	{
+		return _entriesByType.TryGetValue( type, out var entry ) ? entry : [];
 	}
 
 	public ResourceFolder RootFolder { get; internal set; }
@@ -119,6 +131,7 @@ public abstract class BaseGameMount
 	internal void RegisterFileInternal( ResourceLoader entry )
 	{
 		_entries[entry.Path] = entry;
+		_entriesByType.GetOrCreate( entry.Type ).Add( entry );
 	}
 
 	/// <summary>

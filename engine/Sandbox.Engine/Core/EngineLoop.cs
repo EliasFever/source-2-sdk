@@ -419,8 +419,8 @@ internal static class EngineLoop
 		}
 
 		var engineChain = g_pEngineServiceMgr.GetEngineSwapChain();
-	using ( _gameRender.Start() )
-		IGameInstanceDll.Current?.OnRender( engineChain );
+		using ( _gameRender.Start() )
+			IGameInstanceDll.Current?.OnRender( engineChain );
 	}
 
 	/// <summary>

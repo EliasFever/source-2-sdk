@@ -75,14 +75,17 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 		ConVarSystem.AddAssembly( Game.GameAssembly, "game" );
 	}
 
-	public Task Initialize()
+	public async Task Initialize()
 	{
 		ResetEnvironment();
 		Networking.StartThread();
 
 		InitializeUISystem( failHard: false );
 
-		return Task.CompletedTask;
+		if ( !Application.IsStandalone )
+		{
+			await Mounting.MountConfig.Mount();
+		}
 	}
 
 	private static void InitializeUISystem( bool failHard )
@@ -150,9 +153,9 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 		currentProp?.SetValue( null, created );
 
 		// Allow tasks in menu assembly to persist when game sessions end
-		Sandbox.Tasks.ExpirableSynchronizationContext.AllowPersistentTaskMethods( created.GetType().Assembly );
+		Tasks.ExpirableSynchronizationContext.AllowPersistentTaskMethods( created.GetType().Assembly );
 
-		((Sandbox.Internal.IUISystem)created).Init();
+		((IUISystem)created).Init();
 	}
 
 	private static System.Reflection.Assembly FindAssemblyContainingType( string typeName, Type assignableTo )
