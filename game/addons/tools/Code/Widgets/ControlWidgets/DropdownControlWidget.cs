@@ -247,6 +247,9 @@ file class MenuOption<T> : Widget
 		if ( property.IsMultipleDifferentValues ) return false;
 
 		var value = property.GetValue<object>( default );
+		if ( info is DropdownControlWidget<T>.Entry entry )
+			return Equals( value, entry.Value );
+
 		return value == info;
 	}
 

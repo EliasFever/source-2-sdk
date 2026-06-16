@@ -35,8 +35,11 @@ public class ToolSidebarWidget : Widget
 	}
 
 	public Layout AddGroup( string title, SizeMode sizeMode = SizeMode.CanShrink, bool collapsible = false )
+		=> AddGroup( title, sizeMode, collapsible, false );
+
+	public Layout AddGroup( string title, SizeMode sizeMode, bool collapsible, bool collapsedByDefault )
 	{
-		var group = CreateGroupWidget( title, sizeMode, collapsible );
+		var group = CreateGroupWidget( title, sizeMode, collapsible, collapsedByDefault );
 		Layout.Add( group );
 		return group.ContentLayout;
 	}
@@ -45,13 +48,13 @@ public class ToolSidebarWidget : Widget
 	/// Creates a group widget parented to the given widget without adding it to this sidebar's layout.
 	/// Use this to build groups that belong to a separately-controlled container.
 	/// </summary>
-	internal static SidebarGroupWidget CreateGroupWidget( string title, SizeMode sizeMode = SizeMode.CanShrink, bool collapsible = false )
+	internal static SidebarGroupWidget CreateGroupWidget( string title, SizeMode sizeMode = SizeMode.CanShrink, bool collapsible = false, bool collapsedByDefault = false )
 	{
 		var group = new SidebarGroupWidget();
 		group.Title = title;
 		group.VerticalSizeMode = sizeMode;
 		group.Collapsible = collapsible;
-		group.RestoreState();
+		group.RestoreState( collapsedByDefault );
 		return group;
 	}
 
@@ -202,10 +205,10 @@ internal class SidebarGroupWidget : Widget
 		MouseTracking = true;
 	}
 
-	public void RestoreState()
+	public void RestoreState( bool collapsedByDefault = false )
 	{
 		if ( !Collapsible ) return;
-		_collapsed = EditorCookie.Get( $"SidebarGroup.{Title}", false );
+		_collapsed = EditorCookie.Get( $"SidebarGroup.{Title}", collapsedByDefault );
 		_contentWidget.Visible = !_collapsed;
 		Layout.Margin = _collapsed ? new Margin( 8, 16, 8, 0 ) : new Margin( 8, 16, 8, 8 );
 	}
