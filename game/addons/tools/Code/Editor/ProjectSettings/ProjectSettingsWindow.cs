@@ -187,6 +187,7 @@ internal sealed class ProjectSettingsWindow : Window
 			AddCategoryToList( typeof( ResourcesCategory ), "Other" );
 			AddCategoryToList( typeof( ReferencesCategory ), "Other" );
 			AddCategoryToList( typeof( CursorCategory ), "Other" );
+			AddCategoryToList( typeof( ObjectPlacerCategory ), "Other" );
 		}
 		else if ( project.Config.Type == "map" )
 		{
