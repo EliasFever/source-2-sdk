@@ -1,4 +1,4 @@
-﻿namespace Editor;
+namespace Editor;
 
 using Editor;
 using Editor.MeshEditor;
@@ -105,16 +105,9 @@ public static partial class EditorToolBars
 				GroupType = ToolBarOptionGroupType.SingleExclusive,
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
-				Method = EditorToolBarsActions.SelectEntityTool,
+				Method = EditorToolBarsActions.SelectObjectPlacerTool,
 				Description="Add new objects to the scene",
-				ActiveResolver = () =>
-				{
-					if ( EditorToolManager.CurrentModeName != nameof( MeshTool ) )
-						return false;
-
-					var subMode = EditorToolManager.CurrentSubModeName;
-					return subMode == nameof( EntityTool ) || subMode == nameof( MeshTool );
-				} },
+				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( ObjectPlacerTool ) },
 
 			new() { Name="Block Tool",
 				ShortcutAction = "tools.block-tool",

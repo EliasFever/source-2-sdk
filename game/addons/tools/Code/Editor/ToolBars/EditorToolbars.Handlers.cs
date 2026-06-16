@@ -1,4 +1,4 @@
-﻿namespace Editor;
+namespace Editor;
 
 using Editor;
 using Editor.MapEditor;
@@ -748,8 +748,8 @@ public static class EditorToolBarsActions
 	public static void SelectObjects()
 		=> Activate( nameof( MeshTool ), nameof( ObjectSelection ) );
 
-	public static void SelectEntityTool()
-		=> Activate( nameof( MeshTool ), nameof( EntityTool ) );
+	public static void SelectObjectPlacerTool()
+		=> Activate( nameof( ObjectPlacerTool ) );
 
 	public static void SelectNavigation()
 		=> Activate( nameof( NavMeshTool ) );
