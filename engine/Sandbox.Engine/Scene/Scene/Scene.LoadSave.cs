@@ -244,7 +244,7 @@ public partial class Scene : GameObject
 
 		foreach ( var prop in Game.TypeLibrary.GetType<Scene>()
 			.Properties
-			.Where( x => x.HasAttribute<PropertyAttribute>() )
+			.Where( x => x.HasAttribute<SaveRestoreAttribute>() || x.HasAttribute<PropertyAttribute>())
 			.OrderBy( x => x.Name ) )
 		{
 			if ( prop.Name == "Enabled" ) continue;

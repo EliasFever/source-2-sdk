@@ -83,6 +83,7 @@ public sealed class NavMeshAgent : Component
 	[Group( "Movement" ), Title( "Update GameObject Position" )]
 	[Property]
 	public bool UpdatePosition { get; set; } = true;
+	
 
 	/// <summary>
 	/// This will simply face the direction it is moving. It is not configurable on purpose, so you should really turn this off and be doing this yourself if you need it to do anything specific.
@@ -193,6 +194,9 @@ public sealed class NavMeshAgent : Component
 	/// </summary>
 	internal TimeUntil timeUntilNextGroundTrace = 0.0f;
 
+	[ConVar("nav_logging")]
+	public static bool NavEnableLogging { get; set; } = false;
+
 	/// <summary>
 	/// If you want to move the agent from one position to another
 	/// </summary>
@@ -229,6 +233,8 @@ public sealed class NavMeshAgent : Component
 			 agentInternal.targetState == DtMoveRequestState.DT_CROWDAGENT_TARGET_NONE ||
 			 !agentInternal.targetPos.AlmostEqual( targetPos, 1 ) )
 		{
+			if (NavEnableLogging)
+			Log.Info($"MoveTo called on {agentInternal} with poly target of {targetPoly.ToString()} and position of {targetPos}");
 			Scene.NavMesh.crowd.RequestMoveTarget( agentInternal, targetPoly, targetPos );
 		}
 	}
@@ -261,6 +267,9 @@ public sealed class NavMeshAgent : Component
 		agentInternal.targetState = DtMoveRequestState.DT_CROWDAGENT_TARGET_VALID;
 		agentInternal.targetReplanWaitTime = 0;
 		agentInternal.timeSinceLastTargetReplan = 0;
+
+		if ( NavEnableLogging )
+			Log.Info( $"SetPath called on {agentInternal}\n targetRef = {agentInternal.targetRef}\n targetPos = {agentInternal.targetPos}" );
 	}
 
 	/// <summary>
@@ -306,6 +315,9 @@ public sealed class NavMeshAgent : Component
 
 		if ( dtStatus.Failed() )
 		{
+
+			if ( NavEnableLogging )
+				Log.Info( $"GetPath called on {agentInternal} failed!" );
 			ArrayPool<DtStraightPath>.Shared.Return( straightPathCache );
 			result.Status = NavMeshPathStatus.PathNotFound;
 			return result;
@@ -341,6 +353,8 @@ public sealed class NavMeshAgent : Component
 		if ( agentInternal is null )
 			return;
 
+		if ( NavEnableLogging )
+			Log.Info( $"Stop called on {agentInternal}\n" );
 		agentInternal.animation.active = false;
 		agentInternal.state = DtCrowdAgentState.DT_CROWDAGENT_STATE_WALKING;
 		Scene.NavMesh.crowd.ResetMoveTarget( agentInternal );
