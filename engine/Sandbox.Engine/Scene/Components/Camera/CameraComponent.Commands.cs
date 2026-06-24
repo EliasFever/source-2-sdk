@@ -71,7 +71,7 @@ public sealed partial class CameraComponent : Component, Component.ExecuteInEdit
 	/// </summary>
 	private void ExecuteCommandLists( Stage stage, SceneCamera currentCamera )
 	{
-		Scene.RunEvent<IRenderThread>( x => x.OnRenderStage( this, stage ) );
+		Scene.RunRenderThreadEvent( this, stage );
 
 		// RootPanel UI (GlobalContext.Current.UISystem) is simulated on the main thread and builds a single
 		// combined command list. Only execute it for cameras that opt-in to engine overlays, otherwise it will

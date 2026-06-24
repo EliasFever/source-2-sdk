@@ -125,6 +125,7 @@ partial class FaceTool
 				CreateButton( "Mirror Tool", "flip", "mesh.mirror-tool", OpenMirrorTool, _faces.Length > 0, grid );
 				CreateButton( "Clipping Tool", "content_cut", "mesh.open-clipping-tool", OpenClippingTool, _faces.Length > 0, grid );
 				CreateButton( "Bridge", "device_hub", "mesh.bridge-tool", OpenBridgeTool, CanBridgeFaces(), grid );
+				CreateButton( "Inset", "filter_center_focus", "mesh.inset-tool", OpenInsetTool, _faces.Length > 0, grid );
 
 				grid.AddStretchCell();
 
@@ -201,6 +202,17 @@ partial class FaceTool
 				return;
 
 			var tool = new BridgeTool( null, _faces );
+			tool.Manager = _meshTool.Manager;
+			_meshTool.CurrentTool = tool;
+		}
+
+		[Shortcut( "mesh.inset-tool", "Shift+I", typeof( SceneViewWidget ) )]
+		void OpenInsetTool()
+		{
+			if ( _faces.Length == 0 )
+				return;
+
+			var tool = new InsetTool( _faces );
 			tool.Manager = _meshTool.Manager;
 			_meshTool.CurrentTool = tool;
 		}

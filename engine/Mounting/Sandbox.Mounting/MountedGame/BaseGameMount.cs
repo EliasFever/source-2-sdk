@@ -32,6 +32,11 @@ public abstract class BaseGameMount
 	public abstract string Title { get; }
 
 	/// <summary>
+	/// The Steam app id this game belongs to, if any. Used to link to the store when it isn't installed.
+	/// </summary>
+	public virtual long? SteamAppId => null;
+
+	/// <summary>
 	/// Allows logging for this specific asset source
 	/// </summary>
 	protected Logger Log { get; init; }

@@ -82,6 +82,27 @@ public sealed class RecorderTest : SceneTestBase
 		Assert.AreEqual( (startPos + endPos) * 0.5f, posC );
 	}
 
+	/// <summary>
+	/// Capture a game object, but choose a custom name for the track.
+	/// </summary>
+	[TestMethod]
+	public void RecordGameObjectCustomName()
+	{
+		var go = new GameObject( "Foo" );
+
+		var options = new MovieRecorderOptions()
+			.WithCaptureGameObject( go, trackName: "Bar" );
+
+		var clip = Record( options, 10d );
+
+		Console.WriteLine( Json.Serialize( clip ) );
+
+		// We called the track "Bar" instead of "Foo"
+
+		Assert.IsNull( clip.GetReference<GameObject>( "Foo" ) );
+		Assert.IsNotNull( clip.GetReference<GameObject>( "Bar" ) );
+	}
+
 	[TestMethod]
 	public void RecordTextRenderer()
 	{
