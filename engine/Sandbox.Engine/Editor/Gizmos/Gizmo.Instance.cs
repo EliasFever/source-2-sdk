@@ -11,7 +11,7 @@ public static partial class Gizmo
 	/// <summary>
 	/// Allocation-free pool key for a gizmo scene object. <see cref="Type"/> compares by reference.
 	/// </summary>
-	internal readonly record struct GizmoObjectKey( ulong PathHash, int Create, ulong KeyHash, Type Type );
+	internal readonly record struct GizmoObjectKey( ulong PathHash, int Create, ulong KeyHash, Type Type, int Disambiguator = 0 );
 
 	/// <summary>
 	/// Deterministic, allocation-free hash of a char span. Not <see cref="string.GetHashCode()"/> (per-process random).
@@ -335,6 +335,9 @@ Selected: {(current.SelectedPath == null ? "" : string.Join( ", ", current.Selec
 				Active.scope.Create,
 				HashString( key ),
 				typeof( T ) );
+
+			// Disambiguate key collisions so the second object doesn't stomp (and leak) the first in Entries.
+			while ( Entries.ContainsKey( objectKey ) ) objectKey = objectKey with { Disambiguator = objectKey.Disambiguator + 1 };
 
 			//
 			// Do we have this in our pool (created last frame)

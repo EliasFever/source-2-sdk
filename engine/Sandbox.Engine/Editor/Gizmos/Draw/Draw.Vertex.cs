@@ -29,13 +29,14 @@ public static partial class Gizmo
 
 		VertexSceneObject VertexObject( Graphics.PrimitiveType type, Material material, bool tryAdd = true )
 		{
-			// Write the vertex buffer of the previous queued object when we start a new one
-			_vertexObject?.Write();
-
+			// Keep accumulating into the same object while it's reusable; flushing mid-batch would clobber it (Write does a native Begin that clears the buffer).
 			if ( CanReuseVertexObject( type, material ) && tryAdd )
 			{
 				return _vertexObject;
 			}
+
+			// Switching to a different object, so flush the batch we just finished.
+			_vertexObject?.Write();
 
 			_vertexObjectPath = Path;
 			_vertexObjectMaterial = material;
