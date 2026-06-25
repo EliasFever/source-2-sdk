@@ -120,7 +120,7 @@ internal class GameInstance : IGameInstance
 				{
 					BenchmarkOrchestrator.IsRunning = false;
 					BenchmarkOrchestrator.RestoreSettings();
-				//	Game.Overlay.ShowBenchmarkResults( BenchmarkOrchestrator.LastBatchId, BenchmarkOrchestrator.Summaries );
+					//	Game.Overlay.ShowBenchmarkResults( BenchmarkOrchestrator.LastBatchId, BenchmarkOrchestrator.Summaries );
 				}
 				else
 				{

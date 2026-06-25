@@ -119,19 +119,19 @@ internal static class ReflectionQueryCache
 		return fieldAndPropertyMembers;
 	}
 
-    private static bool ShouldSerializeMember( MemberDescription memberDesc )
-    {
-        if ( memberDesc is not PropertyDescription && memberDesc is not FieldDescription ) return false;
-        if ( memberDesc.IsStatic ) return false;
+	private static bool ShouldSerializeMember( MemberDescription memberDesc )
+	{
+		if ( memberDesc is not PropertyDescription && memberDesc is not FieldDescription ) return false;
+		if ( memberDesc.IsStatic ) return false;
 
-        return (memberDesc.HasAttribute<PropertyAttribute>() || memberDesc.HasAttribute<SaveRestoreAttribute>())
-            && !memberDesc.HasAttribute<JsonIgnoreAttribute>();
-    }
+		return (memberDesc.HasAttribute<PropertyAttribute>() || memberDesc.HasAttribute<SaveRestoreAttribute>())
+			&& !memberDesc.HasAttribute<JsonIgnoreAttribute>();
+	}
 
-    /// <summary>
-    /// Returns all properties that have a [RequireComponent] attribute.
-    /// </summary>
-    public static IEnumerable<PropertyDescription> RequiredComponentMembers( Type t )
+	/// <summary>
+	/// Returns all properties that have a [RequireComponent] attribute.
+	/// </summary>
+	public static IEnumerable<PropertyDescription> RequiredComponentMembers( Type t )
 	{
 		if ( _requiredComponentMemberCache.TryGetValue( t, out var members ) )
 		{

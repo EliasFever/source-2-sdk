@@ -83,7 +83,7 @@ public sealed class NavMeshAgent : Component
 	[Group( "Movement" ), Title( "Update GameObject Position" )]
 	[Property]
 	public bool UpdatePosition { get; set; } = true;
-	
+
 
 	/// <summary>
 	/// This will simply face the direction it is moving. It is not configurable on purpose, so you should really turn this off and be doing this yourself if you need it to do anything specific.
@@ -194,7 +194,7 @@ public sealed class NavMeshAgent : Component
 	/// </summary>
 	internal TimeUntil timeUntilNextGroundTrace = 0.0f;
 
-	[ConVar("nav_logging")]
+	[ConVar( "nav_logging" )]
 	public static bool NavEnableLogging { get; set; } = false;
 
 	/// <summary>
@@ -233,8 +233,8 @@ public sealed class NavMeshAgent : Component
 			 agentInternal.targetState == DtMoveRequestState.DT_CROWDAGENT_TARGET_NONE ||
 			 !agentInternal.targetPos.AlmostEqual( targetPos, 1 ) )
 		{
-			if (NavEnableLogging)
-			Log.Info($"MoveTo called on {agentInternal} with poly target of {targetPoly.ToString()} and position of {targetPos}");
+			if ( NavEnableLogging )
+				Log.Info( $"MoveTo called on {agentInternal} with poly target of {targetPoly.ToString()} and position of {targetPos}" );
 			Scene.NavMesh.crowd.RequestMoveTarget( agentInternal, targetPoly, targetPos );
 		}
 	}
