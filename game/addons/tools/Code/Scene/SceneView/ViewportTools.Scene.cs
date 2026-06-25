@@ -278,14 +278,14 @@ file class GizmoIconWidget : Widget
 
 		var handleAttr = type.GetAttribute<EditorHandleAttribute>();
 
-		if ( handleAttr.Texture is not null )
+		if ( !string.IsNullOrWhiteSpace( handleAttr.Texture ) )
 		{
 			var texture = Texture.Load( handleAttr.Texture );
 			var pixmap = Pixmap.FromTexture( texture );
 			pixmap = pixmap.Resize( LocalRect.Size );
 			Paint.Draw( LocalRect, pixmap );
 		}
-		else if ( handleAttr.Icon is not null )
+		else if ( !string.IsNullOrWhiteSpace( handleAttr.Icon ) )
 		{
 			Paint.SetPen( Theme.Text );
 			Paint.DrawIcon( LocalRect, handleAttr.Icon, 16.0f );
