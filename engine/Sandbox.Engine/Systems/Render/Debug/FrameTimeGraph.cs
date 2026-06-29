@@ -1,6 +1,6 @@
 namespace Sandbox;
 
-internal static partial class DebugOverlay
+static partial class DebugOverlay
 {
 	/// <summary>
 	/// On-screen frametime overlay (overlay_fps 1): a live frametime strip (most recent frames, newest
