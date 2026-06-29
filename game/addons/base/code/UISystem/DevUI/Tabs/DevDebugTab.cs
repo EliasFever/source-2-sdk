@@ -69,6 +69,7 @@ public sealed class DevDebugTab : Panel
 		AddOverlayRow( "PHYSICS DEBUG", "physics_debug_draw" );
 		AddOverlayRow( "NETWORK MESSAGES", "overlay_network_calls" );
 		AddOverlayRow( "CONSOLE OUTPUT", "consoleoverlay", on: "True", off: "False" );
+		AddOverlayRow( "FRAME TIME GRAPH", "overlay_fps" );
 
 		// Put the render mode dropdown on its own row, aligned to the right.
 		var footer = overlaysCard.Body.Add.Panel( "overlays-footer" );
