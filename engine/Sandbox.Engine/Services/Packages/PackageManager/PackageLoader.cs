@@ -539,7 +539,7 @@ internal sealed partial class PackageLoader : IDisposable
 
 		var sw = Stopwatch.StartNew();
 
-		if ( ILHotload.Replace( outgoing?.Assembly, outgoing?.ModifiedAssembly ?? outgoing?.Assembly, incoming?.Assembly ) == false )
+		if ( !ILHotload.Replace( outgoing?.Assembly, outgoing?.ModifiedAssembly ?? outgoing?.Assembly, incoming?.Assembly ) )
 			return false;
 
 		sw.Stop();
