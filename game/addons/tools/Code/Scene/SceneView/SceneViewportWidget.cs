@@ -387,7 +387,15 @@ public partial class SceneViewportWidget : Widget
 		return false;
 	}
 
-	Ray CursorTraceRay => _activeCamera.ScreenPixelToRay( initialMousePosition );
+	// Cursor positions arrive as logical Qt coordinates; the active camera renders at physical pixels
+	// (CustomSize == Renderer.Size * DpiScale), so scale by this widget's DpiScale to match.
+	Ray ScreenPixelToRay( Vector2 localPixelPosition )
+	{
+		if ( !_activeCamera.IsValid() )
+			return default;
+
+		return _activeCamera.ScreenPixelToRay( localPixelPosition * DpiScale );
+	}
 
 	[Shortcut( "editor.paste", "CTRL+V" )]
 	void Paste()
@@ -409,7 +417,7 @@ public partial class SceneViewportWidget : Widget
 	{
 		using ( GizmoInstance.Push() )
 		{
-			if ( GetCursorTracePosition( CursorTraceRay ) is { } trace )
+			if ( GetCursorTracePosition( ScreenPixelToRay( initialMousePosition ) ) is { } trace )
 			{
 				EditorScene.PasteAt( trace );
 			}
@@ -452,7 +460,7 @@ public partial class SceneViewportWidget : Widget
 
 			using ( GizmoInstance.Push() )
 			{
-				var ray = CursorTraceRay;
+				var ray = ScreenPixelToRay( initialMousePosition );
 				var trace = GetCursorTracePosition( ray );
 
 				GameObjectNode.CreateObjectMenu( addMenu, null, go =>

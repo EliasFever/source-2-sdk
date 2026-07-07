@@ -8,7 +8,7 @@ namespace Editor.MeshEditor;
 [Icon( "layers" )]
 [Alias( "tools.mesh-selection" )]
 [Group( "5" )]
-public sealed partial class MeshSelection( MeshTool tool ) : SelectionTool
+public sealed partial class MeshSelection( MeshTool tool ) : SelectionTool( tool )
 {
 	public MeshTool Tool { get; private init; } = tool;
 

@@ -64,6 +64,10 @@ public static class GameMode
 
 		g_pEngineServiceMgr.SetEngineState( renderWindowId, widget.SwapChain );
 
+		// The play widget is where the game renders, so make it the main window: flip the existing
+		// m_bIsMainWindow flag so GetGPUFrameTimeMS reports the running game's GPU frame time.
+		g_pRenderDevice.SetSwapChainIsMainWindow( widget.SwapChain, true );
+
 		_focusWindowId = renderWindowId;
 		_inPlay = widget;
 
@@ -79,6 +83,22 @@ public static class GameMode
 	public static void ClearPlayMode()
 	{
 		UnregisterCurrent();
+
+		if ( _inPlay is null )
+			return;
+
+		_inPlay.Blur();
+
+		_inPlay.Focused -= WidgetFocused;
+		_inPlay.Blurred -= WidgetBlurred;
+		_inPlay.MouseTracking = false;
+
+		NativeEngine.InputSystem.UnregisterWindowFromSDL( _inPlay._widget.winId() );
+
+		if ( _inPlay is SceneRenderingWidget playWidget )
+			g_pRenderDevice.SetSwapChainIsMainWindow( playWidget.SwapChain, false );
+
+		_inPlay = null;
 	}
 
 	/// <summary>

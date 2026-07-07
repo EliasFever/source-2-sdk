@@ -85,6 +85,12 @@ public enum GameObjectFlags
 	/// Hide this object only in hierarchy
 	/// </summary>
 	HideInHierarchy = 32768,
+
+	/// <summary>
+	/// This object never moves during gameplay. Applies to children too.
+	/// Lets rendering, physics and navmesh make static optimizations.
+	/// </summary>
+	Static = 65536,
 }
 
 
@@ -96,6 +102,17 @@ public partial class GameObject
 	/// True if this GameObject is being deserialized right now
 	/// </summary>
 	public bool IsDeserializing => Flags.Contains( GameObjectFlags.Deserializing );
+
+	/// <summary>
+	/// This object never moves during gameplay, letting rendering, physics and navmesh
+	/// make static optimizations. Children inherit this via <see cref="GameObjectFlags.Static"/>
+	/// on any ancestor.
+	/// </summary>
+	public bool IsStatic
+	{
+		get => HasFlagOrParent( GameObjectFlags.Static );
+		set => Flags = Flags.WithFlag( GameObjectFlags.Static, value );
+	}
 
 	/// <summary>
 	/// Do we or our ancestor have this flag
