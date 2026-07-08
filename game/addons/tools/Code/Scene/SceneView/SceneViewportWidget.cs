@@ -93,6 +93,10 @@ public partial class SceneViewportWidget : Widget
 	float cameraOrbitDistance = 400;
 	bool doubleClick;
 
+	bool _gizmoOrthoActive;
+	bool _gizmoOrthoSnap;
+	bool WantOrtho => State.Is2D || _gizmoOrthoActive;
+
 	bool blockCameraForToolInput;
 	Vector2 blockCameraMousePosition;
 
@@ -237,10 +241,23 @@ public partial class SceneViewportWidget : Widget
 		_activeCamera.WorldPosition = State.CameraPosition;
 		_activeCamera.WorldRotation = State.CameraRotation;
 
+		bool wantOrtho = WantOrtho;
+
+		// Snapping to an axis view enters ortho instantly
+		if ( _gizmoOrthoSnap )
+		{
+			TransitionBlend = 1f;
+			CurrentFOV = 1f;
+			TargetFOV = 1f;
+			CurrentOrthoHeight = State.CameraOrthoHeight;
+			was2d = true;
+			_gizmoOrthoSnap = false;
+		}
+
 		//
 		// Smooth transition between ortho and perspective
 		//
-		if ( State.Is2D )
+		if ( wantOrtho )
 		{
 			// todo: fog?
 			if ( !was2d )
@@ -260,7 +277,7 @@ public partial class SceneViewportWidget : Widget
 		if ( TransitionBlend.AlmostEqual( 1f, 0.000001f ) ) TransitionBlend = 1;
 
 		// Transition is [ 0, 1 ] or [ 1, 0 ] depending on going to or from 2D
-		TransitionBlend = State.Is2D ?
+		TransitionBlend = wantOrtho ?
 			MathX.Lerp( TransitionBlend, 1f, RealTime.Delta * TransitionSpeed ) :
 			MathX.Lerp( TransitionBlend, 0f, RealTime.Delta * TransitionSpeed );
 
@@ -268,14 +285,14 @@ public partial class SceneViewportWidget : Widget
 
 		CurrentFOV = MathX.Lerp( CurrentFOV, TargetFOV, RealTime.Delta * TransitionSpeed );
 		CurrentOrthoHeight = MathX.Lerp( CurrentOrthoHeight, State.CameraOrthoHeight, RealTime.Delta * TransitionSpeed );
-		was2d = State.Is2D;
+		was2d = wantOrtho;
 
 		_activeCamera.ClearFlags = ClearFlags.Color | ClearFlags.Depth | ClearFlags.Stencil;
 		_activeCamera.ZNear = EditorPreferences.CameraZNear;
-		_activeCamera.ZFar = State.Is2D ? MASSIVEZFAR : EditorPreferences.CameraZFar;
+		_activeCamera.ZFar = wantOrtho ? MASSIVEZFAR : EditorPreferences.CameraZFar;
 		_activeCamera.FieldOfView = CurrentFOV;
 		_activeCamera.EnablePostProcessing = State.EnablePostProcessing;
-		_activeCamera.Orthographic = State.Is2D && TransitionBlend.AlmostEqual( 1 );
+		_activeCamera.Orthographic = wantOrtho && TransitionBlend.AlmostEqual( 1 );
 		_activeCamera.OrthographicHeight = CurrentOrthoHeight;
 		_activeCamera.DebugMode = State.RenderMode;
 		_activeCamera.WireframeMode = State.WireframeMode;
@@ -530,6 +547,11 @@ public partial class SceneViewportWidget : Widget
 
 		GizmoInstance.Input.IsHovered = hasMouseFocus;
 
+		// Orientation gizmo gets priority on the mouse. When it's interacting we suppress clicking anything in the scene
+		bool gizmoInputUsed = UpdateOrientationGizmo( hasMouseFocus );
+		if ( gizmoInputUsed )
+			GizmoInstance.Input.IsHovered = false;
+
 		if ( IsActiveWindow ) // don't update camera input if the editor window isn't active
 		{
 			// Block camera input when shift or ctrl was down first and right mouse pressed.
@@ -563,7 +585,7 @@ public partial class SceneViewportWidget : Widget
 				}
 			}
 
-			bool shouldBlockOrbit = blockCamera || (blockCameraForToolInput && GizmoInstance.Input.IsHovered);
+			bool shouldBlockOrbit = blockCamera || (blockCameraForToolInput && GizmoInstance.Input.IsHovered) || gizmoInputUsed;
 
 			_activeCamera.OrthographicHeight = State.CameraOrthoHeight;
 
@@ -590,7 +612,7 @@ public partial class SceneViewportWidget : Widget
 			State.CameraOrthoHeight = _activeCamera.OrthographicHeight;
 		}
 
-		if ( State.Is2D )
+		if ( WantOrtho )
 		{
 			Vector3 viewOffset = _activeCamera.WorldRotation.Forward;
 			if ( TransitionBlend > 0f && TransitionBlend < 1f )
@@ -651,6 +673,8 @@ public partial class SceneViewportWidget : Widget
 		}
 
 		DrawCameraSpeedOverlay();
+
+		Overlay?.Update();
 	}
 
 	/// <summary>

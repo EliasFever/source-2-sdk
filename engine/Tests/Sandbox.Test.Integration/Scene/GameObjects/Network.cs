@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json.Nodes;
 using Sandbox.Internal;
+using Sandbox.Mapping;
 using Sandbox.Network;
 using SceneTests;
 
