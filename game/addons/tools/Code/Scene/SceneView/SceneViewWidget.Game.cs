@@ -104,6 +104,12 @@ public partial class SceneViewWidget
 		OnViewModeChanged();
 	}
 
+	[Shortcut( "editor.eject", "F8", ShortcutType.Window )]
+	static void EjectShortcut()
+	{
+		Current?.ToggleEject();
+	}
+
 	public void ToggleEject()
 	{
 		if ( !Session.IsPlaying ) return;

@@ -107,8 +107,7 @@ partial class ViewportTools
 		Game.IsPaused = !Game.IsPaused;
 	}
 
-	[Shortcut( "editor.eject", "F8", ShortcutType.Window )]
-	public void Eject()
+	private void Eject()
 	{
 		sceneViewWidget.ToggleEject();
 	}
