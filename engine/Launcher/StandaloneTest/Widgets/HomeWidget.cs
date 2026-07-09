@@ -149,6 +149,10 @@ public class HomeWidget : Widget
 		LocalProjectLayout = scroller.Canvas.Layout.Add( Layout.Column(), 0 );
 
 		RefreshLocalProjects();
+
+		// Fill the taskbar jump list so recent projects are there before you open anything.
+		TaskbarJumpList.Refresh();
+
 		TryRestoreDefaultProject();
 		UpdateBanner();
 
