@@ -73,12 +73,10 @@ namespace Editor
 			var aspect = (float)BackgroundImage.Height / BackgroundImage.Width;
 			Size = new( 580, (580 * aspect).FloorToInt() + BottomAreaHeight );
 
-			if ( geometryCookie is null )
-			{
-				Position = ScreenGeometry.Contain( Size ).Position;
-			}
-
 			Show();
+			UpdateGeometry();
+			Position = ScreenGeometry.Contain( Size ).Position;
+			Focus();
 
 			if ( DpiScale != 1.0f )
 			{
