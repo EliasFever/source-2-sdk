@@ -11,7 +11,7 @@ public partial class UISystem : IUISystem
 	public static UISystem Instance;
 	static bool LoggedInit;
 
-	DevLayer Dev;
+	DevLayerHost Dev;
 	Sandbox.UI.Overlay.UISystemOverlay Overlay;
 
 	public Action<Package> OnPackageSelected { get; set; }
@@ -46,14 +46,15 @@ public partial class UISystem : IUISystem
 		}
 
 		var oldDev = devField.GetValue( current );
-		var devLayerType = currentType.Assembly.GetType( "Sandbox.UI.Dev.DevLayer", throwOnError: false, ignoreCase: false ) ?? typeof( DevLayer );
+		var devLayerType = currentType.Assembly.GetType( "Sandbox.UI.Dev.DevLayerHost", throwOnError: false, ignoreCase: false ) ?? typeof( DevLayerHost );
 		if ( !force && oldDev is not null && oldDev.GetType() == devLayerType )
 			return;
 
 		Log.Info( $"dev_layer_reload: IUISystem.Current is {currentType.FullName} ({currentType.Assembly.GetName().Name})" );
 
 		TryDeletePanelLike( oldDev );
-		var newDev = System.Activator.CreateInstance( devLayerType );
+		var create = devLayerType.GetMethod( "Create", BindingFlags.Public | BindingFlags.Static );
+		var newDev = create?.Invoke( null, null );
 		devField.SetValue( current, newDev );
 	}
 
@@ -98,6 +99,7 @@ public partial class UISystem : IUISystem
 		}
 
 		Instance = this;
+		DeveloperMode.ResetStartupState();
  
 		if ( !LoggedInit )
 		{
@@ -153,8 +155,8 @@ public partial class UISystem : IUISystem
 			if ( Dev is null || !Dev.IsValid )
 			{
 				Dev?.Delete();
-				Dev = new DevLayer();
-				Dev.OnHotloaded();
+				Dev = DevLayerHost.Create();
+				Dev?.OnHotloaded();
 			}
 			return;
 		}

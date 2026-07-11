@@ -180,7 +180,7 @@ public static class DevUiTabRegistry
 			_dirty = false;
 			_version++;
 
-			Log.Info( $"DevUiTabRegistry: built {_tabs.Count:n0} tabs (candidates {candidates:n0}, created {created:n0}, v{_version})" );
+//			Log.Info( $"DevUiTabRegistry: built {_tabs.Count:n0} tabs (candidates {candidates:n0}, created {created:n0}, v{_version})" );
 		}
 		finally
 		{

@@ -373,7 +373,7 @@ public static partial class EditorToolBars
 			}
 		}
 
-		Log.Info( $"[Toolbar] Cached {s_shortcutCache.Count} shortcuts." );
+	//	Log.Info( $"[Toolbar] Cached {s_shortcutCache.Count} shortcuts." );
 		s_shortcutCacheDirty = false;
 
 		//foreach ( var key in s_shortcutCache.Keys )

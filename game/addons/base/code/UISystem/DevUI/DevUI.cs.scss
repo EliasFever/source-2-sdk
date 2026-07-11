@@ -13,9 +13,6 @@ devlayer
 
 	&.developermode
 	{	
-		pointer-events: all;
-
-		
 		// John: We don't want to hide the console here for now
 	
 		// Hide the console overlay when the
@@ -37,4 +34,3 @@ devlayer
 		}
 	}
 }
-

@@ -24,12 +24,13 @@ DeveloperMode
 	bottom: 0px;
 	right: 0px;
 	left: 0px;
-	pointer-events: none;
+	 pointer-events: none;
+	// pointer-events: none;
 
-	&.open.focused
-	{
-		pointer-events: all;
-	}
+	// &.open.focused
+	// {
+	// 	pointer-events: all;
+	// }
 }
 
 DeveloperMode:not(.open) DevWindow

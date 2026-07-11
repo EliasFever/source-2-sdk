@@ -15,6 +15,12 @@ public sealed class DevWindow : Panel
 	[ConVar( "devui_window_force_render_while_interacting" )]
 	public static bool ForceRenderWhileInteracting { get; set; } = true;
 
+	[ConVar( "devui_window_drag_smooth_time" )]
+	public static float DragSmoothTime { get; set; } = 0.0f;
+
+	[ConVar( "devui_window_drag_lead_frames" )]
+	public static float DragLeadFrames { get; set; } = 0.0f;
+
 	const string CookieX = "devui.window.x";
 	const string CookieY = "devui.window.y";
 	const string CookieW = "devui.window.w";
@@ -52,7 +58,10 @@ public sealed class DevWindow : Panel
 	Vector2 DragStartMouse;
 	Vector2 DragStartPos;
 	Vector2 DragCurrentDelta;
-	Vector2 DragMouseOffsetScreen;
+	Vector2 DragVisualDelta;
+	Vector2 DragVisualVelocity;
+	Vector2 DragLastTargetDelta;
+	Vector2 DragTargetVelocity;
 
 	Vector2 ResizeStartMouse;
 	Vector2 ResizeStartSize;
@@ -62,8 +71,13 @@ public sealed class DevWindow : Panel
 	long _dragDebugLastLogMs;
 	int _dragDebugTickCount;
 	int _dragDebugMouseMoveCount;
+	bool _dragVisualUpdatedEarly;
 
 	string ActiveTabId => string.IsNullOrWhiteSpace( _activeTabId ) ? "log" : _activeTabId;
+
+	public bool Open { get; set; }
+	public bool Focused { get; set; } = true;
+	public bool WantsInput => Open && Focused;
 
 	public DevWindow()
 	{
@@ -100,7 +114,7 @@ public sealed class DevWindow : Panel
 		drag.AddEventListener( "onmouseup", () => StopInteractions() );
 		drag.Add.Label( "CONSOLE", "title" );
 
-		var close = Header.AddChild( new Button( null, "close", () => DeveloperMode.DevUI = 0 ) );
+		var close = Header.AddChild( new Button( null, "close", Close ) );
 		close.AddClass( "close" );
 
 		Tabs = Add.Panel( "tabs" );
@@ -132,6 +146,40 @@ public sealed class DevWindow : Panel
 
 	public void BlurConsole() => LogTab?.BlurConsole();
 
+	public void OpenWindow( bool focus = true )
+	{
+		Open = true;
+		Focused = focus;
+	}
+
+	public void Close()
+	{
+		Open = false;
+		Focused = false;
+	}
+
+	public void ToggleOpen()
+	{
+		if ( Open )
+		{
+			Close();
+			return;
+		}
+
+		OpenWindow();
+	}
+
+	public void ToggleFocus()
+	{
+		if ( !Open )
+		{
+			OpenWindow();
+			return;
+		}
+
+		Focused = !Focused;
+	}
+
 	void StartDrag()
 	{
 		EnsureRootMouseUpHook();
@@ -139,9 +187,11 @@ public sealed class DevWindow : Panel
 		DragStartMouse = Mouse.Position;
 		DragStartPos = new Vector2( Style.Left?.Value ?? 0.0f, Style.Top?.Value ?? 0.0f );
 		DragCurrentDelta = 0;
-
-		var startPosScreen = DragStartPos * ScaleToScreen;
-		DragMouseOffsetScreen = Mouse.Position - startPosScreen;
+		DragVisualDelta = 0;
+		DragVisualVelocity = 0;
+		DragLastTargetDelta = 0;
+		DragTargetVelocity = 0;
+		ClearDragTransform();
 		this.SetCursor( CursorType.Move );
 	}
 
@@ -221,8 +271,14 @@ public sealed class DevWindow : Panel
 
 		if ( IsDragging )
 		{
-			var desiredPos = (Mouse.Position - DragMouseOffsetScreen) * ScaleFromScreen;
-			SetPosition( desiredPos );
+			if ( _dragVisualUpdatedEarly )
+			{
+				_dragVisualUpdatedEarly = false;
+			}
+			else
+			{
+				UpdateDragVisual( advanceSmoothing: true );
+			}
 		}
 
 		if ( IsResizing )
@@ -259,6 +315,15 @@ public sealed class DevWindow : Panel
 		}
 	}
 
+	internal void TickDragEarly()
+	{
+		if ( !IsDragging )
+			return;
+
+		UpdateDragVisual( advanceSmoothing: true );
+		_dragVisualUpdatedEarly = true;
+	}
+
 	protected override void OnMouseMove( MousePanelEvent e )
 	{
 		if ( DragDebug && IsInteracting )
@@ -266,7 +331,22 @@ public sealed class DevWindow : Panel
 			_dragDebugMouseMoveCount++;
 		}
 
+		if ( IsDragging && DragSmoothTime <= 0.0f )
+		{
+			UpdateDragVisual( advanceSmoothing: false );
+			if ( ForceRenderWhileInteracting )
+			{
+				MarkRenderDirty();
+			}
+		}
+
 		base.OnMouseMove( e );
+	}
+
+	protected override void OnMouseDown( MousePanelEvent e )
+	{
+		Focused = true;
+		base.OnMouseDown( e );
 	}
 
 	protected override void OnMouseUp( MousePanelEvent e )
@@ -302,6 +382,65 @@ public sealed class DevWindow : Panel
 		var pos = ClampPositionToBounds( DragStartPos + delta, size );
 
 		return pos - DragStartPos;
+	}
+
+	void UpdateDragVisual( bool advanceSmoothing )
+	{
+		var targetDelta = GetClampedDragDeltaFromScreen( Mouse.Position - DragStartMouse );
+
+		if ( advanceSmoothing )
+		{
+			UpdateDragTargetVelocity( targetDelta );
+		}
+
+		DragCurrentDelta = targetDelta;
+		var predictedDelta = GetPredictedDragDelta( targetDelta );
+		DragVisualDelta = advanceSmoothing ? GetSmoothedDragDelta( predictedDelta ) : predictedDelta;
+		ApplyDragTransform( DragVisualDelta );
+	}
+
+	void UpdateDragTargetVelocity( Vector2 targetDelta )
+	{
+		var dt = Time.Delta;
+		if ( dt > 0.0001f )
+		{
+			DragTargetVelocity = (targetDelta - DragLastTargetDelta) / dt;
+		}
+
+		DragLastTargetDelta = targetDelta;
+	}
+
+	Vector2 GetPredictedDragDelta( Vector2 targetDelta )
+	{
+		var leadFrames = DragLeadFrames.Clamp( 0.0f, 3.0f );
+		if ( leadFrames <= 0.0f )
+			return targetDelta;
+
+		var predicted = targetDelta + DragTargetVelocity * Time.Delta * leadFrames;
+		var size = GetCurrentSize();
+		var pos = ClampPositionToBounds( DragStartPos + predicted, size );
+		return pos - DragStartPos;
+	}
+
+	Vector2 GetSmoothedDragDelta( Vector2 targetDelta )
+	{
+		var smoothTime = DragSmoothTime;
+		if ( smoothTime <= 0.0f )
+		{
+			DragVisualVelocity = 0;
+			return targetDelta;
+		}
+
+		var vx = DragVisualVelocity.x;
+		var vy = DragVisualVelocity.y;
+		var dt = Time.Delta;
+
+		var visual = new Vector2(
+			MathX.SmoothDamp( DragVisualDelta.x, targetDelta.x, ref vx, smoothTime, dt ),
+			MathX.SmoothDamp( DragVisualDelta.y, targetDelta.y, ref vy, smoothTime, dt ) );
+
+		DragVisualVelocity = new Vector2( vx, vy );
+		return visual;
 	}
 
 	Vector2 GetCurrentPos()
