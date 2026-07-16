@@ -10,7 +10,7 @@
 
 	<div class="devpercent-slider" @ref="SliderTrack">
 		<div class="devpercent-slider-fill" @ref="SliderFill" style="@FillStyle"></div>
-		<div class="devpercent-slider-thumb" @ref="SliderThumb" style="@ThumbStyle" onmousedown="@(( MousePanelEvent e ) => StartDrag( e ))"></div>
+		<div class="devpercent-slider-thumb" @ref="SliderThumb" style="@ThumbStyle"></div>
 	</div>
 </root>
 
@@ -51,13 +51,6 @@
 
 		DisplayValue = value;
 		ApplyValue();
-	}
-
-	private void StartDrag( MousePanelEvent e )
-	{
-		IsDragging = true;
-		GrabOffset = e.LocalPosition.x;
-		e.StopPropagation();
 	}
 
 	protected override void OnMouseDown( MousePanelEvent e )
