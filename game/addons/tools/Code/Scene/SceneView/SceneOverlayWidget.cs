@@ -24,7 +24,7 @@ public class SceneOverlayWidget : Widget
 		Active = this;
 
 		Layout = Layout.Column();
-		Layout.Margin = 8;
+		Layout.Margin = 16;
 
 		var header = Layout.AddRow();
 		header.AddStretchCell();
@@ -181,7 +181,7 @@ public class SceneOverlayWidget : Widget
 		// If the game is running we don't want focus state, not necessary for now
 		if ( viewport.SceneView.CurrentView == SceneViewWidget.ViewMode.Game )
 			return false;
-	
+
 		// Ejected state uses its own yellow indicator.
 		return viewport.SceneView.CurrentView != SceneViewWidget.ViewMode.GameEjected && IsViewportFocused( viewport );
 	}

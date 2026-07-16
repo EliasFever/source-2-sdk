@@ -14,9 +14,9 @@ public partial class SceneViewportWidget
 
 	private static Color GizmoAxisColor( int axis ) => (axis / 2) switch
 	{
-		0 => Color.FromBytes( 226, 84, 84 ),  // X - red
-		1 => Color.FromBytes( 130, 200, 80 ), // Y - green
-		_ => Color.FromBytes( 74, 140, 226 ), // Z - blue
+		0 => Gizmo.Colors.Red,  // X - red
+		1 => Gizmo.Colors.Green, // Y - green
+		_ => Gizmo.Colors.Blue, // Z - blue
 	};
 
 	private bool _gizmoHovered;
@@ -28,14 +28,14 @@ public partial class SceneViewportWidget
 	private Vector2 _gizmoLockCursor;
 	private Vector3 _gizmoPivot;
 
-	private float GizmoRadius => 30f * Renderer.DpiScale;
-	private float GizmoBallRadius => 7f * Renderer.DpiScale;
+	private float GizmoRadius => 32f * Renderer.DpiScale;
+	private float GizmoBallRadius => 8f * Renderer.DpiScale;
 
 	private Vector2 GizmoCenter
 	{
 		get
 		{
-			var inset = GizmoRadius + GizmoBallRadius + 20f * Renderer.DpiScale;
+			var inset = GizmoRadius + GizmoBallRadius + 16f + 4 * Renderer.DpiScale;
 			return new Vector2( inset, inset );
 		}
 	}
@@ -221,16 +221,14 @@ public partial class SceneViewportWidget
 		if ( !_activeCamera.IsValid() )
 			return;
 
-		const float radius = 30f;
-		const float ballRadius = 7f;
-		var inset = radius + ballRadius + 20f;
+		var inset = GizmoRadius + GizmoBallRadius + 16f + 4;
 		var center = new Vector2( inset, inset );
 
 		Paint.Antialiasing = true;
 
 		if ( _gizmoHovered )
 		{
-			var bg = radius + ballRadius + 4f;
+			var bg = GizmoRadius + GizmoBallRadius + 4f;
 			Paint.ClearPen();
 			Paint.SetBrush( Color.Black.WithAlpha( 0.1f ) );
 			Paint.DrawCircle( center, new Vector2( bg * 2f ) );
@@ -242,7 +240,7 @@ public partial class SceneViewportWidget
 
 		for ( int i = 0; i < GizmoAxes.Length; i++ )
 		{
-			positions[i] = center + GizmoAxisScreenDir( GizmoAxes[i], out var depth ) * radius;
+			positions[i] = center + GizmoAxisScreenDir( GizmoAxes[i], out var depth ) * GizmoRadius;
 			depths[i] = depth;
 			order[i] = i;
 		}
@@ -283,14 +281,14 @@ public partial class SceneViewportWidget
 				else
 					Paint.ClearPen();
 
-				Paint.DrawCircle( pos, new Vector2( ballRadius * 2f ) );
+				Paint.DrawCircle( pos, new Vector2( GizmoBallRadius * 2f ) );
 			}
 			else
 			{
 				// Hollow ball for negative axes.
 				Paint.SetBrush( Color.Black.WithAlpha( facing * 0.5f ) );
 				Paint.SetPen( (hovered ? Color.White : color).WithAlpha( facing ), 1.5f );
-				Paint.DrawCircle( pos, new Vector2( ballRadius * 2f ) );
+				Paint.DrawCircle( pos, new Vector2( GizmoBallRadius * 2f ) );
 			}
 		}
 
@@ -302,7 +300,7 @@ public partial class SceneViewportWidget
 			if ( (i % 2) != 0 )
 				continue;
 
-			Paint.DrawText( new Rect( positions[i] - new Vector2( ballRadius ), ballRadius * 2f ), GizmoAxisLabels[i], TextFlag.Center );
+			Paint.DrawText( new Rect( positions[i] - new Vector2( GizmoBallRadius ), GizmoBallRadius * 2f ), GizmoAxisLabels[i], TextFlag.Center );
 		}
 	}
 }
