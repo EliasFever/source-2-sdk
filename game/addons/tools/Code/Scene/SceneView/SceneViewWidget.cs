@@ -70,6 +70,15 @@ public partial class SceneViewWidget : Widget
 
 		CloseGamePopupWindow( true );
 		SaveState();
+
+		if ( Current == this )
+			Current = null;
+
+		_externalChangesDialog?.Destroy();
+		_externalChangesDialog = null;
+
+		Tools.DisposeAll();
+
 		base.OnDestroyed();
 	}
 

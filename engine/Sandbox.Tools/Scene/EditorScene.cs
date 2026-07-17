@@ -256,9 +256,12 @@ public static class EditorScene
 
 		if ( playMode )
 		{
-			LoadingScreen.IsVisible = true;
-			LoadingScreen.Title = "Loading Game..";
-			IGameInstanceDll.Current.EditorPlay();
+			if ( IGameInstance.Current is not null )
+			{
+				LoadingScreen.IsVisible = true;
+				LoadingScreen.Title = "Loading Game..";
+				IGameInstanceDll.Current.EditorPlay();
+			}
 		}
 		else
 		{
@@ -296,7 +299,6 @@ public static class EditorScene
 		}
 
 		SceneEditorSession.Active.SetPlaying( Game.ActiveScene );
-
 		EditorEvent.Run( "scene.play" );
 	}
 
@@ -311,7 +313,7 @@ public static class EditorScene
 
 		Game.IsClosing = true;
 
-		SceneEditorSession.Active.StopPlaying();
+		SceneEditorSession.Playing?.StopPlaying();
 
 		Game.IsPlaying = false;
 		Game.IsPaused = false;

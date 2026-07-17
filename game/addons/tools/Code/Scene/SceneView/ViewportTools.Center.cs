@@ -6,6 +6,24 @@ partial class ViewportTools
 	EditorToolButton PauseButton { get; set; }
 	EditorToolButton EjectButton { get; set; }
 	EditorToolButton PopupWindowButton { get; set; }
+	Widget PlayToolbar { get; set; }
+
+	enum PlayControlState
+	{
+		Ready,
+		Playing,
+		Hidden
+	}
+
+	PlayControlState _playState;
+
+	PlayControlState CurrentPlayState => sceneViewWidget.Session switch
+	{
+		{ IsPrefabSession: true } => PlayControlState.Hidden,
+		{ IsPlaying: true } => PlayControlState.Playing,
+		_ when Game.IsPlaying => PlayControlState.Hidden,
+		_ => PlayControlState.Ready
+	};
 
 	private void BuildPlayToolbar( Layout toolbar )
 	{
@@ -39,19 +57,15 @@ partial class ViewportTools
 	/// </summary>
 	private void UpdateState()
 	{
-		// Prefabs nada
-		if ( sceneViewWidget.Session.IsPrefabSession )
-		{
-			PlayButton.Enabled = false;
-			PauseButton.Enabled = false;
-			EjectButton.Enabled = false;
-			PopupWindowButton.Enabled = false;
-			return;
-		}
+		_playState = CurrentPlayState;
+		PlayToolbar.Visible = _playState != PlayControlState.Hidden;
 
-		PopupWindowButton.Enabled = true;
+		if ( _playState == PlayControlState.Hidden ) return;
 
-		if ( Game.IsPlaying )
+		var isPlaying = _playState == PlayControlState.Playing;
+		PlayButton.Enabled = true;
+
+		if ( isPlaying )
 		{
 			PlayButton.ToolTip = WithKeys( "Stop", "editor.toggle-play" );
 			PlayButton.GetIcon = () => "stop";
@@ -64,11 +78,10 @@ partial class ViewportTools
 			PlayButton.Color = Theme.Green;
 		}
 
-		// We can only pause whilst we're gaming
-		PauseButton.Enabled = Game.IsPlaying;
+		PauseButton.Enabled = isPlaying;
 		PauseButton.ToolTip = WithKeys( "Pause", "editor.pause" );
 
-		EjectButton.Enabled = Game.IsPlaying;
+		EjectButton.Enabled = isPlaying;
 		bool isEjected = sceneViewWidget.CurrentView == SceneViewWidget.ViewMode.GameEjected;
 		EjectButton.GetIcon = () => isEjected ? "sports_esports" : "eject";
 		EjectButton.ToolTip = WithKeys( isEjected ? "Return to Game" : "Eject", "editor.eject" );
@@ -94,13 +107,16 @@ partial class ViewportTools
 		if ( !PauseButton.IsValid() )
 			return;
 
-		PauseButton.Color = Game.IsPlaying && Game.IsPaused ? Theme.Blue : Theme.TextLight;
+		if ( _playState != CurrentPlayState )
+			UpdateState();
+
+		PauseButton.Color = _playState == PlayControlState.Playing && Game.IsPaused ? Theme.Blue : Theme.TextLight;
 	}
 
 	[Shortcut( "editor.pause", "F7", ShortcutType.Window )]
 	private void Pause()
 	{
-		if ( !Game.IsPlaying )
+		if ( !sceneViewWidget.Session.IsPlaying )
 			return;
 
 		// What the fuck, why isnt this a method

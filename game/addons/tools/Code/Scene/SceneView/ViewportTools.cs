@@ -80,9 +80,9 @@ public partial class ViewportTools : Widget
 
 		toolbar.AddStretchCell();
 
-		var centerGroup = center.Add( AddGroup() );
-		centerGroup.Layout.Spacing = Spacing;
-		BuildPlayToolbar( centerGroup.Layout );
+		PlayToolbar = center.Add( AddGroup() );
+		PlayToolbar.Layout.Spacing = Spacing;
+		BuildPlayToolbar( PlayToolbar.Layout );
 
 		BuildToolbarRight( right );
 

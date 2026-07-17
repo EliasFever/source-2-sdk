@@ -36,6 +36,10 @@ public static class GameMode
 
 		UnregisterCurrent();
 
+		// Blur before registering so SDL's fresh wrapper can't snapshot this widget as its
+		// keyboard focus window - relative mouse mode is driven from the main editor window
+		widget.Blur();
+
 		_focusSource = widget;
 		_focusSource.Focused += WidgetFocused;
 		_focusSource.Blurred += WidgetBlurred;
@@ -71,13 +75,9 @@ public static class GameMode
 		_focusWindowId = renderWindowId;
 		_inPlay = widget;
 
-		// For embedded viewport play, keep vanilla behavior and force a refocus.
-		// For popup mode, don't auto-focus/capture; let the user click into the render area.
-		if ( hostWindowId == renderWindowId )
-		{
-			widget.Blur();
-			widget.Focus();
-		}
+		// Force a full refocus by blurring first
+		widget.Blur();
+		widget.Focus();
 	}
 
 	public static void ClearPlayMode()

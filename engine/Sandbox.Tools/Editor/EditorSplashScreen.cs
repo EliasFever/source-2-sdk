@@ -75,7 +75,7 @@ namespace Editor
 
 			Show();
 			UpdateGeometry();
-			Position = ScreenGeometry.Contain( Size ).Position;
+			CenterWindow();
 			Focus();
 
 			if ( DpiScale != 1.0f )
