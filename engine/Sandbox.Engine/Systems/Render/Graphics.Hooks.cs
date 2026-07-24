@@ -20,8 +20,8 @@ public static partial class Graphics
 			using ( new Graphics.Scope( in setup ) )
 			{
 				DebugOverlay.Render();
-				CaptureFrameWithOverlays();
-				DrawRecordingBorder();
+				ScreenCaptureUtility.CaptureFrame();
+				ScreenCaptureUtility.DrawRecordingBorder();
 			}
 
 			return;
