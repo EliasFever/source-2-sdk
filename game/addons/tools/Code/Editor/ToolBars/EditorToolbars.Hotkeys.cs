@@ -52,7 +52,7 @@ public static partial class EditorToolBars
 
 	[Shortcut( "tools.resize-tool", "q", typeof( SceneViewWidget ) )]
 	public static void ActivateResizeMode() => SetMoveMode( "mesh.resize.mode" );
-	
+
 	//
 	// Selection modes
 	//

@@ -23,7 +23,7 @@ public class ActiveMaterialDock : Widget
 		_content.Margin = 8;
 		_content.Spacing = 6;
 		_content.Alignment = TextFlag.Center;
-		
+
 		Rebuild();
 	}
 

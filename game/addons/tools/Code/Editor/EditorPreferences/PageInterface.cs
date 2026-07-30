@@ -59,7 +59,7 @@ internal partial class PageInterface : Widget
 			"<li>Proof of concept additions that are yet to be polished" +
 			"<li>Errors that can lead to console spam, crashes however are not expected so if you get those report them immediately!" +
 			"</ul>" ) );
-			
+
 			warningbox.HorizontalSizeMode = SizeMode.Expand | SizeMode.CanGrow;
 		}
 	}

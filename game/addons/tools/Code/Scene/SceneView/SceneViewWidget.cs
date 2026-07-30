@@ -394,7 +394,7 @@ file class ViewportToolBar : Widget
 		if ( rootTool?.CreateShortcutsWidget() is { } rootShortcutWidget ) _footer.Add( rootShortcutWidget );
 		if ( subTool?.CreateShortcutsWidget() is { } subShortcutWidget ) _footer.Add( subShortcutWidget );
 	}
-	
+
 	EditorTool _activeTool;
 	int _selectionHash;
 

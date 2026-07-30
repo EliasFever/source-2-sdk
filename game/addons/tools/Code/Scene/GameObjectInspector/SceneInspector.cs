@@ -53,7 +53,7 @@ public class SceneInspector : InspectorWidget
 		Layout.Add( csMeta );
 
 		foreach ( var ext in Extensions )
-    		ext.Extend( Layout, so );
+			ext.Extend( Layout, so );
 
 		Layout.AddStretchCell();
 	}

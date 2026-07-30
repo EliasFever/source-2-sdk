@@ -14,7 +14,7 @@ internal sealed class SceneGamePopupWindow : Window
 		_scene = scene;
 
 		DeleteOnClose = true;
-		WindowFlags = WindowFlags.Window | WindowFlags.WindowTitle | WindowFlags.WindowSystemMenuHint | WindowFlags.CloseButton 
+		WindowFlags = WindowFlags.Window | WindowFlags.WindowTitle | WindowFlags.WindowSystemMenuHint | WindowFlags.CloseButton
 		| WindowFlags.MinimizeButton | WindowFlags.MaximizeButton | WindowFlags.WindowStaysOnTopHint;
 
 		StatusBar = null; // Gets rid of the unwanted padding at the bottom of the window.

@@ -23,7 +23,7 @@ public partial class SceneViewWidget
 		PreserveLastEjectPosition
 	}
 
-	[Title( "Eject Camera Mode" ), Description("Should the eject camera reset it's position every ejection or retain it?")]
+	[Title( "Eject Camera Mode" ), Description( "Should the eject camera reset it's position every ejection or retain it?" )]
 	public EjectCameraMode EjectMode
 	{
 		get => ProjectCookie.Get( EjectCameraModeCookie, EjectCameraMode.ResetFromGameplayCamera );

@@ -225,7 +225,7 @@ public partial class ObjectPlacerTool
 				string.IsNullOrWhiteSpace( group.Name ) ? "Objects" : group.Name,
 				string.IsNullOrWhiteSpace( group.Icon ) ? "folder" : group.Icon,
 				group.CollapsedByDefault,
-				groupedEntries);
+				groupedEntries );
 		}
 
 		var ungrouped = entries.Where( x => string.IsNullOrWhiteSpace( x.GroupId ) || !groups.Any( g => g.Id == x.GroupId ) ).ToArray();
@@ -278,7 +278,7 @@ public partial class ObjectPlacerTool
 		_categoryVisibility[id] = visible;
 	}
 
-	
+
 }
 
 internal readonly record struct ObjectPlacerEntryGroupInfo( string Id, string Name, string Icon, bool CollapsedByDefault, ObjectPlacerEntry[] Entries );
@@ -921,7 +921,7 @@ internal static class ObjectPlacerPreviewIcons
 		return true;
 	}
 
-	public static Pixmap GetConfiguredIconPixmap( string icon)
+	public static Pixmap GetConfiguredIconPixmap( string icon )
 	{
 		if ( string.IsNullOrWhiteSpace( icon ) || !LooksLikeAssetPath( icon ) )
 			return null;

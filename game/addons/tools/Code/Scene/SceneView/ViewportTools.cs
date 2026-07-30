@@ -101,7 +101,7 @@ public partial class ViewportTools : Widget
 		var sceneView = GetAncestor<SceneViewWidget>();
 		var isGameRunning = sceneView.CurrentView == SceneViewWidget.ViewMode.Game;
 		var showToolbar = EditorToolBars.ShowLegacyToolbar || isGameRunning;
-		
+
 		this.Visible = showToolbar || EditorWindow.IsFullscreen( sceneView );
 
 		if ( this.Visible )

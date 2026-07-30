@@ -7,10 +7,10 @@ internal partial class PageInterface
 
 
 	// Populate this!
-	static void RegisterGroups() 
-	{ 
+	static void RegisterGroups()
+	{
 		RegisterGroup( ViewGroup );
-		RegisterGroup( ToolbarsGroup ); 
+		RegisterGroup( ToolbarsGroup );
 	}
 
 	// John: Free example for those who want to make their own groups :)

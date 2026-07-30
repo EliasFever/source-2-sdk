@@ -103,14 +103,14 @@ public partial class ViewportOptions : Widget
 					Min = 0.125f,
 					Max = 128.0f,
 					ToolTip = "Grid Step",
-					FixedWidth = 65				
+					FixedWidth = 65
 				};
 
 				group.Layout.Add( snapStep );
 			}
-			
+
 		}
-		
+
 		if ( SceneViewportWidget.State.RenderMode == SceneCameraDebugMode.Albedo )
 		{
 			var albedoButton = Layout.Add( new IconButton( "palette", ToggleAlbedoChart )
@@ -145,11 +145,11 @@ public partial class ViewportOptions : Widget
 		{
 			SceneViewButton = Layout.Add( new IconButton( "grid_view", () => SceneViewportWidget?.SceneView?.ViewportTools?.OpenSceneViewModeMenuForViewport( SceneViewButton ) )
 			{
-					ToolTip = "Layout",
-					FixedHeight = Theme.RowHeight,
-					FixedWidth = Theme.RowHeight,
-					Background = ButtonBackgroundColor,
-					IconSize = 14f
+				ToolTip = "Layout",
+				FixedHeight = Theme.RowHeight,
+				FixedWidth = Theme.RowHeight,
+				Background = ButtonBackgroundColor,
+				IconSize = 14f
 			} );
 			SceneViewButton.OnPaintOverride = () =>
 			{
@@ -238,7 +238,7 @@ public partial class ViewportOptions : Widget
 
 			cs.AddProperty( this, x => x.CameraFieldOfView );
 			cs.AddProperty( viewport.SceneView, x => x.EjectMode );
-		//	cs.AddProperty( viewport.SceneView, x => x.ShowEjectCamera );
+			//	cs.AddProperty( viewport.SceneView, x => x.ShowEjectCamera );
 
 			widget.Layout = cs;
 
@@ -327,8 +327,8 @@ public partial class ViewportOptions : Widget
 	void ToggleAlbedoChart()
 	{
 		bool current = DebugOverlay.AlbedoChart;
-//		do the thing
-//		ConsoleSystem.SetValue( "r_albedo_chart", !current );
+		//		do the thing
+		//		ConsoleSystem.SetValue( "r_albedo_chart", !current );
 	}
 
 	private Widget AddGroup()

@@ -98,7 +98,7 @@ public class NavTestSettings : EditorTool
 
 			AddRows( AddGroup( "Agent" ), so,
 				"AgentHeight",
-				"AgentRadius", 	
+				"AgentRadius",
 				"AgentStepSize",
 				"AgentMaxSlope" );
 

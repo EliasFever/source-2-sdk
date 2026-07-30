@@ -45,7 +45,7 @@ public partial class SceneTreeWidget : Widget
 		Search.Layout.AddStretchCell( 1 );
 		Search.TextChanged += x => queryDirty = true;
 		Search.FixedHeight = Theme.RowHeight;
-		
+
 		SearchClear = Search.Layout.Add( new ToolButton( string.Empty, "clear", this ) );
 		SearchClear.MouseLeftPress = () =>
 		{
@@ -66,7 +66,7 @@ public partial class SceneTreeWidget : Widget
 			}
 		};
 		SearchClear.Visible = false;
-		
+
 		SubHeader.AddSpacingCell( 2 );
 
 		ShowHiddenButton = SubHeader.Add( new IconButton( "visibility" )
@@ -82,7 +82,7 @@ public partial class SceneTreeWidget : Widget
 			queryDirty = true;
 			Rebuild();
 		};
-		
+
 		TreeView = new TreeView();
 		TreeView.MultiSelect = true;
 		TreeView.BodyDropTarget = TreeView.DragDropTarget.LastRoot;
