@@ -245,7 +245,7 @@ public static partial class EditorToolBars
 				Checkable=true,
 				ActionType = ToolActionType.MethodCall,
 				Method = EditorToolBarsActions.SelectClutterTool,
-				Description="Place pre-configured groups of objects on to a surface with randomization", 				
+				Description="Place pre-configured groups of objects on to a surface with randomization",
 				ActiveResolver = () => EditorToolManager.CurrentModeName == nameof( ClutterTool ) },
 
 			// John: These are very specific, pretty much not used in CS2/HLVR/HLX
@@ -399,7 +399,7 @@ public static partial class EditorToolBars
 			SetterAction = () => EditorScene.GizmoSettings.GlobalSpace = false,
 			GroupType = ToolBarOptionGroupType.SingleExclusive,
 			ActiveResolver = () => !EditorScene.GizmoSettings.GlobalSpace },
-
+/*
 		new() { Name = "Pick Workplane",
 			Icon = "hammer/workplane_tool_icon.png",
 			ToggledIcon = "hammer/workplane_tool_icon_activated.png",
@@ -415,7 +415,7 @@ public static partial class EditorToolBars
 			GroupType = ToolBarOptionGroupType.ExternallyControlled,
 			ConditionalOn = "Pick Workplane",
 			Description = "Reset the workplane when custom workplane is active" },
-
+*/
 		new() { Separator=true },
 
 		new() { Name = "Texture Lock",
@@ -423,44 +423,70 @@ public static partial class EditorToolBars
 			ToggledIcon = "hammer/toggle_texture_lock_component_activated.png",
 			Checkable = true,
 			Hotkey = "Ctrl+Shift+Y",
-			Description = "Texture Lock" },
+			Description = "Texture Lock",
+			ActionType = ToolActionType.PropertyToggle,
+			Getter = () => EditorToolBarsActions.TextureLock,
+			Setter = v => EditorToolBarsActions.TextureLock = v,
+			ActiveResolver = () => EditorToolBarsActions.TextureLock},
 
 		new() { Name = "Texture Lock Scale",
 			Icon = "hammer/toggle_texture_lock_scale.png",
 			ToggledIcon = "hammer/toggle_texture_lock_scale_activated.png",
 			Checkable = true,
-			Description = "Texture Lock Scale" },
+			Description = "Texture Lock Scale",
+			ActionType = ToolActionType.PropertyToggle,
+			Getter = () => EditorToolBarsActions.TextureLockScale,
+			Setter = v => EditorToolBarsActions.TextureLockScale = v,
+			ActiveResolver = () => EditorToolBarsActions.TextureLockScale},
 
 		new() { Name = "Texture Lock Component",
 			Icon = "hammer/toggle_texture_lock_component.png",
 			ToggledIcon = "hammer/toggle_texture_lock_component_activated.png",
 			Checkable = true,
-			Description = "Texture Lock Component Manipulations" },
+			Description = "Texture Lock Component Manipulations",
+			ActionType = ToolActionType.PropertyToggle,
+			Getter = () => EditorToolBarsActions.TextureLockComponent,
+			Setter = v => EditorToolBarsActions.TextureLockComponent = v,
+			ActiveResolver = () => EditorToolBarsActions.TextureLockComponent},
 
 		new() { Name = "Lasso Through",
 			Icon = "hammer/toggle_select_through.png",
 			ToggledIcon = "hammer/toggle_select_through_activated.png",
 			Checkable = true,
 			Hotkey = "Ctrl+Shift+L",
-			Description = "Enable Lasso Select Through" },
+			Description = "Enable Lasso Select Through",
+			ActionType = ToolActionType.PropertyToggle,
+			Getter = () => EditorToolBarsActions.SelectionThrough,
+			Setter = v => EditorToolBarsActions.SelectionThrough = v,
+			ActiveResolver = () => EditorToolBarsActions.SelectionThrough},
 
 		new() { Name = "Lasso Partial",
 			Icon = "hammer/toggle_select_intersecting.png",
 			ToggledIcon = "hammer/toggle_select_intersecting_activated.png",
 			Checkable = true,
-			Description = "Enable Lasso Select Partial Intersections" },
+			Description = "Enable Lasso Select Partial Intersections",
+			ActionType = ToolActionType.PropertyToggle,
+			Getter = () => EditorToolBarsActions.LassoPartialSelection,
+			Setter = v => EditorToolBarsActions.LassoPartialSelection = v,
+			ActiveResolver = () => EditorToolBarsActions.LassoPartialSelection},
 
-		new() { Name = "Backface Select",
+		new () {
+		Name = "Backface Select",
 			Icon = "hammer/toggle_select_backfacing.png",
 			Checkable = true,
 			Hotkey = "Ctrl+Shift+F9",
-			Description = "Enable Backface Selection" },
+			Description = "Enable Backface Selection" ,
+			ActionType = ToolActionType.PropertyToggle,
+			Getter = () => EditorPreferences.BackfaceSelection,
+			Setter = v => EditorPreferences.BackfaceSelection = v,
+			ActiveResolver = () => EditorPreferences.BackfaceSelection},
 
-		new() { Separator=true },
-		new() { Separator=true },
-		new() { Separator=true },
+		new () { Separator=true },
+		new () { Separator=true },
+		new () { Separator=true },
 
-		new() { Name = "Toggle Fullscreen",
+		new () {
+		Name = "Toggle Fullscreen",
 			ShortcutAction = "editor.eject",
 			Icon = "hammer/fullscreen_activated.png",
 			Hotkey = "F3",
@@ -472,9 +498,10 @@ public static partial class EditorToolBars
 			ConditionalOn = "Run Game"
 		},
 
-		new() { Separator=true },
+		new () { Separator=true },
 
-		new() { Name = "Popup Game Window",
+		new () {
+	Name = "Popup Game Window",
 			Icon = "hammer/popup_game_window.png",
 			ToggledIcon = "hammer/popup_game_window_activated.png",
 			Checkable = true,
@@ -484,11 +511,12 @@ public static partial class EditorToolBars
 			Setter = v => SceneViewWidget.UsePopupGameWindow = v,
 			DisableDuringPlay = false,
 			ActiveResolver = () => SceneViewWidget.UsePopupGameWindow
-		},
+},
 
-		new() { Separator=true },
+		new () { Separator=true },
 
-		new() { Name = "Run Game",
+		new () {
+	Name = "Run Game",
 			ShortcutAction = "editor.toggle-play",
 			Icon = "hammer/run_map.png",
 			ToggledIcon = "hammer/run_map_activated.png",
@@ -497,21 +525,22 @@ public static partial class EditorToolBars
 			ActionType = ToolActionType.MethodCall,
 			Method = () =>
 			{
-				if ( !Game.IsPlaying )
-				{
-					EditorScene.Play( SceneViewWidget.Current.Session );
-				}
-				else
-				{
-					EditorScene.Stop();
-				}
-			},
+		if ( !Game.IsPlaying )
+		{
+			EditorScene.Play( SceneViewWidget.Current.Session );
+		}
+		else
+		{
+			EditorScene.Stop();
+		}
+	},
 			DisableDuringPlay = false,
 			Checkable = true,
 			ActiveResolver = () => Game.IsPlaying
-		},
+},
 
-		new() { Name = "Pause Game",
+		new () {
+	Name = "Pause Game",
 			ShortcutAction = "editor.pause",
 			Icon = "hammer/pause_map.png",
 			ToggledIcon = "hammer/pause_map_activated.png",
@@ -524,9 +553,10 @@ public static partial class EditorToolBars
 			DisableDuringPlay = false,
 			ConditionalOn = "Run Game",
 			ActiveResolver = () => Game.IsPaused
-		},
+},
 
-		new() { Name = "Eject",
+		new () {
+	Name = "Eject",
 			ShortcutAction = "editor.eject",
 			Icon = "hammer/eject.png",
 			ToggledIcon = "hammer/eject_activated.png",
@@ -539,12 +569,13 @@ public static partial class EditorToolBars
 			DisableDuringPlay = false,
 			ConditionalOn = "Run Game",
 			ActiveResolver = () => SceneViewWidget.Current?.CurrentView == SceneViewWidget.ViewMode.GameEjected
-		},
+},
 
-		new() { Separator=true },
-		new() { Separator=true },
+		new () { Separator=true },
+		new () { Separator=true },
 
-		new() { Name = "Network Settings",
+		new () {
+	Name = "Network Settings",
 			ShortcutAction = "editor.eject",
 			Icon = "hammer/network_settings.png",
 			Description = "Network Settings",
@@ -562,13 +593,14 @@ public static partial class EditorToolBars
 	{
 		return
 		[
+		/*
 			new() { Name="Show Helpers",
 				Icon="hammer/toggle_show_helpers.png",
 				ToggledIcon="hammer/toggle_show_helpers_activated.png",
 				Checkable=true,
 				Hotkey="Ctrl+Shift+H",
 				Description="Show Helpers" },
-
+*/
 			new() { Name="Editor Objects",
 				Icon="hammer/toggle_editor_objects.png",
 				ToggledIcon="hammer/toggle_editor_objects_activated.png",
@@ -580,7 +612,7 @@ public static partial class EditorToolBars
 				Setter = v => EditorScene.GizmoSettings.GizmosEnabled = v,
 				ActiveResolver = () => EditorScene.GizmoSettings.GizmosEnabled,
 				Description="Show Editor Only Objects" },
-
+/*
 			new() { Name="Tools Materials",
 				Icon="hammer/toggle_tools_materials.png",
 				ToggledIcon="hammer/toggle_tools_materials_activated.png",
@@ -601,7 +633,7 @@ public static partial class EditorToolBars
 				ToggledIcon="hammer/toggle_vis_preview_activated.png",
 				Checkable=true,
 				Description="Hide objects and materials which do not contribute to vis" },
-
+*/
 			new() { Name="Show Collision",
 				Icon="hammer/toggle_collision_hulls.png",
 				ToggledIcon="hammer/toggle_collision_hulls_activated.png",
@@ -616,37 +648,43 @@ public static partial class EditorToolBars
 				ToggledIcon="hammer/toggle_selection_overlay_activated.png",
 				Checkable=true,
 				Hotkey="Ctrl+Shift+F4",
-				Description="Toggle Selection Overlay" },
+				Description="Toggle Selection Overlay" ,
+				ActionType = ToolActionType.PropertyToggle,
+				Getter = () => EditorToolBarsActions.SelectionOverlay,
+				Setter = v => EditorToolBarsActions.SelectionOverlay = v,
+				DisableDuringPlay = false,
+				ActiveResolver = () => EditorToolBarsActions.SelectionOverlay},
 
+				// John: We won't have these for a while, commenting it out for now.
+
+/*
 			new() { Name="Gray Out Instances",
 				Icon="hammer/toggle_instance_overlay.png",
 				ToggledIcon="hammer/toggle_instance_overlay_activated.png",
 				Checkable=true,
 				Hotkey="Ctrl+Shift+F5",
-				Description="Gray Out Objects Outside Instance" },
+				Description="Gray Out Objects Outside Instance" },		
 			
-			// John: We won't have these for a while, commenting it out for now.
-			
-			// new() { Name="Mesh Subdivision",
-			// 	Icon="hammer/toggle_mesh_subdivision.png",
-			// 	ToggledIcon="hammer/toggle_mesh_subdivision_activated.png",
-			// 	Checkable=true,
-			// 	Hotkey="Ctrl+Shift+F6",
-			// 	Description="Toggle Mesh Subdivision" },
+			new() { Name="Mesh Subdivision",
+				Icon="hammer/toggle_mesh_subdivision.png",
+				ToggledIcon="hammer/toggle_mesh_subdivision_activated.png",
+				Checkable=true,
+				Hotkey="Ctrl+Shift+F6",
+				Description="Toggle Mesh Subdivision" },
 
-			// new() { Name="Mesh Tiles 3D",
-			// 	Icon="hammer/toggle_mesh_tiles_3d.png",
-			// 	ToggledIcon="hammer/toggle_mesh_tiles_3d_activated.png",
-			// 	Checkable=true,
-			// 	Hotkey="Ctrl+Shift+F7",
-			// 	Description="Toggle Mesh Tiles in 3D View" },
+			new() { Name="Mesh Tiles 3D",
+				Icon="hammer/toggle_mesh_tiles_3d.png",
+				ToggledIcon="hammer/toggle_mesh_tiles_3d_activated.png",
+				Checkable=true,
+				Hotkey="Ctrl+Shift+F7",
+				Description="Toggle Mesh Tiles in 3D View" },
 
-			// new() { Name="Mesh Tiles 2D",
-			// 	Icon="hammer/toggle_mesh_tiles_2d.png",
-			// 	ToggledIcon="hammer/toggle_mesh_tiles_2d_activated.png",
-			// 	Checkable=true,
-			// 	Hotkey="Ctrl+Shift+F8",
-			// 	Description="Toggle Mesh Tiles in 2D View" },
+			new() { Name="Mesh Tiles 2D",
+				Icon="hammer/toggle_mesh_tiles_2d.png",
+				ToggledIcon="hammer/toggle_mesh_tiles_2d_activated.png",
+				Checkable=true,
+				Hotkey="Ctrl+Shift+F8",
+				Description="Toggle Mesh Tiles in 2D View" },
 
 			new() { Name="Model Animation",
 				Icon="hammer/toggle_model_animation.png",
@@ -685,6 +723,7 @@ public static partial class EditorToolBars
 				],
 				Description="Cycle View Distance",
 				Checkable=false },
+	*/			
 		];
 	}
 

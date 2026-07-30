@@ -373,7 +373,7 @@ public static partial class EditorToolBars
 			}
 		}
 
-	//	Log.Info( $"[Toolbar] Cached {s_shortcutCache.Count} shortcuts." );
+		//	Log.Info( $"[Toolbar] Cached {s_shortcutCache.Count} shortcuts." );
 		s_shortcutCacheDirty = false;
 
 		//foreach ( var key in s_shortcutCache.Keys )
@@ -782,6 +782,42 @@ public static class EditorToolBarsActions
 
 	public static void SelectDisplacementTool()
 		=> Activate( nameof( MeshTool ), nameof( DisplacementTool ) );
+
+	public static bool LassoPartialSelection
+	{
+		get => EditorCookie.Get( "MeshTool.LassoPartialSelection", true );
+		set => EditorCookie.Set( "MeshTool.LassoPartialSelection", value );
+	}
+
+	public static bool SelectionOverlay
+	{
+		get => EditorCookie.Get( "MeshTool.OverlaySelection", true );
+		set => EditorCookie.Set( "MeshTool.OverlaySelectionn", value );
+	}
+
+	public static bool SelectionThrough
+	{
+		get => EditorCookie.Get( "MeshTool.SelectionThrough", true );
+		set => EditorCookie.Set( "MeshTool.SelectionThrough", value );
+	}
+
+	public static bool TextureLock
+	{
+		get => EditorCookie.Get( "MeshTool.TextureLock", true );
+		set => EditorCookie.Set( "MeshTool.TextureLock", value );
+	}
+
+	public static bool TextureLockScale
+	{
+		get => EditorCookie.Get( "MeshTool.TextureLockScale", false );
+		set => EditorCookie.Set( "MeshTool.TextureLockScale", value );
+	}
+
+	public static bool TextureLockComponent
+	{
+		get => EditorCookie.Get( "MeshTool.TextureLockComponent", false );
+		set => EditorCookie.Set( "MeshTool.TextureLockComponent", value );
+	}
 
 	private static void OpenMeshSubTool( Func<EditorTool> toolFactory )
 	{

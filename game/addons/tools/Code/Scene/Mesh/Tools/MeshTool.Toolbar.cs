@@ -93,7 +93,7 @@ partial class MeshTool
 			SelectionThrough, ( v ) => { SelectionThrough = v; SaveSelectionThrough(); } );
 
 		AddCheckboxOption( menu, "Backface Selection", "flip_to_back", "Allow selection of backfacing elements",
-			EditorPreferences.BackfaceSelection, ( v ) => { EditorPreferences.BackfaceSelection = v; } );
+			EditorPreferences.BackfaceSelection, ( v ) => EditorPreferences.BackfaceSelection = v );
 
 		menu.OpenAtCursor();
 	}
@@ -184,40 +184,19 @@ partial class MeshTool
 		SaveVertexSnapping();
 	}
 
-	private void SaveVertexSnapping()
-	{
-		EditorCookie.Set( "MeshTool.VertexSnapping", VertexSnappingEnabled );
-	}
+	private void SaveVertexSnapping() => EditorCookie.Set( "MeshTool.VertexSnapping", VertexSnappingEnabled );
 
-	private void SaveOverlaySelection()
-	{
-		EditorCookie.Set( "MeshTool.OverlaySelection", OverlaySelection );
-	}
+	private void SaveOverlaySelection() => EditorCookie.Set( "MeshTool.OverlaySelection", OverlaySelection );
 
-	private void SaveLassoPartialSelection()
-	{
-		EditorCookie.Set( "MeshTool.LassoPartialSelection", LassoPartialSelection );
-	}
+	private void SaveLassoPartialSelection() => EditorCookie.Set( "MeshTool.LassoPartialSelection", LassoPartialSelection );
 
-	private void SaveSelectionThrough()
-	{
-		EditorCookie.Set( "MeshTool.SelectionThrough", SelectionThrough );
-	}
+	private void SaveSelectionThrough() => EditorCookie.Set( "MeshTool.SelectionThrough", SelectionThrough );
 
-	private void SaveTextureLock()
-	{
-		EditorCookie.Set( "MeshTool.TextureLock", TextureLock );
-	}
+	private void SaveTextureLock() => EditorCookie.Set( "MeshTool.TextureLock", TextureLock );
 
-	private void SaveTextureLockScale()
-	{
-		EditorCookie.Set( "MeshTool.TextureLockScale", TextureLockScale );
-	}
+	private void SaveTextureLockScale() => EditorCookie.Set( "MeshTool.TextureLockScale", TextureLockScale );
 
-	private void SaveTextureLockComponent()
-	{
-		EditorCookie.Set( "MeshTool.TextureLockComponent", TextureLockComponent );
-	}
+	private void SaveTextureLockComponent() => EditorCookie.Set( "MeshTool.TextureLockComponent", TextureLockComponent );
 
 	private void LoadToolbarCookies()
 	{
