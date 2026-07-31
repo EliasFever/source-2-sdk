@@ -37,14 +37,14 @@ public static partial class EditorToolBars
 		RegisterToolBar( name, bar, window );
 
 		//	window.DockManager.RegisterDockType( $"Editor - {name}", "hammer/appicon.ico", () => bar );
-
-		window.DockManager.AddDock( new DockManager.DockInfo()
-		{
-			CreateAction = () => bar,
-			Title = $"Editor - {name}",
-			Icon = "hammer/appicon.ico"
-		} );
-
+		/*
+				window.DockManager.AddDock( new DockManager.DockInfo()
+				{
+					CreateAction = () => bar,
+					Title = $"Editor - {name}",
+					Icon = "hammer/appicon.ico"
+				} );
+		*/
 		return bar;
 	}
 
