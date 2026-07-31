@@ -1,7 +1,7 @@
 ﻿namespace Editor.MeshEditor;
 
 /// <summary>
-/// Create stuff as long as it fits in a box, woah crazy.
+/// Draw a primitive by dragging its bounds in the scene.
 /// </summary>
 [Title( "Block" ), Icon( "meshtools/primitve_tools/block.png" )]
 public sealed class BlockEditor( PrimitiveTool tool ) : PrimitiveEditor( tool )
@@ -333,8 +333,7 @@ public sealed class BlockEditor( PrimitiveTool tool ) : PrimitiveEditor( tool )
 	private static IEnumerable<TypeDescription> GetBuilderTypes()
 	{
 		return EditorTypeLibrary.GetTypes<PrimitiveBuilder>()
-			.Where( x => !x.IsAbstract )
-			.OrderBy( x => x.Name );
+			.Where( x => !x.IsAbstract );
 	}
 
 	class BlockEditorWidget : ToolSidebarWidget
@@ -354,24 +353,22 @@ public sealed class BlockEditor( PrimitiveTool tool ) : PrimitiveEditor( tool )
 
 			{
 				var group = AddGroup( "Shape Type" );
-				var list = group.Add( new PrimitiveListView( this ) );
-				list.FixedWidth = 200;
-				list.SetItems( GetBuilderTypes() );
-				list.SelectItem( list.Items.FirstOrDefault( x => (x as TypeDescription).TargetType == _primitive?.GetType() ) );
-				list.ItemSelected = ( e ) => OnPrimitiveSelected( (e as TypeDescription).TargetType );
-				list.BuildLayout();
+				var picker = group.Add( new PrimitiveTypePicker( this, "Shape" ) );
+				picker.SetItems( GetBuilderTypes() );
+				picker.SelectType( _primitive?.GetType() );
+				picker.TypeSelected = type => OnPrimitiveSelected( type.TargetType );
 			}
 
 			_controlLayout = Layout.AddColumn();
 			BuildControlSheet();
-
-			Layout.AddStretchCell();
 		}
 
 		void OnPrimitiveSelected( Type type )
 		{
-			_editor._primitive = EditorTypeLibrary.Create<PrimitiveBuilder>( type );
+			_primitive = EditorTypeLibrary.Create<PrimitiveBuilder>( type );
+			_editor._primitive = _primitive;
 			_editor.BuildPreview();
+			BuildControlSheet();
 		}
 
 		void BuildControlSheet()
@@ -391,44 +388,16 @@ public sealed class BlockEditor( PrimitiveTool tool ) : PrimitiveEditor( tool )
 			var so = _primitive.GetSerialized();
 			so.OnPropertyChanged += ( e ) => _onEdited?.Invoke();
 
+			if ( _primitive.CreatePropertyEditor( so ) is { } editor )
 			{
-				var row = new Widget { Layout = Layout.Row() };
-				row.Layout.Spacing = 24;
-				row.Layout.Alignment = TextFlag.LeftCenter;
-
-				var label = new Label( text: "Sides:" );
-
-				var range = ControlWidget.Create( so.GetProperty( nameof( BlockPrimitive.Sides ) ) );
-
-				range.HorizontalSizeMode = SizeMode.CanShrink;
-				range.FixedHeight = Theme.ControlHeight;
-				range.MinimumWidth = 100;
-
-				row.Layout.Add( label );
-				row.Layout.Add( range );
-
-				group.Add( row );
+				group.Add( editor );
 			}
-
+			else
 			{
-				var row = new Widget { Layout = Layout.Row() };
-				row.Layout.Spacing = 14;
-				row.Layout.Alignment = TextFlag.LeftCenter;
-
-				var label = new Label( text: "Hollow:" );
-
-				var boolean = ControlWidget.Create( so.GetProperty( nameof( BlockPrimitive.Hollow ) ) );
-
-				row.Layout.Add( label );
-				var t = row.Layout.Add( boolean );
-
-				group.Add( row );
+				var sheet = new ControlSheet();
+				sheet.AddObject( so );
+				group.Add( sheet );
 			}
-
-			//  John: This was the old way, it didn't scale very well so fuck this.
-			//	var sheet = new ControlSheet();
-			//	sheet.AddObject( so );
-			//	group.Add( sheet );
 		}
 
 		[EditorEvent.Frame]

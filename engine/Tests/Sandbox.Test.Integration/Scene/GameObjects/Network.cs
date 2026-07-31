@@ -795,6 +795,214 @@ public class NetworkTest
 		Assert.AreEqual( 3, comp.RegularInt, "Regular property should be overwritten by network refresh on the host" );
 	}
 
+
+	[TestMethod]
+	public async Task NetworkedMeshSurvivesLateJoinSnapshot()
+	{
+		Assert.IsNotNull( TypeLibrary.GetType<MeshComponent>(), "TypeLibrary hasn't been given the game assembly" );
+
+		using var scope = new Scene().Push();
+		using var clientAndHost = new ClientAndHost( TypeLibrary );
+
+		clientAndHost.BecomeHost();
+
+		var block = new GameObject();
+		var meshComponent = block.Components.Create<MeshComponent>();
+
+		var mesh = new PolygonMesh();
+		var a = mesh.AddVertex( new Vector3( 0, 0, 0 ) );
+		var b = mesh.AddVertex( new Vector3( 64, 0, 0 ) );
+		var c = mesh.AddVertex( new Vector3( 64, 64, 0 ) );
+		var d = mesh.AddVertex( new Vector3( 0, 64, 0 ) );
+		mesh.AddFace( a, b, c, d );
+		meshComponent.Mesh = mesh;
+
+		var expectedFaces = mesh.FaceHandles.Count();
+		Assert.AreNotEqual( 0, expectedFaces, "Test mesh should have geometry to begin with" );
+
+		block.NetworkSpawn();
+
+		// Build the snapshot a late-joining client would receive.
+		var snapshot = new SnapshotMsg { GameObjectSystems = [], NetworkObjects = new List<object>() };
+		SceneNetworkSystem.Instance.GetSnapshot( default, ref snapshot );
+
+		// The mesh geometry rides in the object's own blob buffer - the exact data the client dropped.
+		var createMsg = snapshot.NetworkObjects.OfType<ObjectCreateMsg>().Single( x => x.Guid == block.Id );
+		Assert.IsNotNull( createMsg.BlobData, "Mesh blob data should be in the create message" );
+
+		// Client applies the snapshot into a fresh scene, like a late-joiner.
+		clientAndHost.BecomeClient();
+		await SceneNetworkSystem.Instance.SetSnapshotAsync( snapshot );
+
+		var clientMesh = Game.ActiveScene.GetAllComponents<MeshComponent>().FirstOrDefault();
+		Assert.IsNotNull( clientMesh, "MeshComponent missing on client" );
+		Assert.IsNotNull( clientMesh.Mesh, "Mesh data missing on client" );
+		Assert.AreEqual( expectedFaces, clientMesh.Mesh.FaceHandles.Count(), "Mesh geometry did not survive the snapshot" );
+	}
+
+	[DataRow( false, false, false, DisplayName = "Cullable + hidden -> excluded" )]
+	[DataRow( false, true, true, DisplayName = "Cullable + visible -> included" )]
+	[DataRow( true, false, true, DisplayName = "AlwaysTransmit -> included when hidden" )]
+	public void JoinSnapshotFiltersByVisibility( bool alwaysTransmit, bool visible, bool included )
+	{
+		using var scope = new Scene().Push();
+		using var clientAndHost = new ClientAndHost( TypeLibrary );
+		clientAndHost.BecomeHost();
+
+		var go = SpawnNetworked( visible );
+		go.Network.AlwaysTransmit = alwaysTransmit;
+
+		var collection = new List<object>();
+		Game.ActiveScene.SerializeNetworkObjects( clientAndHost.Client, collection );
+
+		Assert.AreEqual( included, collection.OfType<ObjectCreateMsg>().Any( m => m.Guid == go.Id ) );
+	}
+
+	[TestMethod]
+	public void JoinSnapshotIncludesNetworkedAncestorsOfIncludedObject()
+	{
+		using var scope = new Scene().Push();
+		using var clientAndHost = new ClientAndHost( TypeLibrary );
+		clientAndHost.BecomeHost();
+
+		// A cullable parent the joining client can't see, with a child it can. The parent must still
+		// ride along in the snapshot, otherwise the child resolves a null parent and gets reparented
+		// to the scene root on the client.
+		var parent = SpawnNetworked( visible: false );
+		var child = SpawnNetworked( visible: true );
+		child.SetParent( parent );
+
+		var collection = new List<object>();
+		Game.ActiveScene.SerializeNetworkObjects( clientAndHost.Client, collection );
+
+		var guids = collection.OfType<ObjectCreateMsg>().Select( m => m.Guid ).ToList();
+
+		Assert.IsTrue( guids.Contains( child.Id ), "Visible child should be included" );
+		Assert.IsTrue( guids.Contains( parent.Id ), "Hidden parent must be pulled in so the child can resolve it" );
+		// The parent's create message carries the child's real parent id.
+		var childMsg = collection.OfType<ObjectCreateMsg>().Single( m => m.Guid == child.Id );
+		Assert.AreEqual( parent.Id, childMsg.Parent, "Child create message should reference the real parent" );
+	}
+
+	[TestMethod]
+	public void JoinSnapshotDoesNotDuplicateSharedAncestors()
+	{
+		using var scope = new Scene().Push();
+		using var clientAndHost = new ClientAndHost( TypeLibrary );
+		clientAndHost.BecomeHost();
+
+		// One hidden parent, two visible children - the parent must appear exactly once.
+		var parent = SpawnNetworked( visible: false );
+		var childA = SpawnNetworked( visible: true );
+		var childB = SpawnNetworked( visible: true );
+		childA.SetParent( parent );
+		childB.SetParent( parent );
+
+		var collection = new List<object>();
+		Game.ActiveScene.SerializeNetworkObjects( clientAndHost.Client, collection );
+
+		var parentCount = collection.OfType<ObjectCreateMsg>().Count( m => m.Guid == parent.Id );
+		Assert.AreEqual( 1, parentCount, "Shared ancestor should be emitted exactly once" );
+	}
+
+	[TestMethod]
+	public void EnsureCreateMessageSentIsIdempotent()
+	{
+		using var scope = new Scene().Push();
+		using var clientAndHost = new ClientAndHost( TypeLibrary );
+		clientAndHost.BecomeHost();
+
+		// Suppress the spawn broadcast so the client isn't already marked as having the create.
+		NetworkObject net;
+		using ( SceneNetworkSystem.SuppressSpawnMessages() )
+			net = SpawnNetworked( visible: false )._net;
+
+		net.EnsureCreateMessageSent( clientAndHost.Client );
+		net.EnsureCreateMessageSent( clientAndHost.Client );
+
+		Assert.AreEqual( 1, CreateMsgCount( clientAndHost.Client ) );
+	}
+
+	[TestMethod]
+	public void EnsureCreateMessageSentSkipsDestroyedObject()
+	{
+		using var scope = new Scene().Push();
+		using var clientAndHost = new ClientAndHost( TypeLibrary );
+		clientAndHost.BecomeHost();
+
+		NetworkObject net;
+		GameObject go;
+		using ( SceneNetworkSystem.SuppressSpawnMessages() )
+		{
+			go = SpawnNetworked( visible: false );
+			net = go._net;
+		}
+
+		go.DestroyImmediate();
+		net.EnsureCreateMessageSent( clientAndHost.Client );
+
+		Assert.AreEqual( 0, CreateMsgCount( clientAndHost.Client ) );
+	}
+
+	[TestMethod]
+	public void EnsureCreateMessageSentOnlyEmitsFromHost()
+	{
+		using var scope = new Scene().Push();
+		using var clientAndHost = new ClientAndHost( TypeLibrary );
+		clientAndHost.BecomeClient();
+
+		NetworkObject net;
+		using ( SceneNetworkSystem.SuppressSpawnMessages() )
+			net = SpawnNetworked( visible: false )._net;
+
+		net.EnsureCreateMessageSent( clientAndHost.Host );
+
+		Assert.AreEqual( 0, CreateMsgCount( clientAndHost.Host ),
+			"A non-host machine must not emit an ObjectCreateMsg via EnsureCreateMessageSent" );
+	}
+
+	[TestMethod]
+	public void SerializeNetworkObjectsMarksCreateMessageSent()
+	{
+		using var scope = new Scene().Push();
+		using var clientAndHost = new ClientAndHost( TypeLibrary );
+		clientAndHost.BecomeHost();
+
+		GameObject go;
+		using ( SceneNetworkSystem.SuppressSpawnMessages() )
+			go = SpawnNetworked( visible: true );
+
+		var collection = new List<object>();
+		Game.ActiveScene.SerializeNetworkObjects( clientAndHost.Client, collection );
+
+		Assert.IsTrue( collection.OfType<ObjectCreateMsg>().Any( m => m.Guid == go.Id ),
+			"Object should have been serialized into the snapshot" );
+
+		go._net.EnsureCreateMessageSent( clientAndHost.Client );
+
+		Assert.AreEqual( 0, CreateMsgCount( clientAndHost.Client ) );
+	}
+
+	// Spawns a cullable (not AlwaysTransmit) networked object with controllable visibility.
+	private static GameObject SpawnNetworked( bool visible )
+	{
+		var go = new GameObject();
+		go.Components.Create<VisibilityController>().Visible = visible;
+		go.NetworkSpawn();
+		go.Network.AlwaysTransmit = false;
+		return go;
+	}
+
+	private static int CreateMsgCount( TestConnection connection )
+		=> connection.Messages.Count( m => m.Payload is ObjectCreateMsg );
+
+	private class VisibilityController : Component, Component.INetworkVisible
+	{
+		public bool Visible;
+
+		public bool IsVisibleToConnection( Connection connection, in BBox worldBounds ) => Visible;
+	}
+
 	private class NetworkTestComponent : Component
 	{
 		[Sync] public int SyncInt { get; set; }

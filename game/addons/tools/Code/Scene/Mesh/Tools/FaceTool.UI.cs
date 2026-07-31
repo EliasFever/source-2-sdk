@@ -67,6 +67,8 @@ partial class FaceTool
 				SaveTextureSettings();
 			};
 
+			this.AddPivotGroup( tool );
+
 			{
 				var group = AddGroup( "Operations", collapsible: true );
 
