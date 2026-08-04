@@ -430,10 +430,9 @@ partial class VertexPaintTool
 				ConeOuter = 89,
 				ConeInner = 75,
 				QuadraticAttenuation = 5f,
-				ShadowsEnabled = true
+				ShadowsEnabled = true,
+				Rotation = Rotation.From( 90, 0, 0 )
 			};
-
-			light.Rotation = Rotation.From( 90, 0, 0 );
 
 			var mesh = CreatePlane( new Color( mask.x, mask.y, mask.z, mask.w ) );
 			var model = Model.Builder

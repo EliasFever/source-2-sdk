@@ -8,6 +8,7 @@ class PreviewMaterial : AssetPreview
 	SkyBox2D skyboxObject;
 
 	static readonly Model Plane = Model.Load( "models/dev/plane_blend.vmdl" );
+	private SceneSpotLight _sceneSpotLight;
 
 	public PreviewMaterial( Asset asset ) : base( asset )
 	{
@@ -24,8 +25,7 @@ class PreviewMaterial : AssetPreview
 
 		using ( Scene.Push() )
 		{
-			PrimaryObject = new GameObject();
-			PrimaryObject.WorldTransform = Transform.Zero;
+			PrimaryObject = new GameObject { WorldTransform = Transform.Zero };
 
 			if ( material.Flags.IsSky )
 			{
@@ -37,12 +37,25 @@ class PreviewMaterial : AssetPreview
 				var go = Scene.Directory.FindByName( "envmap" )?.FirstOrDefault() ?? new GameObject( true, "envmap" );
 				var c = go.GetOrAddComponent<EnvmapProbe>();
 				c.WorldPosition = new Vector3( 0, 0, 0 );
-				c.TintColor = Color.White * 0.1f;
+				c.TintColor = Color.White * 1;
 				var sprite = PrimaryObject.AddComponent<ModelRenderer>();
 				sprite.Model = Plane;
 				sprite.MaterialOverride = material;
-			}
 
+				var multiplier = material.ShaderName.StartsWith( "shaders/hl2k_" ) ? 3.1415926f : 0.8f;
+
+				_sceneSpotLight = new SceneSpotLight( Scene.SceneWorld )
+				{
+					Radius = 4000,
+					LightColor = Color.White * multiplier,
+					Position = new Vector3( 0, 0, 128 ),
+					ConeOuter = 89,
+					ConeInner = 75,
+					QuadraticAttenuation = 5f,
+					ShadowsEnabled = true,
+					Rotation = Rotation.From( 90, 0, 0 )
+				};
+			}
 		}
 	}
 
@@ -65,6 +78,9 @@ class PreviewMaterial : AssetPreview
 
 		PrimaryObject.WorldRotation = new Angles( 0, spin, 0 );
 
+		// make sure the thumbnail gets the default
+		if ( cycle > 5 ) _sceneSpotLight.Position = new( MathF.Cos( cycle * MathF.PI * 2f ) * 64, MathF.Sin( cycle * MathF.PI * 2f ) * 64, 128 );
+
 		SceneCenter = 0;
 		SceneSize = 55;
 		FrameScene();
@@ -72,9 +88,12 @@ class PreviewMaterial : AssetPreview
 
 	public override Widget CreateToolbar()
 	{
-		var info = new IconButton( "settings" );
-		info.Layout = Layout.Row();
-		info.MinimumSize = 16;
+		var info = new IconButton( "settings" )
+		{
+			Layout = Layout.Row(),
+			MinimumSize = 16
+		};
+
 		info.MouseLeftPress = () => OpenSettings( info );
 
 		return info;
@@ -82,11 +101,12 @@ class PreviewMaterial : AssetPreview
 
 	public void OpenSettings( Widget parent )
 	{
-		var popup = new PopupWidget( parent );
-		popup.IsPopup = true;
+		var popup = new PopupWidget( parent )
+		{
+			IsPopup = true,
+			Layout = Layout.Column()
+		};
 
-
-		popup.Layout = Layout.Column();
 		popup.Layout.Margin = 16;
 
 		var ps = new ControlSheet();

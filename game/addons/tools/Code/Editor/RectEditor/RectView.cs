@@ -666,10 +666,9 @@ public class RectView : Widget
 			ConeOuter = 89,
 			ConeInner = 75,
 			QuadraticAttenuation = 5f,
-			ShadowsEnabled = true
+			ShadowsEnabled = true,
+			Rotation = Rotation.From( 90, 0, 0 )
 		};
-
-		light.Rotation = Rotation.From( 90, 0, 0 );
 
 		var debugMode = Session.Settings.FastTextureSettings.DebugMode;
 
@@ -741,10 +740,7 @@ public class RectView : Widget
 		Update();
 	}
 
-	private void UpdateScaledBackgroundImage()
-	{
-		ScaledImage = SourceImage?.Resize( DrawRect.Size );
-	}
+	private void UpdateScaledBackgroundImage() => ScaledImage = SourceImage?.Resize( DrawRect.Size );
 
 	protected override void OnResize()
 	{
