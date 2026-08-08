@@ -42,7 +42,7 @@ class PreviewMaterial : AssetPreview
 				sprite.Model = Plane;
 				sprite.MaterialOverride = material;
 
-				var multiplier = material.ShaderName.StartsWith( "shaders/hl2k_" ) ? 3.1415926f : 0.8f;
+				var multiplier = material.ShaderName.StartsWith( "shaders/hl2k_" ) ? 3.1415926f * 0.8f : 0.8f;
 
 				_sceneSpotLight = new SceneSpotLight( Scene.SceneWorld )
 				{
@@ -50,7 +50,7 @@ class PreviewMaterial : AssetPreview
 					LightColor = Color.White * multiplier,
 					Position = new Vector3( 0, 0, 128 ),
 					ConeOuter = 89,
-					ConeInner = 75,
+					ConeInner = 0,
 					QuadraticAttenuation = 5f,
 					ShadowsEnabled = true,
 					Rotation = Rotation.From( 90, 0, 0 )
