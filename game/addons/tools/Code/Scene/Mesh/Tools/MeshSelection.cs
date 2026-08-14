@@ -10,8 +10,6 @@ namespace Editor.MeshEditor;
 [Group( "5" )]
 public sealed partial class MeshSelection( MeshTool tool ) : SelectionTool( tool )
 {
-	public MeshTool Tool { get; private init; } = tool;
-
 	readonly Dictionary<MeshComponent, Transform> _startPoints = [];
 	readonly Dictionary<MeshVertex, Vector3> _transformVertices = [];
 	IDisposable _undoScope;
