@@ -263,6 +263,9 @@ internal partial class GameInstanceDll : Engine.IGameInstanceDll
 		FileWatchers.ForEach( w => w.Dispose() );
 		FileWatchers.Clear();
 
+		NetworkedFileSystem?.Dispose();
+		NetworkedFileSystem = null;
+
 		Screen.UpdateFromEngine();
 
 		Game.InitTypeLibrary();

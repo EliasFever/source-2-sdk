@@ -713,6 +713,7 @@ public partial class SceneViewportWidget : Widget
 		}
 
 		DrawCameraSpeedOverlay();
+		DrawOrientationGizmo();
 
 		Overlay?.Update();
 	}
@@ -902,6 +903,9 @@ public partial class SceneViewportWidget : Widget
 	public override void OnDestroyed()
 	{
 		Session.OnFrameTo -= FrameOn;
+
+		_gizmoSceneObject?.Delete();
+		_gizmoSceneObject = null;
 
 		_activeCamera?.GameObject?.Destroy();
 		_activeCamera = null;

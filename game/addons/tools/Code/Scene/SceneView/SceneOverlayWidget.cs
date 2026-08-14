@@ -122,7 +122,7 @@ public class SceneOverlayWidget : Widget
 			}
 			else
 			{
-				vw.PaintOrientationGizmo();
+				vw.DrawOrientationGizmo();
 			}
 		}
 

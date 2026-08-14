@@ -75,9 +75,9 @@ public static partial class DebugOverlay
 			pos.y += OverlaySpacing;
 		}
 
-		if ( overlay_fps == 1 )
+		if ( overlay_fps > 0 )
 		{
-			DebugOverlay.FrameTimeGraph.Draw( ref pos );
+			DebugOverlay.FrameTimeGraph.Draw( ref pos, overlay_fps );
 			pos.y += OverlaySpacing;
 		}
 

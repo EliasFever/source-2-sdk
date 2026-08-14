@@ -731,7 +731,7 @@ public partial class SceneNetworkSystem : GameNetworkSystem
 
 	public override void OnJoined( Connection client )
 	{
-		Platform.Chat.BroadcastText( $"👋 {client.Name} has joined the game" );
+		Platform.Chat.BroadcastPlayerJoin( client );
 
 		Action queue = default;
 
@@ -768,7 +768,7 @@ public partial class SceneNetworkSystem : GameNetworkSystem
 
 			if ( Networking.IsHost )
 			{
-				Platform.Chat.BroadcastText( $"👋 {client.Name} left the game" );
+				Platform.Chat.BroadcastPlayerLeave( client );
 
 				Action queue = default;
 

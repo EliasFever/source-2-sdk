@@ -54,6 +54,10 @@ public partial class SceneViewportWidget
 		{
 			Renderer.Visible = true;
 		}
+
+		_gizmoSceneObject?.Delete();
+		_gizmoSceneObject = null;
+
 		Tools.DisposeAll();
 	}
 
@@ -110,6 +114,10 @@ public partial class SceneViewportWidget
 		IsGameView = true;
 		IsExternalGameView = false;
 		Renderer.Visible = true;
+
+		_gizmoSceneObject?.Delete();
+		_gizmoSceneObject = null;
+
 		Tools.DisposeAll();
 	}
 }
