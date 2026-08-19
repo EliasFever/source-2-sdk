@@ -23,7 +23,7 @@ If you want to build from source, this repository includes all the necessary fil
 
 ```bash
 # Clone the repo
-git clone https://github.com/QuantumStop/source-2-sdk.git
+git clone https://github.com/EliasFever/source-2-sdk.git
 ```
 Once you've cloned the repo simply run `Bootstrap.bat` which will download dependencies and build the engine.
 The game and editor can be run from the binaries in the game folder.
